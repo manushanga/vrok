@@ -1,3 +1,6 @@
+/* JACK Audio Connection Kit Plugin
+ *
+ */
 #include <cstdio>
 #include <errno.h>
 #include <unistd.h>
