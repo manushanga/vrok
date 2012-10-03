@@ -37,7 +37,7 @@ static const char *sb_bandnames[] = {
     "20 kHz"
 };
 SuperEqState sb_state;
-float sb_bands[18]= {1.7f,2.2f,1.3f,1.2f,1.1f,1.0f,
+float sb_bands[18]= {2.2f,2.5f,2.3f,1.2f,1.1f,1.0f,
                      0.7f,0.6f,0.5f,0.5f,0.6f,0.7f,
                      1.0f,1.1f,1.2f,1.3f,2.3f,2.2f};
 float sb_preamp;
