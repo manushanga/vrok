@@ -63,12 +63,16 @@ int jack_init(char *name)
     jack_set_process_callback (client, jack_process, 0);
     jack_on_shutdown (client, jack_shutdown, 0);
 
-    buffer_channels = jack_channels();
-
-    if (buffer_channels > 8){
-        DBG("Jack::Can't output to more than 8 channels, try again after deactivating some");
+    if ((ports = jack_get_ports (client, NULL, NULL, JackPortIsPhysical|JackPortIsInput)) == NULL) {
+        DBG("Jack::No playback ports");
         return 1;
     }
+    unsigned chs=0;
+    while (ports[chs]!=NULL){
+        chs++;
+    }
+    buffer_channels = chs;
+    DBG("Jack::channels"<<chs);
 
     char portname[25];
     for (unsigned i=0;i<buffer_channels;i++){
@@ -88,12 +92,7 @@ int jack_init(char *name)
         return 1;
     }
 
-    if ((ports = jack_get_ports (client, NULL, NULL, JackPortIsPhysical|JackPortIsInput)) == NULL) {
-        DBG("Jack::No playback ports");
-        return 1;
-    }
-
-    for (unsigned ch=0;ch<buffer_channels;ch++){
+    for (unsigned ch=0;ch<chs;ch++){
         DBG("Jack::channel "<<ports[ch]);
         int ret = jack_connect (client, jack_port_name (output_ports[ch]), ports[ch]);
         if (ret == EEXIST) {
@@ -103,7 +102,6 @@ int jack_init(char *name)
             return 1;
         }
     }
-
     free(ports);
 
     return 0;

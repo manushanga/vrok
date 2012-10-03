@@ -10,9 +10,10 @@ int main(int argc, char *argv[])
     VrokMain w;
     w.show();
     VPlayer v((char *)"vrok",0);
-    v.setURL((char *)"/media/ENT/Songs/Audios/English/Others/11-uptown-girl.mp3");
+    v.setURL((char *)"/media/ENT/Songs/Audios/English/Paul_van_Dyk-Evolution-[VAN2050B]-WEB-320kbps-2012/09-paul_van_dyk_feat_tyler_michaud_and_fisher-all_the_way.mp3");
+    v.setVolume(100);
     v.play();
-    sleep(20);
+    sleep(200);
     v.stop();
     return a.exec();
 }
