@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include <vplayer.h>
+
 namespace Ui {
 class VrokMain;
 }
@@ -17,6 +19,7 @@ public:
     
 private:
     Ui::VrokMain *ui;
+    VPlayer *vp;
 };
 
 #endif // VROKMAIN_H

@@ -37,9 +37,9 @@ static const char *sb_bandnames[] = {
     "20 kHz"
 };
 SuperEqState sb_state;
-float sb_bands[18]= {2.2f,2.5f,2.3f,1.2f,1.1f,1.0f,
-                     0.7f,0.6f,0.5f,0.5f,0.6f,0.7f,
-                     1.0f,1.1f,1.2f,1.3f,2.3f,2.2f};
+float sb_bands[18]= {1.1f,1.3f,1.1f,0.9f,0.7f,0.5f,
+                     0.4f,0.2f,0.1f,0.1f,0.2f,0.4f,
+                     0.5f,0.7f,0.8f,0.9f,0.8f,0.7f};
 float sb_preamp;
 void *sb_paramsroot;
 
@@ -91,8 +91,9 @@ void vpout_run(void *data, const void *samples, unsigned count, int64_t pts)
     }
 
     for (unsigned i=0;i<count*vpout_channels;i++){
-        vpout_buffer[i] = s_samples[i]/32767.0f;
+        vpout_buffer[i] = s_samples[i]/32768.0f;
     }
+
     equ_modifySamples_float(&sb_state, (char *)vpout_buffer, count, vpout_channels);
     current->vpout_plugin_run(vpout_buffer, count);
 }

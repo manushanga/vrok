@@ -20,7 +20,7 @@ int audio_setup(void **data, char *format, unsigned *rate, unsigned *channels)
 
 VPlayer::VPlayer(char *portname, unsigned output)
 {
-    const char *args[]={"--verbose=0", NULL};
+    const char *args[]={"--verbose=0", "-I","dummy","--ignore-config", NULL};
     inst = libvlc_new (1, args);
     mp = libvlc_media_player_new(inst);
 
@@ -112,8 +112,9 @@ void VPlayer::stop()
 }
 VPlayer::~VPlayer()
 {
-    vpout_end();
+    stop();
     libvlc_media_player_release (mp);
     libvlc_release (inst);
+    vpout_end();
 }
 

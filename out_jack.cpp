@@ -129,7 +129,7 @@ void jack_run(float *samples, unsigned count)
                 buffer_write = 0;
                 run_write = 0;
             }
-            buffer[ch][run_write] = 9.0f*samples[buffer_channels*i+ch];
+            buffer[ch][run_write] = 8.0f*samples[buffer_channels*i+ch];
         }
     }
     buffer_write += count;
@@ -137,6 +137,9 @@ void jack_run(float *samples, unsigned count)
 
 int jack_end()
 {
+    int ret = jack_client_close(client);
+    ret += jack_deactivate(client);
+    DBG("Jack::end "<<ret);
     free(buffer);
-    return jack_client_close(client);
+    return ret;
 }
