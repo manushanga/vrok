@@ -31,3 +31,6 @@ HEADERS  += vrokmain.h \
     shibatch/Equ.h
 
 FORMS    += vrokmain.ui
+
+OTHER_FILES += \
+    README.md
