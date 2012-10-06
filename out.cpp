@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <cstring>
+#include <sys/mman.h>
+#include <cmath>
 
 #include "vputils.h"
 #include "out.h"
@@ -70,7 +72,10 @@ int vpout_init(char *portname, unsigned op){
     vpout_channels = current->vpout_plugin_channels();
     vpout_samplerate = current->vpout_plugin_samplerate();
 
-    vpout_buffer = (float *) malloc(VPOUT_BUFFER_SAMPLES*sizeof(float)*current->vpout_plugin_channels());
+    unsigned vpout_buffer_size = VPOUT_BUFFER_SAMPLES*sizeof(float)*current->vpout_plugin_channels();
+    vpout_buffer = (float *) malloc(vpout_buffer_size);
+    mlock(vpout_buffer, vpout_buffer_size);
+
     equ_init (&sb_state, 10, vpout_channels);
     sb_preamp = 1.0f;
     //sb_bands
@@ -84,14 +89,13 @@ int vpout_init(char *portname, unsigned op){
 void vpout_run(void *data, const void *samples, unsigned count, int64_t pts)
 {
     short *s_samples= (short *) samples;
-    // VP_SAMPLES > count
+
     if (VPOUT_BUFFER_SAMPLES < count) {
         DBG("VPOUT::vpout_buffer not enough");
         exit(1);
     }
-
     for (unsigned i=0;i<count*vpout_channels;i++){
-        vpout_buffer[i] = s_samples[i]/32768.0f;
+        vpout_buffer[i] =s_samples[i]/32768.0f;
     }
 
     equ_modifySamples_float(&sb_state, (char *)vpout_buffer, count, vpout_channels);

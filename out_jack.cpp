@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <cstdlib>
-#include <semaphore.h>
+#include <sys/mman.h>
 
 #include <jack/jack.h>
 
@@ -24,6 +24,7 @@ static unsigned buffer_channels=0;
 static unsigned run_ch_samples=0;
 static unsigned run_write=0;
 static unsigned run_read=0;
+static unsigned run_write_larger=1;
 
 typedef jack_default_audio_sample_t jack_sample_t;
 
@@ -33,17 +34,26 @@ int jack_process (jack_nframes_t nframes, void *arg)
 {
     for (unsigned ch=0;ch<buffer_channels;ch++){
         process_out[ch] = (jack_sample_t *)jack_port_get_buffer (output_ports[ch], nframes);
-        for (unsigned i=0;i<nframes;i++){
-            run_read = buffer_read + i;
-            if (run_read >= JACK_SAMPLES){
-                buffer_read=0;
-                run_read=0;
-            }
-            process_out[ch][i]=buffer[ch][run_read]*0.05f;
-        }
     }
-    buffer_read += nframes;
-
+    if ( (run_write_larger && (run_write > run_read)) || (!run_write_larger && (run_write < run_read)) ){
+        for (unsigned i=0;i<nframes;i++){
+            if (run_read >= JACK_SAMPLES){
+                run_read=0;
+                run_write_larger = !run_write_larger;
+            }
+            for (unsigned ch=0;ch<buffer_channels;ch++){
+                process_out[ch][i]=buffer[ch][run_read];
+            }
+            run_read++;
+        }
+    } else {
+        for (unsigned i=0;i<nframes;i++){
+            for (unsigned ch=0;ch<buffer_channels;ch++){
+                process_out[ch][i]=0.0f;
+            }
+        }
+        DBG("Jack::xrun");
+    }
     return 0;
 }
 
@@ -72,7 +82,7 @@ int jack_init(char *name)
         chs++;
     }
     buffer_channels = chs;
-    DBG("Jack::channels"<<chs);
+    DBG("Jack::channels "<<chs);
 
     char portname[25];
     for (unsigned i=0;i<buffer_channels;i++){
@@ -86,6 +96,7 @@ int jack_init(char *name)
 
     buffer_size = JACK_SAMPLES*buffer_channels*sizeof(float);
     buffer = (float (*)[JACK_SAMPLES]) malloc(buffer_size);
+    mlock(buffer, buffer_size);
 
     if (jack_activate (client)) {
         DBG("Jack::Can't activate jack");
@@ -119,20 +130,22 @@ unsigned jack_channels(){
 
 void jack_run(float *samples, unsigned count)
 {
-    // JACK_SAMPLES > count
-    run_ch_samples=count/buffer_channels;
 
-    for (unsigned ch=0;ch<buffer_channels;ch++){
-        for (unsigned i=0;i<count;i++){
-            run_write = buffer_write+i;
-            if (run_write >= JACK_SAMPLES){
-                buffer_write = 0;
-                run_write = 0;
-            }
-            buffer[ch][run_write] = 8.0f*samples[buffer_channels*i+ch];
-        }
+    if (JACK_SAMPLES < count){
+        DBG("buffer too small");
     }
-    buffer_write += count;
+
+    for (unsigned i=0;i<count;i++){
+        if (run_write >= JACK_SAMPLES){
+            run_write = 0;
+            run_write_larger = !run_write_larger;
+        }
+        for (unsigned ch=0;ch<buffer_channels;ch++){
+            buffer[ch][run_write] = samples[buffer_channels*i+ch];
+        }
+        run_write++;
+    }
+
 }
 
 int jack_end()

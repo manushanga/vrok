@@ -1,7 +1,7 @@
 #ifndef OUT_JACK_H
 #define OUT_JACK_H
 
-#define JACK_SAMPLES 65536*8
+#define JACK_SAMPLES 65536
 
 int jack_init(char *name);
 void jack_run(float *samples, unsigned count);

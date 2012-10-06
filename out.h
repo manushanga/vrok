@@ -5,7 +5,7 @@
 
 #include "out_jack.h"
 
-#define VPOUT_BUFFER_SAMPLES 65536
+#define VPOUT_BUFFER_SAMPLES 4096
 
 typedef struct _vpout_plugin_t{
     char vpout_plugin_name[64];

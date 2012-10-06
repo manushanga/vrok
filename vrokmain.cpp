@@ -8,7 +8,8 @@ VrokMain::VrokMain(QWidget *parent) :
 {
     ui->setupUi(this);
     vp = new VPlayer((char *)"vrok",0);
-    vp->setURL((char *)"/media/ENT/Songs/Audios/English/Daughtry - Break The Spell 2011/05 - Crazy.mp3");
+    vp->setURL((char *)"/home/madura/Downloads/Lenny Kravitz - Greatest Hits (2000) [FLAC]/02 - Fly Away.flac");
+    //vp->setURL((char *)"/media/ENT/Songs/Audios/සිංහල/කසුන් කල්හාර/48 - WORDLESS.mp3");
     vp->setVolume(100);
     vp->play();
 

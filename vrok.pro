@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
-LIBS     += -lvlc -ljack -lsupc++
+LIBS     += -lvlc -ljack -lsupc++ -lm
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
