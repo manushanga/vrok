@@ -1,18 +1,28 @@
+#include <unistd.h>
+
 #include "vrokmain.h"
 #include "ui_vrokmain.h"
+#include "vputils.h"
 #include "vplayer.h"
+#include "players/player_flac.h"
 
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VrokMain)
 {
     ui->setupUi(this);
-    vp = new VPlayer((char *)"vrok",0);
-    vp->setURL((char *)"/home/madura/Downloads/Lenny Kravitz - Greatest Hits (2000) [FLAC]/02 - Fly Away.flac");
-    //vp->setURL((char *)"/media/ENT/Songs/Audios/සිංහල/කසුන් කල්හාර/48 - WORDLESS.mp3");
-    vp->setVolume(100);
-    vp->play();
-
+    vp = new FLACPlayer();
+    vp->init();
+    vp->open((char *)"/home/madura/Downloads/Lenny Kravitz - Greatest Hits (2000) [FLAC]/02 - Fly Away.flac");
+   // vp->play();
+    //sleep(5);
+    //vp->pause();
+    //sleep(5);
+    //vp->play();
+    //vp->setURL((char *)"/media/ENT/Dump/Downloads/PSY_-_Gangnam_Style.mp3");
+    //vp->play();
+    //vp->end();
+    DBG("asd");
 }
 
 VrokMain::~VrokMain()

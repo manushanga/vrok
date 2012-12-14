@@ -5,10 +5,11 @@
 #-------------------------------------------------
 
 QT       += core gui
-LIBS     += -lvlc -ljack -lsupc++ -lm
+LIBS     += -lsupc++ -lm -lpthread -lasound -lFLAC
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+QMAKE_CXXFLAGS += -std=c++11
 TARGET = vrok
 TEMPLATE = app
 
@@ -17,18 +18,20 @@ DEFINES += USE_OOURA
 SOURCES += main.cpp\
         vrokmain.cpp \
     vplayer.cpp \
-    out_jack.cpp \
     out.cpp \
     shibatch/Equ.cpp \
-    shibatch/Fftsg_fl.c
+    shibatch/Fftsg_fl.c \
+    outs/out_alsa.cpp \
+    players/player_flac.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
     vputils.h \
-    out_jack.h \
     out.h \
     shibatch/paramlist.hpp \
-    shibatch/Equ.h
+    shibatch/Equ.h \
+    outs/out_alsa.h \
+    players/player_flac.h
 
 FORMS    += vrokmain.ui
 
