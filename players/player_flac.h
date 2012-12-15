@@ -7,20 +7,23 @@
 
 class FLACPlayer : public VPlayer
 {
-private:
-
 public:
-    bool work;
-    float buffer[VPlayer::BUFFER_FRAMES*2*2];
+    FLAC__StreamDecoder *decoder;
+    FLAC__StreamDecoderInitStatus init_status;
+    float *buffer;
     unsigned buffer_write;
+
+    FLACPlayer();
     int open(char *url);
-    int play();
-    void pause();
-    void stop();
+    void reader();
+    //int play();
+    //void pause();
+    //void stop();
     int setVolume(unsigned vol);
     unsigned long getLength();
     void setPosition(unsigned long t);
     unsigned long getPosition();
+    ~FLACPlayer();
 };
 
 #endif // PLAYER_FLAC_H

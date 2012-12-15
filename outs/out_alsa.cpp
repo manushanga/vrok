@@ -8,16 +8,17 @@ static void worker_run(VPOutPluginAlsa *self)
 {
     int ret;
     while (self->work){
+
         ((VPOutPlugin*) self )->owner->mutexes[1]->lock();
         ret = snd_pcm_writei(self->handle,
                              ((VPOutPlugin*) self )->owner->buffer1,
-                             ((VPOutPlugin*) self )->owner->BUFFER_FRAMES);
+                             VPlayer::BUFFER_FRAMES);
         ((VPOutPlugin*) self )->owner->mutexes[0]->unlock();
 
         ((VPOutPlugin*) self )->owner->mutexes[3]->lock();
         ret = snd_pcm_writei(self->handle,
                              ((VPOutPlugin*) self )->owner->buffer2,
-                             ((VPOutPlugin*) self )->owner->BUFFER_FRAMES);
+                             VPlayer::BUFFER_FRAMES);
         ((VPOutPlugin*) self )->owner->mutexes[2]->unlock();
 
         if (ret < 0){
@@ -30,6 +31,17 @@ static void worker_run(VPOutPluginAlsa *self)
 const char *VPOutPluginAlsa::getName()
 {
     return name;
+}
+void VPOutPluginAlsa::resume()
+{
+    snd_pcm_prepare (handle);
+    snd_pcm_start (handle);
+
+}
+void VPOutPluginAlsa::pause()
+{
+    snd_pcm_drop (handle);
+
 }
 
 int VPOutPluginAlsa::init(unsigned samplerate, unsigned channels)
@@ -54,7 +66,6 @@ int VPOutPluginAlsa::init(unsigned samplerate, unsigned channels)
         DBG("Alsa:init: failed to pcm params");
         return -1;
     }
-
     worker = new std::thread(worker_run, this);
     work=true;
     return 0;
@@ -91,11 +102,12 @@ unsigned VPOutPluginAlsa::getChannels()
         return 0;
     }
 }
-int VPOutPluginAlsa::end()
+int VPOutPluginAlsa::finit()
 {
     work=false;
     worker->join();
     delete worker;
+    worker=NULL;
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
 }

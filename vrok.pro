@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
-LIBS     += -lsupc++ -lm -lpthread -lasound -lFLAC
+LIBS     += -lsupc++ -lm -lpthread -lasound -lFLAC -lmpg123
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     shibatch/Equ.cpp \
     shibatch/Fftsg_fl.c \
     outs/out_alsa.cpp \
-    players/player_flac.cpp
+    players/player_flac.cpp \
+    players/player_mpeg.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -31,7 +32,8 @@ HEADERS  += vrokmain.h \
     shibatch/paramlist.hpp \
     shibatch/Equ.h \
     outs/out_alsa.h \
-    players/player_flac.h
+    players/player_flac.h \
+    players/player_mpeg.h
 
 FORMS    += vrokmain.ui
 
