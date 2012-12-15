@@ -15,7 +15,7 @@ VrokMain::VrokMain(QWidget *parent) :
     vp = new MPEGPlayer();
     //vp= new FLACPlayer();
     vp->prepare();
-   // vp->open((char *)"/home/madura/Downloads/Lenny Kravitz - Greatest Hits (2000) [FLAC]/02 - Fly Away.flac");
+    //vp->open((char *)"/home/madura/Downloads/Lenny Kravitz - Greatest Hits (2000) [FLAC]/02 - Fly Away.flac");
    // vp->play();
     //sleep(5);
     //vp->pause();
@@ -29,7 +29,7 @@ VrokMain::VrokMain(QWidget *parent) :
     sleep(1);
     vp->play();
     sleep(3);
-    vp->pause();
+    vp->stop();
     //sleep(1);
     vp->play();
     //vp->end();

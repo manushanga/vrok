@@ -3,12 +3,14 @@
 
 #include <alsa/asoundlib.h>
 
-#include "vplayer.h"
-#include "out.h"
+#include "../vplayer.h"
+#include "../out.h"
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
 
 class VPOutPluginAlsa : public VPOutPlugin {
+private:
+    VPlayer *owner;
 public:
     snd_pcm_t *handle;
     snd_pcm_hw_params_t *params;
@@ -16,7 +18,7 @@ public:
     bool work;
 
     virtual const char *getName();
-    virtual int init(unsigned samplerate, unsigned channels);
+    virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);
     virtual void resume();
     virtual void pause();
     virtual unsigned getSamplerate();

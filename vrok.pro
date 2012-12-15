@@ -23,7 +23,9 @@ SOURCES += main.cpp\
     shibatch/Fftsg_fl.c \
     outs/out_alsa.cpp \
     players/player_flac.cpp \
-    players/player_mpeg.cpp
+    players/player_mpeg.cpp \
+    effects/effect_eq.cpp \
+    effect.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -33,7 +35,9 @@ HEADERS  += vrokmain.h \
     shibatch/Equ.h \
     outs/out_alsa.h \
     players/player_flac.h \
-    players/player_mpeg.h
+    players/player_mpeg.h \
+    effect.h \
+    effects/effect_eq.h
 
 FORMS    += vrokmain.ui
 

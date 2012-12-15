@@ -1,0 +1,45 @@
+#include <cstring>
+
+#include "effect_eq.h"
+
+static const char *sb_bandnames[] = { "Preamp", "55 Hz", "77 Hz", "110 Hz",
+    "156 Hz", "220 Hz", "311 Hz", "440 Hz", "622 Hz", "880 Hz", "1.2 kHz",
+    "1.8 kHz", "2.5 kHz", "3.5 kHz", "5 kHz", "7 kHz", "10 kHz", "14 kHz",
+    "20 kHz"
+};
+static float sb_bands[18]= {1.3f,1.5f,1.4f,1.2f,0.7f,0.5f,
+                            0.4f,0.2f,0.1f,0.1f,0.2f,0.4f,
+                            0.5f,0.7f,0.8f,0.9f,0.8f,0.7f};
+
+void VPEffectPluginEQ::sb_recalc_table()
+{
+    void *params = paramlist_alloc ();
+
+    float bands_copy[18];
+    memcpy (bands_copy, sb_bands, sizeof (sb_bands));
+    for (int i = 0; i < 18; i++) {
+        bands_copy[i] *= sb_preamp;
+    }
+
+    equ_makeTable (&sb_state, bands_copy, params, owner->track_samples);
+
+    paramlist_free (sb_paramsroot);
+    sb_paramsroot = params;
+}
+int VPEffectPluginEQ::init(VPlayer *v)
+{
+    owner = v;
+    equ_init (&sb_state, 10, owner->track_channels);
+    sb_preamp = 1.0f;
+    sb_recalc_table();
+}
+
+void VPEffectPluginEQ::process(float *buffer)
+{
+    equ_modifySamples_float(&sb_state, (char *)buffer, owner->BUFFER_FRAMES, owner->track_channels);
+}
+
+int VPEffectPluginEQ::finit()
+{
+
+}

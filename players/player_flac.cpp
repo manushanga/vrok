@@ -1,4 +1,5 @@
 #include "player_flac.h"
+#include "effect.h"
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)
 
@@ -89,6 +90,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             self->buffer1[j] = selfp->buffer[j];
             j++;
         }
+        self->vpeffect->process(self->buffer1);
         self->mutexes[1]->unlock();
 
         self->mutexes[2]->lock();
@@ -99,6 +101,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             self->buffer2[j] = selfp->buffer[VPlayer::BUFFER_FRAMES*self->track_channels+j];
             j++;
         }
+        self->vpeffect->process(self->buffer2);
         self->mutexes[3]->unlock();
 
         selfp->buffer_write=0;
@@ -120,6 +123,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             self->buffer1[j] = selfp->buffer[j];
             j++;
         }
+        self->vpeffect->process(self->buffer1);
         self->mutexes[1]->unlock();
         DBG("s3");
         self->mutexes[2]->lock();
@@ -129,6 +133,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             self->buffer2[j] = selfp->buffer[VPlayer::BUFFER_FRAMES*self->track_channels+j];
             j++;
         }
+        self->vpeffect->process(self->buffer2);
         self->mutexes[3]->unlock();
 
         while (frame->header.blocksize-i > VPlayer::BUFFER_FRAMES*2 ){
@@ -142,6 +147,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
                 }
                 i++;
             }
+            self->vpeffect->process(self->buffer1);
             self->mutexes[1]->unlock();
 
             self->mutexes[2]->lock();
@@ -154,6 +160,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
                 }
                 i++;
             }
+            self->vpeffect->process(self->buffer2);
             self->mutexes[3]->unlock();
         }
 

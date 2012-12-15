@@ -13,11 +13,13 @@
 enum VPState_t{VP_IDLE, VP_OPEN, VP_BUFFER, VP_PLAY, VP_PAUSE, VP_STOP, VP_END, VP_ERROR};
 
 class VPOutPlugin;
+class VPEffectPlugin;
 
 class VPlayer
 {
+
 public:
-    static const unsigned BUFFER_FRAMES = 8192;
+    static const unsigned BUFFER_FRAMES = 4096;
 
     float *buffer1;
     float *buffer2;
@@ -27,6 +29,7 @@ public:
     bool work;
     bool paused;
     std::thread *play_worker;
+    VPEffectPlugin *vpeffect;
     VPOutPlugin *vpout;
 
     unsigned prev_track_samples;

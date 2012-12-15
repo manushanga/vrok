@@ -1,4 +1,5 @@
 #include "player_mpeg.h"
+#include "effect.h"
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)
 
@@ -16,10 +17,9 @@ void MPEGPlayer::reader()
 {
     int err = MPG123_OK;
     size_t done=0;
-    size_t off=0;
     size_t count = ((VPlayer *)this)->BUFFER_FRAMES*((VPlayer *)this)->track_channels*2;
 
-    do {
+    while (work) {
         while (done<count*sizeof(short)){
             err = mpg123_read( mh, ((unsigned char *) buffer)+done, count*sizeof(short)-done, &done );
         }
@@ -33,17 +33,19 @@ void MPEGPlayer::reader()
             for (size_t i=0;i<count/2;i++){
                 ((VPlayer *)this)->buffer1[i]=SHORTTOFL*buffer[i];
             }
+            ((VPlayer *)this)->vpeffect->process(buffer1);
             ((VPlayer *)this)->mutexes[1]->unlock();
 
             ((VPlayer *)this)->mutexes[2]->lock();
             for (size_t i=0;i<count/2;i++){
                 ((VPlayer *)this)->buffer2[i]=SHORTTOFL*buffer[count/2+i];
             }
+            ((VPlayer *)this)->vpeffect->process(buffer2);
             ((VPlayer *)this)->mutexes[3]->unlock();
         }
 
 
-    } while (work);
+    }
 }
 
 int MPEGPlayer::open(char *url)

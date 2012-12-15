@@ -9,12 +9,10 @@
 
 class VPOutPlugin{
 public:
-    VPlayer *owner;
     bool work;
 
-    void setOwner(VPlayer *v);
     virtual const char *getName() = 0;
-    virtual int init(unsigned samplerate, unsigned channels) = 0;
+    virtual int init(VPlayer *v, unsigned samplerate, unsigned channels) = 0;
     virtual void resume() = 0;
     virtual void pause() = 0;
     virtual unsigned getSamplerate() = 0;

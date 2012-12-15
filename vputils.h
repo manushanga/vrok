@@ -6,7 +6,7 @@
     #include <iostream>
     #define DBG(...) std::cout<<"DBG "<<__VA_ARGS__<<std::endl
 #else
-    #define DBG()
+    #define DBG(...)
 #endif
 
 #endif // VPUTILS_H

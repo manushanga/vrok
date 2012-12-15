@@ -2,6 +2,7 @@
 
 #include "vplayer.h"
 #include "outs/out_alsa.h"
+#include "effects/effect_eq.h"
 
 void VPlayer::play_work(VPlayer *self)
 {
@@ -28,15 +29,18 @@ VPlayer::VPlayer()
 void VPlayer::prepare()
 {
     if (vpout != NULL){
-        //stop();
         vpout->finit();
+        vpeffect->finit();
 
+        DBG("done");
         for (int i=0;i<4;i++){
-            mutexes[i]->lock();
+            mutexes[i]->try_lock();
         }
         delete buffer1;
         delete buffer2;
         delete vpout;
+        if (play_worker)
+            delete play_worker;
     }
     track_channels = 2;
     track_samples = 44100;
@@ -44,47 +48,45 @@ void VPlayer::prepare()
     buffer1 = new float[VPlayer::BUFFER_FRAMES*track_channels];
     buffer2 = new float[VPlayer::BUFFER_FRAMES*track_channels];
 
+    play_worker = NULL;
+
     vpout = (VPOutPlugin *) new VPOutPluginAlsa();
-    vpout->setOwner(this);
-    vpout->init(44100,2);
-    paused = false;
+    vpout->init(this, 44100, 2);
+    vpeffect = (VPEffectPlugin *) new VPEffectPluginEQ();
+    vpeffect->init(this);
+    DBG("sadf");
 }
 
 int VPlayer::play()
 {
     work = true;
-
+    vpout->resume();
     if (play_worker == NULL){
         play_worker = new std::thread(VPlayer::play_work,this);
     }
-    vpout->resume();
+
     ((VPlayer *) this)->mutexes[0]->unlock();
     ((VPlayer *) this)->mutexes[2]->unlock();
+
 }
 
 void VPlayer::pause()
-{vpout->pause();
+{
+    vpout->pause();
     while (((VPlayer *) this)->mutexes[0]->try_lock() ||
            ((VPlayer *) this)->mutexes[1]->try_lock() ||
            ((VPlayer *) this)->mutexes[2]->try_lock() ||
-           ((VPlayer *) this)->mutexes[3]->try_lock() ){ }
-/*
-    DBG(((VPlayer *) this)->mutexes[0]->try_lock());
-    DBG(((VPlayer *) this)->mutexes[1]->try_lock());
-    DBG(((VPlayer *) this)->mutexes[2]->try_lock());
-    DBG(((VPlayer *) this)->mutexes[3]->try_lock());*/
-
-
-
-    /*
-
-
-    ((VPlayer *) this)->mutexes[0]->lock();
-    ((VPlayer *) this)->mutexes[2]->lock();
-
-    ((VPlayer *) this)->mutexes[1]->lock();
-
-    ((VPlayer *) this)->mutexes[3]->lock();*/
+           ((VPlayer *) this)->mutexes[3]->try_lock() ){}
 }
 
+void VPlayer::stop()
+{
+    setPosition(0);
+    work = false;
+
+    play_worker->join();
+
+    prepare();
+     DBG("ad");
+}
 

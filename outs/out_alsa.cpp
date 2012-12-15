@@ -36,16 +36,15 @@ void VPOutPluginAlsa::resume()
 {
     snd_pcm_prepare (handle);
     snd_pcm_start (handle);
-
 }
 void VPOutPluginAlsa::pause()
 {
     snd_pcm_drop (handle);
-
 }
 
-int VPOutPluginAlsa::init(unsigned samplerate, unsigned channels)
+int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
 {
+    owner = v;
     if (snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
         DBG("Alsa:init: failed to open pcm");
         return -1;
