@@ -60,7 +60,7 @@ void VrokMain::on_btnOpen_clicked()
         vp = new MPEGPlayer();
     }
 
-    vp->open((char *)ui->txtFile->text().toAscii().data());
+    vp->open((char *)ui->txtFile->text().toUtf8().data() );
     if (ui->btnFX->isChecked()==true)
         vp->effects = true;
 
