@@ -6,7 +6,7 @@
 #include "vplayer.h"
 #include "players/player_flac.h"
 #include "players/player_mpeg.h"
-
+#include <QFileDialog>
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VrokMain)
@@ -35,6 +35,7 @@ VrokMain::VrokMain(QWidget *parent) :
     //vp->end();
     vp=NULL;
 }
+
 void VrokMain::on_btnStop_clicked()
 {
 
@@ -49,6 +50,10 @@ void VrokMain::on_btnOpen_clicked()
 {
     if (vp)
         delete vp;
+    ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
+                                                    "",
+                                                    tr("Supported Files (*.flac *.mp3)")));
+
     if (ui->txtFile->text().endsWith(".flac",Qt::CaseInsensitive) == true) {
         vp= new FLACPlayer();
     } else {

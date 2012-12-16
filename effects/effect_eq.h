@@ -3,7 +3,7 @@
 
 #include "../vplayer.h"
 #include "../effect.h"
-#include "../shibatch/Equ.h"
+#include "shibatch/Equ.h"
 
 class VPEffectPluginEQ : VPEffectPlugin {
 private:

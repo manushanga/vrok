@@ -22,6 +22,7 @@ public slots:
     void on_btnStop_clicked();
     void on_btnOpen_clicked();
     void on_btnFX_clicked();
+
 private:
     Ui::VrokMain *ui;
     VPlayer *vp;

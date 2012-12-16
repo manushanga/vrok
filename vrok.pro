@@ -19,8 +19,8 @@ SOURCES += main.cpp\
         vrokmain.cpp \
     vplayer.cpp \
     out.cpp \
-    shibatch/Equ.cpp \
-    shibatch/Fftsg_fl.c \
+    effects/shibatch/Equ.cpp \
+    effects/shibatch/Fftsg_fl.c \
     outs/out_alsa.cpp \
     players/player_flac.cpp \
     players/player_mpeg.cpp \
@@ -31,8 +31,8 @@ HEADERS  += vrokmain.h \
     vplayer.h \
     vputils.h \
     out.h \
-    shibatch/paramlist.hpp \
-    shibatch/Equ.h \
+    effects/shibatch/paramlist.hpp \
+    effects/shibatch/Equ.h \
     outs/out_alsa.h \
     players/player_flac.h \
     players/player_mpeg.h \
