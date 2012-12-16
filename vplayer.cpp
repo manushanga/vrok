@@ -21,6 +21,10 @@ VPlayer::VPlayer()
         mutexes[i] = new std::mutex();
         mutexes[i]->try_lock();
     }
+    mutex_play = new std::mutex();
+    mutex_play->unlock();
+    mutex_pause = new std::mutex();
+    mutex_pause->unlock();
 
     play_worker = NULL;
     work=false;
@@ -44,15 +48,21 @@ int VPlayer::play()
 {
     if (paused || stopped) {
         work = true;
-        vpout->resume();
+        mutex_play->lock();
+
+        paused = false;
+        stopped = false;
+        mutex_pause->unlock();
+        mutexes[0]->unlock();
+        mutexes[2]->unlock();
+
         if (play_worker == NULL){
             play_worker = new std::thread(VPlayer::play_work,this);
         }
 
-        mutexes[0]->unlock();
-        mutexes[2]->unlock();
-        paused = false;
-        stopped = false;
+        vpout->resume();
+        mutex_play->unlock();
+
     }
     return 1;
 }
@@ -60,17 +70,19 @@ int VPlayer::play()
 void VPlayer::pause()
 {
     if (paused ==false) {
+        mutex_play->lock();
         vpout->pause();
-        while (mutexes[0]->try_lock() ||
-               mutexes[2]->try_lock()){}
         paused = true;
+        mutex_pause->try_lock();
+        mutex_play->unlock();
     }
 }
 void VPlayer::ended()
 {
     work=false;
-    while (mutexes[0]->try_lock() ||
-           mutexes[2]->try_lock() ){}
+    mutex_play->lock();
+
+    mutex_play->unlock();
     // its going to die anyway
     play_worker= NULL;
 
@@ -85,10 +97,17 @@ void VPlayer::stop()
         delete play_worker;
         play_worker = NULL;
 
-        while (mutexes[0]->try_lock() ||
-               mutexes[2]->try_lock() ){}
-
+        mutex_play->lock();
+        vpout->pause();
         stopped = true;
+        mutex_pause->try_lock();
+        while(mutexes[0]->try_lock()||
+              mutexes[1]->try_lock()||
+              mutexes[2]->try_lock()||
+              mutexes[3]->try_lock()){}
+        mutex_play->unlock();
+
+
     }
 }
 

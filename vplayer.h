@@ -19,13 +19,17 @@ class VPlayer
 {
 
 public:
-    static const unsigned BUFFER_FRAMES = 8192;
+    static const unsigned BUFFER_FRAMES = 128;
 
     float *buffer1;
     float *buffer2;
 
     // mutexes[0..1] for buffer1, mutexes[2..3] for buffer2
     std::mutex *mutexes[4];
+    // play, pause, stop event control
+    std::mutex *mutex_play;
+
+    std::mutex *mutex_pause;
     bool work;
     bool paused;
     bool stopped;

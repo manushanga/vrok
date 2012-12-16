@@ -9,7 +9,7 @@ LIBS     += -lsupc++ -lm -lpthread -lasound -lFLAC -lmpg123
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -O4 -std=c++11
 TARGET = vrok
 TEMPLATE = app
 

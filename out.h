@@ -10,6 +10,7 @@
 class VPOutPlugin{
 public:
     bool work;
+    std::mutex *mutex_pause;
 
     virtual const char *getName() = 0;
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels) = 0;

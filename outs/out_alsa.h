@@ -15,6 +15,7 @@ public:
     snd_pcm_hw_params_t *params;
     std::thread *worker;
     bool work;
+    bool paused;
 
     virtual const char *getName();
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);

@@ -8,6 +8,8 @@ static void worker_run(VPOutPluginAlsa *self)
 {
     int ret;
     while (self->work){
+        if (self->paused)
+            self->mutex_pause->lock();
 
         self->owner->mutexes[1]->lock();
         ret = snd_pcm_writei(self->handle,
@@ -20,8 +22,7 @@ static void worker_run(VPOutPluginAlsa *self)
                              self->owner->buffer2,
                              VPlayer::BUFFER_FRAMES);
         self->owner->mutexes[2]->unlock();
-
-        if (ret < 0){
+        if (ret < 0 && ret != -EAGAIN){
             DBG("Alsa:run: write error "<<ret);
         }
     }
@@ -34,12 +35,17 @@ const char *VPOutPluginAlsa::getName()
 }
 void VPOutPluginAlsa::resume()
 {
+    paused = false;
+    mutex_pause->unlock();
     snd_pcm_prepare (handle);
     snd_pcm_start (handle);
 }
 void VPOutPluginAlsa::pause()
 {
-    snd_pcm_drop (handle);
+    paused = true;
+    mutex_pause->try_lock();
+    snd_pcm_drain (handle);
+
 }
 
 int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
@@ -65,8 +71,11 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
         DBG("Alsa:init: failed to pcm params");
         return -1;
     }
-    worker = new std::thread(worker_run, this);
+    mutex_pause = new std::mutex();
+    mutex_pause->try_lock();
     work=true;
+    worker = new std::thread(worker_run, this);
+
     return 0;
 }
 
@@ -107,6 +116,7 @@ int VPOutPluginAlsa::finit()
     worker->join();
     delete worker;
     worker=NULL;
+    delete mutex_pause;
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
     return 1;
