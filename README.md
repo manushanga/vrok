@@ -11,11 +11,13 @@ Compiling
 
 run these commands in the project directory
 
+<pre>
 qmake
 make
+</pre>
 
 Running
 -------
-
+<pre>
 ./vrok
-
+</pre>
