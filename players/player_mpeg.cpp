@@ -20,31 +20,37 @@ void MPEGPlayer::reader()
     size_t count = ((VPlayer *)this)->BUFFER_FRAMES*((VPlayer *)this)->track_channels*2;
 
     while (work) {
-        while (done<count*sizeof(short)){
+        while (done<count*sizeof(short) && err != MPG123_DONE){
             err = mpg123_read( mh, ((unsigned char *) buffer)+done, count*sizeof(short)-done, &done );
         }
         done=0;
 
-        if (err != MPG123_OK) {
+        if (err != MPG123_OK && err != MPG123_DONE) {
             break;
         } else {
 
-            ((VPlayer *)this)->mutexes[0]->lock();
+            mutexes[0]->lock();
             for (size_t i=0;i<count/2;i++){
-                ((VPlayer *)this)->buffer1[i]=SHORTTOFL*buffer[i];
+                buffer1[i]=SHORTTOFL*buffer[i];
             }
-            ((VPlayer *)this)->post_process(buffer1);
-            ((VPlayer *)this)->mutexes[1]->unlock();
+            post_process(buffer1);
+            mutexes[1]->unlock();
 
-            ((VPlayer *)this)->mutexes[2]->lock();
+            mutexes[2]->lock();
             for (size_t i=0;i<count/2;i++){
-                ((VPlayer *)this)->buffer2[i]=SHORTTOFL*buffer[count/2+i];
+                buffer2[i]=SHORTTOFL*buffer[count/2+i];
             }
-            ((VPlayer *)this)->post_process(buffer2);
-            ((VPlayer *)this)->mutexes[3]->unlock();
+            post_process(buffer2);
+            mutexes[3]->unlock();
         }
 
-
+        if (err == MPG123_DONE){
+            break;
+        }
+    }
+    // stub for handling track end
+    if (work){
+        ended();
     }
 }
 
@@ -85,5 +91,9 @@ void MPEGPlayer::setPosition(unsigned long t)
 unsigned long MPEGPlayer::getPosition()
 {
     return 0;
+}
+MPEGPlayer::~MPEGPlayer()
+{
+    this->~VPlayer();
 }
 

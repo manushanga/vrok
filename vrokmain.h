@@ -16,10 +16,17 @@ class VrokMain : public QMainWindow
 public:
     explicit VrokMain(QWidget *parent = 0);
     ~VrokMain();
-    
+
+public slots:
+    void on_btnPlay_clicked();
+    void on_btnStop_clicked();
+    void on_btnOpen_clicked();
+    void on_btnFX_clicked();
 private:
     Ui::VrokMain *ui;
     VPlayer *vp;
+
+
 };
 
 #endif // VROKMAIN_H

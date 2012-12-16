@@ -175,7 +175,6 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         selfp->buffer_write=j;
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
     }
-
 }
 FLACPlayer::FLACPlayer()
 {
@@ -192,9 +191,10 @@ FLACPlayer::~FLACPlayer()
 {
     FLAC__stream_decoder_delete(decoder);
 
-    if (buffer == NULL)
+    if (buffer != NULL)
         delete buffer;
     buffer_write = 0;
+    this->~VPlayer();
 }
 
 int FLACPlayer::open(char *url)
@@ -215,6 +215,8 @@ void FLACPlayer::reader()
     if (init_status==FLAC__STREAM_DECODER_INIT_STATUS_OK) {
        FLAC__stream_decoder_process_until_end_of_stream(decoder);
     }
+    ended();
+
 }
 
 int FLACPlayer::setVolume(unsigned vol)

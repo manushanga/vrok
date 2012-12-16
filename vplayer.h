@@ -19,7 +19,7 @@ class VPlayer
 {
 
 public:
-    static const unsigned BUFFER_FRAMES = 32768;
+    static const unsigned BUFFER_FRAMES = 8192;
 
     float *buffer1;
     float *buffer2;
@@ -28,6 +28,9 @@ public:
     std::mutex *mutexes[4];
     bool work;
     bool paused;
+    bool stopped;
+    bool effects;
+
     std::thread *play_worker;
     VPEffectPlugin *vpeffect;
     VPOutPlugin *vpout;
@@ -46,10 +49,12 @@ public:
     void pause();// = 0;
     void stop();// = 0;
     void post_process(float *buffer);
+    void ended();
     virtual int setVolume(unsigned vol) = 0;
     virtual unsigned long getLength() = 0;
     virtual void setPosition(unsigned long t) = 0;
     virtual unsigned long getPosition() = 0;
+    virtual ~VPlayer();
 };
 
 

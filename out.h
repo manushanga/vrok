@@ -18,6 +18,7 @@ public:
     virtual unsigned getSamplerate() = 0;
     virtual unsigned getChannels() = 0;
     virtual int finit() = 0;
+    virtual ~VPOutPlugin();
 };
 
 

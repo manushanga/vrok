@@ -109,4 +109,5 @@ int VPOutPluginAlsa::finit()
     worker=NULL;
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
+    return 1;
 }
