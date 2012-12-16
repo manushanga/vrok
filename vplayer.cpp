@@ -90,3 +90,8 @@ void VPlayer::stop()
      DBG("ad");
 }
 
+void VPlayer::post_process(float *buffer)
+{
+    vpeffect->process(buffer);
+}
+

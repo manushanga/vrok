@@ -13,6 +13,9 @@ static float sb_bands[18]= {1.3f,1.5f,1.4f,1.2f,0.7f,0.5f,
 
 void VPEffectPluginEQ::sb_recalc_table()
 {
+    //this->owner->mutexes[0]->lock();
+    //this->owner->mutexes[2]->lock();
+
     void *params = paramlist_alloc ();
 
     float bands_copy[18];
@@ -25,6 +28,10 @@ void VPEffectPluginEQ::sb_recalc_table()
 
     paramlist_free (sb_paramsroot);
     sb_paramsroot = params;
+
+    //this->owner->mutexes[0]->unlock();
+    //this->owner->mutexes[2]->unlock();
+
 }
 int VPEffectPluginEQ::init(VPlayer *v)
 {
@@ -32,6 +39,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
     equ_init (&sb_state, 10, owner->track_channels);
     sb_preamp = 1.0f;
     sb_recalc_table();
+    return 1;
 }
 
 void VPEffectPluginEQ::process(float *buffer)
@@ -41,5 +49,5 @@ void VPEffectPluginEQ::process(float *buffer)
 
 int VPEffectPluginEQ::finit()
 {
-
+    return 1;
 }

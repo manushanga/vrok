@@ -9,17 +9,17 @@ static void worker_run(VPOutPluginAlsa *self)
     int ret;
     while (self->work){
 
-        ((VPOutPlugin*) self )->owner->mutexes[1]->lock();
+        self->owner->mutexes[1]->lock();
         ret = snd_pcm_writei(self->handle,
-                             ((VPOutPlugin*) self )->owner->buffer1,
+                             self->owner->buffer1,
                              VPlayer::BUFFER_FRAMES);
-        ((VPOutPlugin*) self )->owner->mutexes[0]->unlock();
+        self->owner->mutexes[0]->unlock();
 
-        ((VPOutPlugin*) self )->owner->mutexes[3]->lock();
+        self->owner->mutexes[3]->lock();
         ret = snd_pcm_writei(self->handle,
-                             ((VPOutPlugin*) self )->owner->buffer2,
+                             self->owner->buffer2,
                              VPlayer::BUFFER_FRAMES);
-        ((VPOutPlugin*) self )->owner->mutexes[2]->unlock();
+        self->owner->mutexes[2]->unlock();
 
         if (ret < 0){
             DBG("Alsa:run: write error "<<ret);

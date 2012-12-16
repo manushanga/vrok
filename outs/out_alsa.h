@@ -9,9 +9,8 @@
 #define ALSA_PCM_NEW_HW_PARAMS_API
 
 class VPOutPluginAlsa : public VPOutPlugin {
-private:
-    VPlayer *owner;
 public:
+    VPlayer *owner;
     snd_pcm_t *handle;
     snd_pcm_hw_params_t *params;
     std::thread *worker;

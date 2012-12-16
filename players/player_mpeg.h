@@ -14,9 +14,6 @@ public:
     MPEGPlayer();
     int open(char *url);
     void reader();
-   // int play();
-   // void pause();
-    //void stop();
     int setVolume(unsigned vol);
     unsigned long getLength();
     void setPosition(unsigned long t);

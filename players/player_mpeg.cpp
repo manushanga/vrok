@@ -33,14 +33,14 @@ void MPEGPlayer::reader()
             for (size_t i=0;i<count/2;i++){
                 ((VPlayer *)this)->buffer1[i]=SHORTTOFL*buffer[i];
             }
-            ((VPlayer *)this)->vpeffect->process(buffer1);
+            ((VPlayer *)this)->post_process(buffer1);
             ((VPlayer *)this)->mutexes[1]->unlock();
 
             ((VPlayer *)this)->mutexes[2]->lock();
             for (size_t i=0;i<count/2;i++){
                 ((VPlayer *)this)->buffer2[i]=SHORTTOFL*buffer[count/2+i];
             }
-            ((VPlayer *)this)->vpeffect->process(buffer2);
+            ((VPlayer *)this)->post_process(buffer2);
             ((VPlayer *)this)->mutexes[3]->unlock();
         }
 

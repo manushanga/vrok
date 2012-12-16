@@ -12,17 +12,17 @@ VrokMain::VrokMain(QWidget *parent) :
     ui(new Ui::VrokMain)
 {
     ui->setupUi(this);
-    vp = new MPEGPlayer();
-    //vp= new FLACPlayer();
+    //vp = new MPEGPlayer();
+    vp= new FLACPlayer();
     vp->prepare();
-    //vp->open((char *)"/home/madura/Downloads/Lenny Kravitz - Greatest Hits (2000) [FLAC]/02 - Fly Away.flac");
+   vp->open((char *)"/home/madura/Downloads/Lenny Kravitz - Greatest Hits (2000) [FLAC]/02 - Fly Away.flac");
    // vp->play();
     //sleep(5);
     //vp->pause();
     //sleep(5);
     //vp->play();
     //vp->open((char *)"/media/ENT/Dump/Downloads/PSY_-_Gangnam_Style.mp3");
-    vp->open((char *)"/media/ENT/Dump/Downloads/GTA Radio/FLASH.mp3");
+    //vp->open((char *)"/media/ENT/Dump/Downloads/GTA Radio/FLASH.mp3");
     vp->play();
     sleep(3);
     vp->pause();

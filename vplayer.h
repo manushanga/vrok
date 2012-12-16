@@ -19,7 +19,7 @@ class VPlayer
 {
 
 public:
-    static const unsigned BUFFER_FRAMES = 4096;
+    static const unsigned BUFFER_FRAMES = 32768;
 
     float *buffer1;
     float *buffer2;
@@ -45,6 +45,7 @@ public:
     int play();// = 0;
     void pause();// = 0;
     void stop();// = 0;
+    void post_process(float *buffer);
     virtual int setVolume(unsigned vol) = 0;
     virtual unsigned long getLength() = 0;
     virtual void setPosition(unsigned long t) = 0;
