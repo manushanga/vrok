@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>509</width>
-    <height>138</height>
+    <width>577</width>
+    <height>136</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="btnPlay">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>120</x>
       <y>60</y>
       <width>100</width>
       <height>23</height>
@@ -46,7 +46,7 @@
    <widget class="QPushButton" name="btnFX">
     <property name="geometry">
      <rect>
-      <x>370</x>
+      <x>450</x>
       <y>60</y>
       <width>100</width>
       <height>23</height>
@@ -65,7 +65,7 @@
    <widget class="QPushButton" name="btnStop">
     <property name="geometry">
      <rect>
-      <x>260</x>
+      <x>340</x>
       <y>60</y>
       <width>100</width>
       <height>23</height>
@@ -78,7 +78,7 @@
    <widget class="QPushButton" name="btnOpen">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>10</x>
       <y>60</y>
       <width>100</width>
       <height>23</height>
@@ -91,13 +91,26 @@
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QPushButton" name="btnPause">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>60</y>
+      <width>100</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Pause</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>509</width>
+     <width>577</width>
      <height>21</height>
     </rect>
    </property>

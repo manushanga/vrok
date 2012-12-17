@@ -1,4 +1,8 @@
 /*
+    Vrok - smokin' audio
+    (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+    hold. Vrok only redistributes this file, without modifications.
+
     DeaDBeeF - ultimate music player for GNU/Linux systems with X11
     Copyright (C) 2009-2012 Alexey Yakovenko <waker@users.sourceforge.net>
 

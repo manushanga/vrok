@@ -1,3 +1,11 @@
+/*
+  Vrok - smokin' audio
+  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
+
 #include "player_mpeg.h"
 #include "effect.h"
 
@@ -21,7 +29,7 @@ void MPEGPlayer::reader()
 
     while (work) {
 
-        if (stopped)
+        if (paused)
             mutex_pause->lock();
 
         while (done<count*sizeof(short) && err != MPG123_DONE){
@@ -60,24 +68,25 @@ void MPEGPlayer::reader()
 
 int MPEGPlayer::open(char *url)
 {
-     if (mpg123_open(mh, url) != MPG123_OK) {
-         DBG("MPEGPlayer:open open file fail");
-         return -1;
-     }
-     int channels, encoding;
-     long rate;
-     if (mpg123_getformat(mh, &rate, &channels, &encoding) != MPG123_OK){
-         DBG("MPEGPlayer:open getformat fail");
-         return -1;
-     }
-     if (buffer!=NULL)
-         delete buffer;
-     buffer = new short[((VPlayer *)this)->BUFFER_FRAMES*((VPlayer *)this)->track_channels*2];
-     ((VPlayer *) this)->mutexes[0]->unlock();
-     ((VPlayer *) this)->mutexes[2]->unlock();
-     DBG("asd");
-     mpg123_format_none(mh);
-     mpg123_format(mh, rate, channels, encoding);
+    reset();
+    if (mpg123_open(mh, url) != MPG123_OK) {
+        DBG("MPEGPlayer:open open file fail");
+        return -1;
+    }
+    int channels, encoding;
+    long rate;
+    if (mpg123_getformat(mh, &rate, &channels, &encoding) != MPG123_OK){
+        DBG("MPEGPlayer:open getformat fail");
+        return -1;
+    }
+    if (buffer!=NULL)
+        delete buffer;
+    buffer = new short[((VPlayer *)this)->BUFFER_FRAMES*((VPlayer *)this)->track_channels*2];
+    ((VPlayer *) this)->mutexes[0]->unlock();
+    ((VPlayer *) this)->mutexes[2]->unlock();
+    DBG("asd");
+    mpg123_format_none(mh);
+    mpg123_format(mh, rate, channels, encoding);
 }
 
 int MPEGPlayer::setVolume(unsigned vol)
@@ -98,6 +107,8 @@ unsigned long MPEGPlayer::getPosition()
 }
 MPEGPlayer::~MPEGPlayer()
 {
+    if (buffer)
+        delete buffer;
     this->~VPlayer();
 }
 

@@ -1,3 +1,11 @@
+/*
+  Vrok - smokin' audio
+  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
+
 #include "player_flac.h"
 #include "effect.h"
 
@@ -10,7 +18,8 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder,
     FLACPlayer *me = (FLACPlayer*) client_data;
     bool changed=false;
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
-        if (me->prev_track_samples != metadata->data.stream_info.sample_rate)
+
+        /*if (me->prev_track_samples != metadata->data.stream_info.sample_rate)
             me->track_samples =  metadata->data.stream_info.sample_rate;
         else
             changed=true;
@@ -22,7 +31,7 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder,
 
         if (changed){
             // restart out engine
-        }
+        }*/
     }
 }
 
@@ -57,7 +66,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 
     if (!self->work)
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-    if (self->stopped)
+    if (self->paused)
         self->mutex_pause->lock();
 
     if (selfp->buffer_write+frame->header.blocksize*self->track_channels + 1 < VPlayer::BUFFER_FRAMES*2*self->track_channels){

@@ -1,3 +1,11 @@
+/*
+  Vrok - smokin' audio
+  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
+
 #include <unistd.h>
 
 #include "vrokmain.h"
@@ -33,6 +41,8 @@ VrokMain::VrokMain(QWidget *parent) :
     //sleep(1);
     //vp->play();
     //vp->end();
+
+    ui->txtFile->setText(QString::fromWCharArray(L"/media/ENT/Songs/Audios/සිංහල/Athma Liyanage/Sanda Hiru Thaarakaa.mp3"));
     vp=NULL;
 }
 
@@ -40,6 +50,10 @@ void VrokMain::on_btnStop_clicked()
 {
 
     vp->stop();
+}
+void VrokMain::on_btnPause_clicked()
+{
+    vp->pause();
 }
 void VrokMain::on_btnPlay_clicked()
 {
@@ -50,9 +64,9 @@ void VrokMain::on_btnOpen_clicked()
 {
     if (vp)
         delete vp;
-    ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
-                                                    "",
-                                                    tr("Supported Files (*.flac *.mp3)")));
+    ///ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
+      //                                              "",
+      //                                              tr("Supported Files (*.flac *.mp3)")));
 
     if (ui->txtFile->text().endsWith(".flac",Qt::CaseInsensitive) == true) {
         vp= new FLACPlayer();

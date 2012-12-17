@@ -42,4 +42,5 @@ HEADERS  += vrokmain.h \
 FORMS    += vrokmain.ui
 
 OTHER_FILES += \
-    README.md
+    README.md \
+    LICENSE

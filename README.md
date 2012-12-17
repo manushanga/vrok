@@ -1,10 +1,10 @@
 vrok
 ====
 
-plays FLAC, MPEG and AAC(planned)
-Shibatch SuperEQ
-Windows support and JACK support is planned
-Gapless, not implemented yet
+plays FLAC, MPEG and AAC(planned)<br>
+Shibatch SuperEQ<br>
+Windows support and JACK support is planned<br>
+Gapless, not implemented yet<br>
 
 Compiling
 ---------
@@ -21,3 +21,8 @@ Running
 <pre>
 ./vrok
 </pre>
+
+License
+-------
+
+Distributed under terms of GPL 2.0, for more see LICENSE.

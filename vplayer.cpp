@@ -1,3 +1,19 @@
+/*
+  Vrok - smokin' audio
+  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
+/*
+  Notes
+  A file is played on play_worker thread, the mutexes[0], mutexes[2], mutex_pause
+  control it's states. Pausing is done by invoking a try_lock() and the thread
+  locks itself up next time it reaches mutex_pause->lock(), paused should be true.
+
+  Only play_worker is managed here.
+*/
+
 #include <thread>
 
 #include "vplayer.h"
@@ -8,7 +24,30 @@ void VPlayer::play_work(VPlayer *self)
 {
     self->reader();
 }
+void VPlayer::reset()
+{
+    // gather play worker
+    DBG("at reset");
+    if (play_worker){
+        work=false;
 
+        // make sure its not locked
+        paused = false;
+        mutex_pause->unlock();
+        mutexes[0]->unlock();
+        mutexes[2]->unlock();
+
+        play_worker->join();
+        delete play_worker;
+        play_worker = NULL;
+    }
+    // prepare muxtexes for new run
+    mutexes[0]->try_lock();
+    mutexes[1]->try_lock();
+    mutexes[2]->try_lock();
+    mutexes[3]->try_lock();
+
+}
 VPlayer::VPlayer()
 {
     track_channels = 0;
@@ -21,8 +60,8 @@ VPlayer::VPlayer()
         mutexes[i] = new std::mutex();
         mutexes[i]->try_lock();
     }
-    mutex_play = new std::mutex();
-    mutex_play->unlock();
+    mutex_control = new std::mutex();
+    mutex_control->unlock();
     mutex_pause = new std::mutex();
     mutex_pause->unlock();
 
@@ -48,7 +87,7 @@ int VPlayer::play()
 {
     if (paused || stopped) {
         work = true;
-        mutex_play->lock();
+        mutex_control->lock();
 
         paused = false;
         stopped = false;
@@ -61,7 +100,7 @@ int VPlayer::play()
         }
 
         vpout->resume();
-        mutex_play->unlock();
+        mutex_control->unlock();
 
     }
     return 1;
@@ -70,22 +109,25 @@ int VPlayer::play()
 void VPlayer::pause()
 {
     if (paused ==false) {
-        mutex_play->lock();
+        mutex_control->lock();
         vpout->pause();
         paused = true;
         mutex_pause->try_lock();
-        mutex_play->unlock();
+        while(mutexes[0]->try_lock()||
+              mutexes[1]->try_lock()||
+              mutexes[2]->try_lock()||
+              mutexes[3]->try_lock()){}
+        mutex_control->unlock();
     }
 }
 void VPlayer::ended()
 {
     work=false;
-    mutex_play->lock();
+    mutex_control->lock();
 
-    mutex_play->unlock();
+    mutex_control->unlock();
     // its going to die anyway
     play_worker= NULL;
-
 }
 void VPlayer::stop()
 {
@@ -97,7 +139,7 @@ void VPlayer::stop()
         delete play_worker;
         play_worker = NULL;
 
-        mutex_play->lock();
+        mutex_control->lock();
         vpout->pause();
         stopped = true;
         mutex_pause->try_lock();
@@ -105,7 +147,7 @@ void VPlayer::stop()
               mutexes[1]->try_lock()||
               mutexes[2]->try_lock()||
               mutexes[3]->try_lock()){}
-        mutex_play->unlock();
+        mutex_control->unlock();
 
 
     }
@@ -119,9 +161,8 @@ void VPlayer::post_process(float *buffer)
 
 VPlayer::~VPlayer()
 {
-    work = false;
-    if (play_worker)
-        play_worker->join();
+    // we want to die a peacful death, free of locks!
+    reset();
     DBG("VPLyer delete");
 
 }

@@ -2,6 +2,13 @@
 #define VROKMAIN_H
 
 #include <QMainWindow>
+/*
+  Vrok - smokin' audio
+  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
 
 #include <vplayer.h>
 
@@ -19,6 +26,7 @@ public:
 
 public slots:
     void on_btnPlay_clicked();
+    void on_btnPause_clicked();
     void on_btnStop_clicked();
     void on_btnOpen_clicked();
     void on_btnFX_clicked();
