@@ -110,10 +110,11 @@ void VPlayer::stop()
 {
     if (!paused) {
         mutex_control->lock();
+
+        setPosition(0);
         vpout->pause();
         paused = true;
         mutex_pause->try_lock();
-        setPosition(0);
         mutex_control->unlock();
     }
 }

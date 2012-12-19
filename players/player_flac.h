@@ -19,6 +19,7 @@ public:
     FLAC__StreamDecoder *decoder;
     FLAC__StreamDecoderInitStatus init_status;
     float *buffer;
+    uint64_t set_pos;
     unsigned buffer_write;
 
     FLACPlayer();

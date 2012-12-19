@@ -5,6 +5,7 @@
 
   See LICENSE for details.
 */
+#include <cstdint>
 
 #include "player_flac.h"
 #include "effect.h"
@@ -56,8 +57,14 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
     //  write full buffers to buffer1 buffer2
     //  write remaining to buffer
     //  return ok
-    if (self->paused)
+    if (self->paused){
+        DBG(selfp->set_pos);
+
         self->mutex_pause->lock();
+        // do the position change
+        DBG(selfp->set_pos);
+
+    }
 
     if (!self->work)
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
@@ -130,7 +137,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         }
         self->post_process(self->buffer1);
         self->mutexes[1]->unlock();
-        DBG("s3");
+        //DBG("s3");
         self->mutexes[2]->lock();
         j=0;
         // write buffer2
@@ -190,7 +197,7 @@ FLACPlayer::FLACPlayer()
         DBG("FLACPlayer:open: decoder create fail");
     }
     init_status = FLAC__STREAM_DECODER_INIT_STATUS_ERROR_OPENING_FILE;
-
+    set_pos=UINT64_MAX;
 }
 
 FLACPlayer::~FLACPlayer()
@@ -236,7 +243,11 @@ unsigned long FLACPlayer::getLength()
 }
 void FLACPlayer::setPosition(unsigned long t)
 {
-    FLAC__stream_decoder_seek_absolute(decoder, (uint64_t) t);
+    // worst seeking evaar!
+    set_pos = (uint64_t)t;
+    FLAC__stream_decoder_skip_single_frame(decoder);
+    FLAC__stream_decoder_seek_absolute(decoder, set_pos);
+
 }
 unsigned long FLACPlayer::getPosition()
 {
