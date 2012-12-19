@@ -36,18 +36,21 @@ int AACPlayer::open(const char *url)
     fseek(f,read,SEEK_SET);
 
     vpout_open();
+    return 0;
 }
 
 void AACPlayer::reader()
 {
     unsigned char buffer[BUFFER_SIZE];
 
-    size_t read, fpos=(size_t)ftell(f);
+    size_t read, fpos=(size_t)ftell(f), write;
     NeAACDecFrameInfo hfinfo;
     memset(&hfinfo,0,sizeof(NeAACDecFrameInfo));
     while (!feof(f)){
         read = fread(buffer,BUFFER_SIZE,1,f);
         float *samples=NeAACDecDecode(decoder,hfinfo,buffer,read);
+        write=hfinfo.samples;
+        while (write>)
         fpos += hfinfo.bytesconsumed;
         fseek(f,fpos,SEEK_SET);
 
@@ -57,7 +60,7 @@ void AACPlayer::reader()
 
 unsigned long AACPlayer::getLength()
 {
-
+    return 0;
 }
 
 void AACPlayer::setPosition(unsigned long t)
@@ -66,7 +69,7 @@ void AACPlayer::setPosition(unsigned long t)
 }
 unsigned long AACPlayer::getPosition()
 {
-
+    return 0;
 }
 AACPlayer::~AACPlayer()
 {
