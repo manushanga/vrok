@@ -206,7 +206,7 @@ FLACPlayer::~FLACPlayer()
    // this->~VPlayer();
 }
 
-int FLACPlayer::open(char *url)
+int FLACPlayer::open(const char *url)
 {
     if (buffer != NULL)
         delete buffer;

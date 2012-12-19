@@ -52,18 +52,24 @@ public:
     unsigned track_channels;
 
     VPlayer();
-    void reset();
-    virtual int open(char *url) = 0;
+
+    // internal interface
     static void play_work(VPlayer *self);
-    virtual void reader() = 0;
+    void reset();
+    void vpout_open();
     void vpout_close();
+    virtual void reader() = 0;
+    void ended();
+    void post_process(float *buffer);
+
+    // external
+    virtual int open(const char *url) = 0;
     int play();
     void pause();
     void stop();
-    void post_process(float *buffer);
-    void ended();
     void setVolume(float vol);
     float getVolume();
+    bool enqueGapless(const char *url);
     virtual unsigned long getLength() = 0;
     virtual void setPosition(unsigned long t) = 0;
     virtual unsigned long getPosition() = 0;

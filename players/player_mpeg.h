@@ -20,7 +20,7 @@ public:
     short *buffer;
 
     MPEGPlayer();
-    int open(char *url);
+    int open(const char *url);
     void reader();
     unsigned long getLength();
     void setPosition(unsigned long t);

@@ -6,7 +6,7 @@
 
 CONFIG   += qt thread
 QT       += core gui
-LIBS     += -lsupc++ -lm -lasound -lFLAC -lmpg123
+LIBS     += -lsupc++ -lm -lasound -lFLAC -lmpg123 -lfaad
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     players/player_flac.cpp \
     players/player_mpeg.cpp \
     effects/effect_eq.cpp \
-    effect.cpp
+    effect.cpp \
+    players/player_aac.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -38,7 +39,8 @@ HEADERS  += vrokmain.h \
     players/player_flac.h \
     players/player_mpeg.h \
     effect.h \
-    effects/effect_eq.h
+    effects/effect_eq.h \
+    players/player_aac.h
 
 FORMS    += vrokmain.ui
 

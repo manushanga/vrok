@@ -24,6 +24,7 @@ void VPlayer::play_work(VPlayer *self)
 {
     self->reader();
 }
+
 void VPlayer::reset()
 {
     mutex_pause->unlock();
@@ -33,6 +34,7 @@ void VPlayer::reset()
     mutexes[2]->unlock();
     mutexes[3]->try_lock();
 }
+
 VPlayer::VPlayer()
 {
     mutex_control = new std::mutex();
@@ -98,15 +100,12 @@ void VPlayer::pause()
         mutex_control->unlock();
     }
 }
+
 void VPlayer::ended()
 {
 
-//    mutex_control->lock();
-
-//    mutex_control->unlock();
-    // its going to die anyway
-    //play_worker= NULL;
 }
+
 void VPlayer::stop()
 {
     if (!paused) {
@@ -139,6 +138,10 @@ float VPlayer::getVolume()
 {
     return volume;
 }
+void VPlayer::vpout_open()
+{
+
+}
 void VPlayer::vpout_close()
 {
     if (vpout){
@@ -147,4 +150,3 @@ void VPlayer::vpout_close()
         vpout=NULL;
     }
 }
-

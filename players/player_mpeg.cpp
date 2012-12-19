@@ -66,7 +66,7 @@ void MPEGPlayer::reader()
     }
 }
 
-int MPEGPlayer::open(char *url)
+int MPEGPlayer::open(const char *url)
 {
     reset();
     if (mpg123_open(mh, url) != MPG123_OK) {
