@@ -48,9 +48,9 @@ void AACPlayer::reader()
     memset(&hfinfo,0,sizeof(NeAACDecFrameInfo));
     while (!feof(f)){
         read = fread(buffer,BUFFER_SIZE,1,f);
-        float *samples=NeAACDecDecode(decoder,hfinfo,buffer,read);
+        //float *samples=NeAACDecDecode(decoder,hfinfo,buffer,read);
         write=hfinfo.samples;
-        while (write>)
+        //while (write>)
         fpos += hfinfo.bytesconsumed;
         fseek(f,fpos,SEEK_SET);
 
