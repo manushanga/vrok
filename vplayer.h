@@ -21,9 +21,12 @@ class VPEffectPlugin;
 
 class VPlayer
 {
-
 public:
-    static const unsigned BUFFER_FRAMES = 128;
+    // smaller buffers have less cpu usage and more wakeups
+    static const unsigned BUFFER_FRAMES = 256;
+
+    // from 0 to 1
+    float volume;
 
     float *buffer1;
     float *buffer2;
@@ -43,9 +46,9 @@ public:
     VPEffectPlugin *vpeffect;
     VPOutPlugin *vpout;
 
-    unsigned prev_track_samples;
+    unsigned prev_track_samplerate;
     unsigned prev_track_channels;
-    unsigned track_samples;
+    unsigned track_samplerate;
     unsigned track_channels;
 
     VPlayer();
@@ -53,16 +56,18 @@ public:
     virtual int open(char *url) = 0;
     static void play_work(VPlayer *self);
     virtual void reader() = 0;
+    void vpout_close();
     int play();
     void pause();
     void stop();
     void post_process(float *buffer);
     void ended();
-    virtual int setVolume(unsigned vol) = 0;
+    void setVolume(float vol);
+    float getVolume();
     virtual unsigned long getLength() = 0;
     virtual void setPosition(unsigned long t) = 0;
     virtual unsigned long getPosition() = 0;
-    virtual ~VPlayer();
+    virtual ~VPlayer() ;
 };
 
 

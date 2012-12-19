@@ -43,14 +43,14 @@ void MPEGPlayer::reader()
 
             mutexes[0]->lock();
             for (size_t i=0;i<count/2;i++){
-                buffer1[i]=SHORTTOFL*buffer[i];
+                buffer1[i]=SHORTTOFL*buffer[i]*volume;
             }
             post_process(buffer1);
             mutexes[1]->unlock();
 
             mutexes[2]->lock();
             for (size_t i=0;i<count/2;i++){
-                buffer2[i]=SHORTTOFL*buffer[count/2+i];
+                buffer2[i]=SHORTTOFL*buffer[count/2+i]*volume;
             }
             post_process(buffer2);
             mutexes[3]->unlock();
@@ -60,8 +60,8 @@ void MPEGPlayer::reader()
             break;
         }
     }
-    // stub for handling track end
-    if (work){
+
+    if (work && err == MPG123_DONE){
         ended();
     }
 }
@@ -79,36 +79,43 @@ int MPEGPlayer::open(char *url)
         DBG("MPEGPlayer:open getformat fail");
         return -1;
     }
+    prev_track_channels = track_channels;
+    prev_track_samplerate = track_samplerate;
+
+    track_channels = (unsigned) channels;
+    track_samplerate = (unsigned) rate;
+
     if (buffer!=NULL)
         delete buffer;
     buffer = new short[((VPlayer *)this)->BUFFER_FRAMES*((VPlayer *)this)->track_channels*2];
     ((VPlayer *) this)->mutexes[0]->unlock();
     ((VPlayer *) this)->mutexes[2]->unlock();
-    DBG("asd");
+
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
+
+    return 0;
 }
 
-int MPEGPlayer::setVolume(unsigned vol)
-{
-    return 0;
-}
 unsigned long MPEGPlayer::getLength()
 {
-    return 0;
+    mpg123_seek(mh, (off_t) 0, SEEK_END);
+    off_t pos=mpg123_tell(mh);
+    return (unsigned long)pos;
 }
 void MPEGPlayer::setPosition(unsigned long t)
 {
-
+    mpg123_seek(mh, (off_t) t, SEEK_SET);
 }
 unsigned long MPEGPlayer::getPosition()
 {
-    return 0;
+    return (unsigned long)mpg123_tell(mh);
 }
 MPEGPlayer::~MPEGPlayer()
 {
+    pause();
+    vpout_close();
     if (buffer)
         delete buffer;
-    this->~VPlayer();
 }
 

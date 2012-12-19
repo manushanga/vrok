@@ -13,8 +13,8 @@ static float sb_bands[18]= {1.3f,1.5f,1.4f,1.2f,0.7f,0.5f,
 
 void VPEffectPluginEQ::sb_recalc_table()
 {
-    //this->owner->mutexes[0]->lock();
-    //this->owner->mutexes[2]->lock();
+   // this->owner->mutexes[0]->lock();
+   // this->owner->mutexes[2]->lock();
 
     void *params = paramlist_alloc ();
 
@@ -24,7 +24,7 @@ void VPEffectPluginEQ::sb_recalc_table()
         bands_copy[i] *= sb_preamp;
     }
 
-    equ_makeTable (&sb_state, bands_copy, params, owner->track_samples);
+    equ_makeTable (&sb_state, bands_copy, params, owner->track_samplerate);
 
     paramlist_free (sb_paramsroot);
     sb_paramsroot = params;

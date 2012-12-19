@@ -4,8 +4,9 @@
 #
 #-------------------------------------------------
 
+CONFIG   += qt thread
 QT       += core gui
-LIBS     += -lsupc++ -lm -lpthread -lasound -lFLAC -lmpg123
+LIBS     += -lsupc++ -lm -lasound -lFLAC -lmpg123
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

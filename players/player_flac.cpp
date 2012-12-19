@@ -18,20 +18,13 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder,
     FLACPlayer *me = (FLACPlayer*) client_data;
     bool changed=false;
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
+        me->prev_track_channels = me->track_channels;
+        me->prev_track_samplerate = me->track_samplerate;
 
-        /*if (me->prev_track_samples != metadata->data.stream_info.sample_rate)
-            me->track_samples =  metadata->data.stream_info.sample_rate;
-        else
-            changed=true;
+        me->track_channels = metadata->data.stream_info.channels;
+        me->track_samplerate = metadata->data.stream_info.sample_rate;
+        DBG("meta ok");
 
-        if (me->prev_track_channels != metadata->data.stream_info.channels)
-            me->track_channels =  metadata->data.stream_info.channels;
-        else
-            changed=true;
-
-        if (changed){
-            // restart out engine
-        }*/
     }
 }
 
@@ -63,18 +56,19 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
     //  write full buffers to buffer1 buffer2
     //  write remaining to buffer
     //  return ok
+    if (self->paused)
+        self->mutex_pause->lock();
 
     if (!self->work)
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-    if (self->paused)
-        self->mutex_pause->lock();
+
 
     if (selfp->buffer_write+frame->header.blocksize*self->track_channels + 1 < VPlayer::BUFFER_FRAMES*2*self->track_channels){
         size_t i=0,j=0;
         DBG("s1");
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[selfp->buffer_write+j]=SHORTTOFL*buffer[ch][i];
+                selfp->buffer[selfp->buffer_write+j]=SHORTTOFL*buffer[ch][i]*selfp->volume;
                 j++;
             }
             i++;
@@ -87,7 +81,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[selfp->buffer_write+j]=SHORTTOFL*buffer[ch][i];
+                selfp->buffer[selfp->buffer_write+j]=SHORTTOFL*buffer[ch][i]*selfp->volume;
                 j++;
             }
             i++;
@@ -98,7 +92,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         DBG("wb1");
         // write buffer1
         while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
-            self->buffer1[j] = selfp->buffer[j];
+            self->buffer1[j] = selfp->buffer[j]*selfp->volume;
             j++;
         }
         self->post_process(self->buffer1);
@@ -109,7 +103,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         DBG("wb2");
         // write buffer2
         while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
-            self->buffer2[j] = selfp->buffer[VPlayer::BUFFER_FRAMES*self->track_channels+j];
+            self->buffer2[j] = selfp->buffer[VPlayer::BUFFER_FRAMES*self->track_channels+j]*selfp->volume;
             j++;
         }
         self->post_process(self->buffer2);
@@ -121,7 +115,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         size_t i=0,j=selfp->buffer_write;
         while (j<VPlayer::BUFFER_FRAMES*2*self->track_channels) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[j]=SHORTTOFL*buffer[ch][i];
+                selfp->buffer[j]=SHORTTOFL*buffer[ch][i]*selfp->volume;
                 j++;
             }
             i++;
@@ -131,7 +125,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         j=0;
         // write buffer1
         while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
-            self->buffer1[j] = selfp->buffer[j];
+            self->buffer1[j] = selfp->buffer[j]*selfp->volume;
             j++;
         }
         self->post_process(self->buffer1);
@@ -141,7 +135,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         j=0;
         // write buffer2
         while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
-            self->buffer2[j] = selfp->buffer[VPlayer::BUFFER_FRAMES*self->track_channels+j];
+            self->buffer2[j] = selfp->buffer[VPlayer::BUFFER_FRAMES*self->track_channels+j]*selfp->volume;
             j++;
         }
         self->post_process(self->buffer2);
@@ -153,7 +147,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             // write buffer1
             while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
                 for (unsigned ch=0;ch<self->track_channels;ch++){
-                    self->buffer1[j]=SHORTTOFL*buffer[ch][i];
+                    self->buffer1[j]=SHORTTOFL*buffer[ch][i]*selfp->volume;
                     j++;
                 }
                 i++;
@@ -166,7 +160,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             // write buffer2
             while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
                 for (unsigned ch=0;ch<self->track_channels;ch++){
-                    selfp->buffer2[j]=SHORTTOFL*buffer[ch][i];
+                    selfp->buffer2[j]=SHORTTOFL*buffer[ch][i]*selfp->volume;
                     j++;
                 }
                 i++;
@@ -178,7 +172,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         j=0;
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[j]=SHORTTOFL*buffer[ch][i];
+                selfp->buffer[j]=SHORTTOFL*buffer[ch][i]*selfp->volume;
                 j++;
             }
             i++;
@@ -191,6 +185,7 @@ FLACPlayer::FLACPlayer()
 {
     buffer = NULL;
     decoder = NULL;
+    reset();
     if ((decoder = FLAC__stream_decoder_new()) == NULL) {
         DBG("FLACPlayer:open: decoder create fail");
     }
@@ -200,17 +195,19 @@ FLACPlayer::FLACPlayer()
 
 FLACPlayer::~FLACPlayer()
 {
+    pause();
+    vpout_close();
     FLAC__stream_decoder_delete(decoder);
 
     if (buffer != NULL)
         delete buffer;
     buffer_write = 0;
-    this->~VPlayer();
+    DBG("Flac delete");
+   // this->~VPlayer();
 }
 
 int FLACPlayer::open(char *url)
 {
-
     if (buffer != NULL)
         delete buffer;
 
@@ -219,7 +216,11 @@ int FLACPlayer::open(char *url)
     init_status = FLAC__stream_decoder_init_file(decoder, url, write_callback, metadata_callback, error_callback, (void *) this);
     if (init_status != FLAC__STREAM_DECODER_INIT_STATUS_OK){
         DBG("FLACPlayer:open: decoder init fail");
+        return -1;
+    } else {
+        FLAC__stream_decoder_process_until_end_of_metadata(decoder);
     }
+    return 0;
 }
 void FLACPlayer::reader()
 {
@@ -227,22 +228,19 @@ void FLACPlayer::reader()
        FLAC__stream_decoder_process_until_end_of_stream(decoder);
     }
     ended();
-
 }
 
-int FLACPlayer::setVolume(unsigned vol)
-{
-    return 0;
-}
 unsigned long FLACPlayer::getLength()
 {
-    return 0;
+    return (unsigned long)FLAC__stream_decoder_get_total_samples(decoder);
 }
 void FLACPlayer::setPosition(unsigned long t)
 {
-
+    FLAC__stream_decoder_seek_absolute(decoder, (uint64_t) t);
 }
 unsigned long FLACPlayer::getPosition()
 {
-    return 0;
+    uint64_t pos=0;
+    FLAC__stream_decoder_get_decode_position(decoder, &pos);
+    return (unsigned long) pos;
 }

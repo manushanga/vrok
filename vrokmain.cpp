@@ -42,7 +42,6 @@ VrokMain::VrokMain(QWidget *parent) :
     //vp->play();
     //vp->end();
 
-    ui->txtFile->setText(QString::fromWCharArray(L"/media/ENT/Songs/Audios/සිංහල/Athma Liyanage/Sanda Hiru Thaarakaa.mp3"));
     vp=NULL;
 }
 
@@ -64,9 +63,9 @@ void VrokMain::on_btnOpen_clicked()
 {
     if (vp)
         delete vp;
-    ///ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
-      //                                              "",
-      //                                              tr("Supported Files (*.flac *.mp3)")));
+    ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
+                                                    "",
+                                                    tr("Supported Files (*.flac *.mp3)")));
 
     if (ui->txtFile->text().endsWith(".flac",Qt::CaseInsensitive) == true) {
         vp= new FLACPlayer();

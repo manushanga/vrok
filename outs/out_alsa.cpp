@@ -15,8 +15,14 @@ static void worker_run(VPOutPluginAlsa *self)
 {
     int ret;
     while (self->work){
-        if (self->paused)
+        if (self->paused){
+            // we do alsa syncs here, instead of the calling thread
+            // because of thread syncing problems
+            snd_pcm_drain(self->handle);
             self->mutex_pause->lock();
+            snd_pcm_prepare (self->handle);
+            snd_pcm_start (self->handle);
+        }
 
         self->owner->mutexes[1]->lock();
         ret = snd_pcm_writei(self->handle,
@@ -32,6 +38,7 @@ static void worker_run(VPOutPluginAlsa *self)
         if (ret < 0 && ret != -EAGAIN){
             DBG("Alsa:run: write error "<<ret);
         }
+
     }
 
 }
@@ -44,15 +51,11 @@ void VPOutPluginAlsa::resume()
 {
     paused = false;
     mutex_pause->unlock();
-    snd_pcm_prepare (handle);
-    snd_pcm_start (handle);
 }
 void VPOutPluginAlsa::pause()
 {
     paused = true;
     mutex_pause->try_lock();
-    snd_pcm_drain (handle);
-
 }
 
 int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
@@ -120,9 +123,16 @@ unsigned VPOutPluginAlsa::getChannels()
 int VPOutPluginAlsa::finit()
 {
     work=false;
-    worker->join();
-    delete worker;
-    worker=NULL;
+    if(!paused)
+        pause();
+    owner->mutexes[1]->unlock();
+    owner->mutexes[3]->unlock();
+
+    resume();
+    if (worker){
+        worker->join();
+        delete worker;
+    }
     delete mutex_pause;
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
