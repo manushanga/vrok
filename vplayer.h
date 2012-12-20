@@ -1,3 +1,4 @@
+
 /*
   Vrok - smokin' audio
   (C) 2012 Madura A. released under GPL 2.0. All following copyrights
@@ -35,11 +36,8 @@ public:
     std::mutex *mutexes[4];
     // play, pause, stop event control
     std::mutex *mutex_control;
-    // mutex for pausing, lock this mutex for pausing
-    std::mutex *mutex_pause;
     bool work;
     bool paused;
-    bool stopped;
     bool effects;
 
     std::thread *play_worker;
@@ -70,6 +68,7 @@ public:
     void setVolume(float vol);
     float getVolume();
     bool enqueGapless(const char *url);
+    bool isPlaying();
     virtual unsigned long getLength() = 0;
     virtual void setPosition(unsigned long t) = 0;
     virtual unsigned long getPosition() = 0;

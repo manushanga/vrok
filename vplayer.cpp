@@ -27,8 +27,6 @@ void VPlayer::play_work(VPlayer *self)
 
 void VPlayer::reset()
 {
-    mutex_pause->unlock();
-
     mutexes[0]->unlock();
     mutexes[1]->try_lock();
     mutexes[2]->unlock();
@@ -51,9 +49,6 @@ VPlayer::VPlayer()
         mutexes[i] = new std::mutex();
         mutexes[i]->try_lock();
     }
-
-    mutex_pause = new std::mutex();
-    mutex_pause->try_lock();
 
     play_worker = NULL;
     work=false;
@@ -80,7 +75,6 @@ int VPlayer::play()
         work = true;
         mutex_control->lock();
         paused = false;
-        mutex_pause->unlock();
         vpout->resume();
         if (!play_worker){
             play_worker = new std::thread(VPlayer::play_work, this);
@@ -96,11 +90,13 @@ void VPlayer::pause()
         mutex_control->lock();
         vpout->pause();
         paused = true;
-        mutex_pause->try_lock();
         mutex_control->unlock();
     }
 }
-
+bool VPlayer::isPlaying()
+{
+    return !paused;
+}
 void VPlayer::ended()
 {
 
@@ -110,11 +106,9 @@ void VPlayer::stop()
 {
     if (!paused) {
         mutex_control->lock();
-
         setPosition(0);
         vpout->pause();
         paused = true;
-        mutex_pause->try_lock();
         mutex_control->unlock();
     }
 }

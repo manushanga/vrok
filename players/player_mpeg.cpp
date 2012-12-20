@@ -28,10 +28,6 @@ void MPEGPlayer::reader()
     size_t count = ((VPlayer *)this)->BUFFER_FRAMES*((VPlayer *)this)->track_channels*2;
 
     while (work) {
-
-        if (paused)
-            mutex_pause->lock();
-
         while (done<count*sizeof(short) && err != MPG123_DONE){
             err = mpg123_read( mh, ((unsigned char *) buffer)+done, count*sizeof(short)-done, &done );
         }

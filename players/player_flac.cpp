@@ -6,6 +6,7 @@
   See LICENSE for details.
 */
 #include <cstdint>
+#include <cstring>
 
 #include "player_flac.h"
 #include "effect.h"
@@ -25,7 +26,7 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder,
         me->track_channels = metadata->data.stream_info.channels;
         me->track_samplerate = metadata->data.stream_info.sample_rate;
         DBG("meta ok");
-
+        me->half_buffer_bytes = VPlayer::BUFFER_FRAMES*me->track_channels*sizeof(float);
     }
 }
 
@@ -57,14 +58,6 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
     //  write full buffers to buffer1 buffer2
     //  write remaining to buffer
     //  return ok
-    if (self->paused){
-        DBG(selfp->set_pos);
-
-        self->mutex_pause->lock();
-        // do the position change
-        DBG(selfp->set_pos);
-
-    }
 
     if (!self->work)
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
@@ -98,10 +91,11 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         j=0;
         DBG("wb1");
         // write buffer1
-        while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
-            self->buffer1[j] = selfp->buffer[j]*selfp->volume;
+        memcpy(self->buffer1,selfp->buffer,selfp->half_buffer_bytes );
+        /*while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
+            self->buffer1[j] = selfp->buffer[j];
             j++;
-        }
+        }*/
         self->post_process(self->buffer1);
         self->mutexes[1]->unlock();
 
@@ -109,10 +103,12 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         j=0;
         DBG("wb2");
         // write buffer2
+        memcpy(self->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
+        /*
         while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
             self->buffer2[j] = selfp->buffer[VPlayer::BUFFER_FRAMES*self->track_channels+j]*selfp->volume;
             j++;
-        }
+        }*/
         self->post_process(self->buffer2);
         self->mutexes[3]->unlock();
 
@@ -131,20 +127,16 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         self->mutexes[0]->lock();
         j=0;
         // write buffer1
-        while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
-            self->buffer1[j] = selfp->buffer[j]*selfp->volume;
-            j++;
-        }
+        memcpy(self->buffer1,selfp->buffer,selfp->half_buffer_bytes);
+
         self->post_process(self->buffer1);
         self->mutexes[1]->unlock();
         //DBG("s3");
         self->mutexes[2]->lock();
         j=0;
         // write buffer2
-        while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
-            self->buffer2[j] = selfp->buffer[VPlayer::BUFFER_FRAMES*self->track_channels+j]*selfp->volume;
-            j++;
-        }
+        memcpy(self->buffer2,(char *)selfp->buffer+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
+
         self->post_process(self->buffer2);
         self->mutexes[3]->unlock();
 
@@ -197,7 +189,6 @@ FLACPlayer::FLACPlayer()
         DBG("FLACPlayer:open: decoder create fail");
     }
     init_status = FLAC__STREAM_DECODER_INIT_STATUS_ERROR_OPENING_FILE;
-    set_pos=UINT64_MAX;
 }
 
 FLACPlayer::~FLACPlayer()
@@ -244,9 +235,8 @@ unsigned long FLACPlayer::getLength()
 void FLACPlayer::setPosition(unsigned long t)
 {
     // worst seeking evaar!
-    set_pos = (uint64_t)t;
     FLAC__stream_decoder_skip_single_frame(decoder);
-    FLAC__stream_decoder_seek_absolute(decoder, set_pos);
+    FLAC__stream_decoder_seek_absolute(decoder, (uint64_t)t);
 
 }
 unsigned long FLACPlayer::getPosition()

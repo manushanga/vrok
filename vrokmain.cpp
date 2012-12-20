@@ -12,8 +12,11 @@
 #include "ui_vrokmain.h"
 #include "vputils.h"
 #include "vplayer.h"
+
 #include "players/player_flac.h"
 #include "players/player_mpeg.h"
+#include "players/player_ogg.h"
+
 #include <QFileDialog>
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
@@ -65,12 +68,14 @@ void VrokMain::on_btnOpen_clicked()
         delete vp;
     ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
                                                     "",
-                                                    tr("Supported Files (*.flac *.mp3)")));
+                                                    tr("Supported Files (*.flac *.mp3 *.ogg)")));
 
     if (ui->txtFile->text().endsWith(".flac",Qt::CaseInsensitive) == true) {
         vp= new FLACPlayer();
-    } else {
+    } else if (ui->txtFile->text().endsWith(".mp3",Qt::CaseInsensitive) == true){
         vp = new MPEGPlayer();
+    } else {
+        vp = new OGGPlayer();
     }
 
     vp->open((char *)ui->txtFile->text().toUtf8().data() );

@@ -1,22 +1,22 @@
 #ifndef PLAYER_AAC_H
 #define PLAYER_AAC_H
-#include <stdlib.h>
-#include <neaacdec.h>
+
+#include <vorbis/vorbisfile.h>
 #include "../vplayer.h"
 
-class AACPlayer : public VPlayer
+class OGGPlayer : public VPlayer
 {
 public:
-    NeAACDecHandle decoder;
-    FILE *f;
-    size_t read_head;
+    OggVorbis_File vf;
+    OGGPlayer();
+    float *buffer;
+    unsigned half_buffer_size;
 
-    AACPlayer();
     int open(const char *url);
     void reader();
     unsigned long getLength();
     void setPosition(unsigned long t);
     unsigned long getPosition();
-    ~AACPlayer();
+    ~OGGPlayer();
 };
 #endif // PLAYER_AAC_H

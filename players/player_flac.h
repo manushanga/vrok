@@ -19,8 +19,8 @@ public:
     FLAC__StreamDecoder *decoder;
     FLAC__StreamDecoderInitStatus init_status;
     float *buffer;
-    uint64_t set_pos;
     unsigned buffer_write;
+    unsigned half_buffer_bytes;
 
     FLACPlayer();
     int open(const char *url);
