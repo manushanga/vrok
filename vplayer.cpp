@@ -25,14 +25,16 @@ void VPlayer::play_work(VPlayer *self)
     self->reader();
 }
 
-void VPlayer::reset()
+void VPlayer::addEffect(VPEffectPlugin *eff)
 {
-    mutexes[0]->unlock();
-    mutexes[1]->try_lock();
-    mutexes[2]->unlock();
-    mutexes[3]->try_lock();
+    effects.push_back(eff);
 }
+void VPlayer::removeEffect(unsigned idx)
+{
+    delete effects.at(idx);
+    effects.erase(effects.begin()+idx);
 
+}
 VPlayer::VPlayer()
 {
     mutex_control = new std::mutex();
@@ -52,20 +54,15 @@ VPlayer::VPlayer()
 
     play_worker = NULL;
     work=false;
-    effects=false;
+    effects_active=false;
 
-    track_channels = 2;
-    track_samplerate = 44100;
-
-    buffer1 = new float[VPlayer::BUFFER_FRAMES*track_channels];
-    buffer2 = new float[VPlayer::BUFFER_FRAMES*track_channels];
-
-    vpout = (VPOutPlugin *) new VPOutPluginAlsa();
-    vpout->init(this, 44100, 2);
-    vpeffect = (VPEffectPlugin *) new VPEffectPluginEQ();
-    vpeffect->init(this);
     paused = true;
     volume = 1.0f;
+
+    vpout=NULL;
+    gapless_compatible = false;
+    effects.clear();
+
     mutex_control->unlock();
 }
 
@@ -104,26 +101,32 @@ void VPlayer::ended()
 
 void VPlayer::stop()
 {
-    if (!paused) {
-        mutex_control->lock();
-        setPosition(0);
-        vpout->pause();
-        paused = true;
-        mutex_control->unlock();
-    }
+
 }
 
 void VPlayer::post_process(float *buffer)
 {
-    if (effects)
-        vpeffect->process(buffer);
+    if (effects_active){
+        for (std::vector<VPEffectPlugin *>::iterator it=effects.begin();it!=effects.end();it++) {
+            (*it)->process(buffer);
+        }
+    }
+
 }
 
 VPlayer::~VPlayer()
 {
 
 }
-
+void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
+{
+    if (track_channels == channels && track_samplerate == samplerate)
+        gapless_compatible = true;
+    else
+        gapless_compatible = false;
+    track_samplerate = samplerate;
+    track_channels = channels;
+}
 void VPlayer::setVolume(float vol)
 {
     volume = vol;
@@ -133,15 +136,78 @@ float VPlayer::getVolume()
 {
     return volume;
 }
-void VPlayer::vpout_open()
+int VPlayer::vpout_open()
 {
+    int ret;
+    mutex_control->lock();
 
+    mutexes[0]->unlock();
+    mutexes[1]->try_lock();
+    mutexes[2]->unlock();
+    mutexes[3]->try_lock();
+
+    if (buffer1)
+        delete buffer1;
+    if (buffer2)
+        delete buffer2;
+
+    buffer1 = new float[VPlayer::BUFFER_FRAMES*track_channels];
+    buffer2 = new float[VPlayer::BUFFER_FRAMES*track_channels];
+
+
+    if (vpout)
+        delete vpout;
+    vpout = (VPOutPlugin *) new VPOutPluginAlsa();
+    DBG(track_channels);
+    DBG(track_samplerate);
+    DBG(vpout->getChannels());
+    DBG(vpout->getSamplerate());
+
+    if (!gapless_compatible){
+        for (std::vector<VPEffectPlugin *>::iterator it=effects.begin();it!=effects.end();it++) {
+            ret += (*it)->init(this);
+        }
+
+        if (vpout->getChannels() >= track_channels && vpout->getSamplerate() >= track_samplerate)
+            ret += vpout->init(this, track_samplerate, track_channels);
+        else if (vpout->getSamplerate() < track_samplerate){
+            DBG("Can not initialize hardware for this samplerate");
+        } else {
+            DBG("Dropping channels due to hardware incompatibility");
+            track_channels = vpout->getChannels();
+            ret += vpout->init(this, track_samplerate, track_channels);
+        }
+
+    }
+
+    mutex_control->unlock();
+    return ret;
 }
-void VPlayer::vpout_close()
+int VPlayer::vpout_close()
 {
+    mutex_control->lock();
+
+    if(paused)
+        play();
+
+    work=false;
+
+    vpout->pause();
+
+    // let play_worker roll, make sure that only these mutexes are locked once,
+    // if its done multiple times include the work check in between them. see
+    // player_flac.cpp's worker function
+
+    mutexes[0]->unlock();
+    mutexes[2]->unlock();
+
+    play_worker->join();
+    DBG("player thread joined");
     if (vpout){
         vpout->finit();
         delete vpout;
         vpout=NULL;
     }
+    mutex_control->unlock();
+
 }

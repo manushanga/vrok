@@ -9,7 +9,6 @@
 #ifndef EFFECT_EQ_H
 #define EFFECT_EQ_H
 
-#include "../vplayer.h"
 #include "../effect.h"
 #include "shibatch/Equ.h"
 

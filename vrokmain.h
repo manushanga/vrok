@@ -11,7 +11,11 @@
 */
 
 #include <vplayer.h>
+#include "effects/effect_vis.h"
+#include <thread>
+#include <QGraphicsScene>
 
+#define BAR_COUNT 16
 namespace Ui {
 class VrokMain;
 }
@@ -21,6 +25,8 @@ class VrokMain : public QMainWindow
     Q_OBJECT
     
 public:
+    float bars[VPEffectPluginVis::BARS];
+    static void vis_updater(VrokMain *self);
     explicit VrokMain(QWidget *parent = 0);
     ~VrokMain();
 
@@ -31,11 +37,15 @@ public slots:
     void on_btnOpen_clicked();
     void on_btnFX_clicked();
 
+
 private:
     Ui::VrokMain *ui;
     VPlayer *vp;
-
-
+    VPEffectPluginVis *vis;
+    QGraphicsScene *gs;
+    QGraphicsRectItem *gbars[16];
+    std::thread *th;
+    bool visuals;
 };
 
 #endif // VROKMAIN_H

@@ -78,7 +78,7 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     snd_pcm_hw_params_set_period_size(handle, params, PERIOD_SIZE, 0);
 
     if (snd_pcm_hw_params(handle, params) < 0) {
-        DBG("Alsa:init: failed to pcm params");
+        DBG("Alsa:init: failed to set pcm params");
         return -1;
     }
     mutex_pause = new std::mutex();
@@ -91,34 +91,38 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
 
 unsigned VPOutPluginAlsa::getSamplerate()
 {
-    if (snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
+    snd_pcm_t *h;
+    if (snd_pcm_open(&h, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
         DBG("Alsa:getSamplerate: failed to open pcm");
         return 0;
     }
     snd_pcm_hw_params_alloca(&params);
-    snd_pcm_hw_params_any(handle, params);
+    snd_pcm_hw_params_any(h, params);
     unsigned s;
     if (snd_pcm_hw_params_get_rate_max(params, &s, 0) > -1){
         return s;
     } else {
         return 0;
     }
+    snd_pcm_close(h);
 
 }
 unsigned VPOutPluginAlsa::getChannels()
 {
-    if (snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
+    snd_pcm_t *h;
+    if (snd_pcm_open(&h, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
         DBG("Alsa:getChannels: failed to open pcm");
         return 0;
     }
     snd_pcm_hw_params_alloca(&params);
-    snd_pcm_hw_params_any(handle, params);
+    snd_pcm_hw_params_any(h, params);
     unsigned c;
     if (snd_pcm_hw_params_get_channels_max(params, &c) > -1) {
         return c;
     } else {
         return 0;
     }
+    snd_pcm_close(h);
 }
 int VPOutPluginAlsa::finit()
 {
@@ -131,6 +135,7 @@ int VPOutPluginAlsa::finit()
     resume();
     if (worker){
         worker->join();
+        DBG("out thread joined");
         delete worker;
     }
     delete mutex_pause;

@@ -64,7 +64,6 @@ void MPEGPlayer::reader()
 
 int MPEGPlayer::open(const char *url)
 {
-    reset();
     if (mpg123_open(mh, url) != MPG123_OK) {
         DBG("MPEGPlayer:open open file fail");
         return -1;
@@ -75,21 +74,18 @@ int MPEGPlayer::open(const char *url)
         DBG("MPEGPlayer:open getformat fail");
         return -1;
     }
-    prev_track_channels = track_channels;
-    prev_track_samplerate = track_samplerate;
 
-    track_channels = (unsigned) channels;
-    track_samplerate = (unsigned) rate;
+    set_metadata( rate,  channels);
+
 
     if (buffer!=NULL)
         delete buffer;
     buffer = new short[((VPlayer *)this)->BUFFER_FRAMES*((VPlayer *)this)->track_channels*2];
-    ((VPlayer *) this)->mutexes[0]->unlock();
-    ((VPlayer *) this)->mutexes[2]->unlock();
 
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
 
+    vpout_open();
     return 0;
 }
 
@@ -109,7 +105,6 @@ unsigned long MPEGPlayer::getPosition()
 }
 MPEGPlayer::~MPEGPlayer()
 {
-    pause();
     vpout_close();
     if (buffer)
         delete buffer;

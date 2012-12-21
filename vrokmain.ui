@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>577</width>
-    <height>136</height>
+    <width>574</width>
+    <height>402</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -104,13 +104,23 @@
      <string>Pause</string>
     </property>
    </widget>
+   <widget class="QGraphicsView" name="gvBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>551</width>
+      <height>231</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>577</width>
+     <width>574</width>
      <height>21</height>
     </rect>
    </property>

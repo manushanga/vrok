@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     players/player_mpeg.cpp \
     effects/effect_eq.cpp \
     effect.cpp \
-    players/player_ogg.cpp
+    players/player_ogg.cpp \
+    effects/effect_vis.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -40,7 +41,8 @@ HEADERS  += vrokmain.h \
     players/player_mpeg.h \
     effect.h \
     effects/effect_eq.h \
-    players/player_ogg.h
+    players/player_ogg.h \
+    effects/effect_vis.h
 
 FORMS    += vrokmain.ui
 

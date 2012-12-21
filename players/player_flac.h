@@ -21,6 +21,7 @@ public:
     float *buffer;
     unsigned buffer_write;
     unsigned half_buffer_bytes;
+    int ret_vpout_open;
 
     FLACPlayer();
     int open(const char *url);

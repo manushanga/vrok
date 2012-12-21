@@ -7,7 +7,6 @@
 
 OGGPlayer::OGGPlayer()
 {
-    reset();
 
 }
 int OGGPlayer::open(const char *url)
@@ -15,13 +14,15 @@ int OGGPlayer::open(const char *url)
     int ret=ov_fopen(url,&vf);
     if (ret<0){
         DBG("OGGPlayer:open fail");
+        return -1;
     }
-    track_channels = ov_info(&vf,0)->channels;
-    track_samplerate = ov_info(&vf,0)->rate;
+
+    set_metadata(ov_info(&vf,0)->rate, ov_info(&vf,0)->channels);
     buffer = new float[VPlayer::BUFFER_FRAMES*track_channels*2];
     half_buffer_size = VPlayer::BUFFER_FRAMES*track_channels*sizeof(float);
-    mutexes[0]->unlock();
-    mutexes[2]->unlock();
+
+    vpout_open();
+    return 0;
 }
 
 void OGGPlayer::reader()
@@ -77,6 +78,7 @@ unsigned long OGGPlayer::getPosition()
 }
 OGGPlayer::~OGGPlayer()
 {
+    vpout_close();
     ov_clear(&vf);
     delete buffer;
 }
