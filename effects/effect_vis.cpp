@@ -37,8 +37,6 @@ void VPEffectPluginVis::process(float *buffer)
 {
     float mid,xre,xim,newb;
     mutex_vis.lock();
-
-
     for (size_t b=0;b<BARS;b++){
         xre=0.0;
         xim=0.0;
@@ -46,7 +44,6 @@ void VPEffectPluginVis::process(float *buffer)
             mid = (buffer[i*owner->track_channels]+buffer[i*owner->track_channels+1] )* 0.5f;
             xre +=mid*trig[0][b][i];
             xim +=mid*trig[1][b][i];
-
         }
         newb = sqrtf(xre*xre + xim*xim)*sqrt(b+2.0f);
         if (bar_array[b] < 0.1f && bar_array[b] > 0.0f)

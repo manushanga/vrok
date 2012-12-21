@@ -185,10 +185,10 @@ int VPlayer::vpout_open()
 }
 int VPlayer::vpout_close()
 {
-    mutex_control->lock();
-
     if(paused)
         play();
+
+    mutex_control->lock();
 
     work=false;
 

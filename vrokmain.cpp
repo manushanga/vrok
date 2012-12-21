@@ -62,11 +62,7 @@ VrokMain::VrokMain(QWidget *parent) :
     vis = new VPEffectPluginVis(bars);
 }
 
-void VrokMain::on_btnStop_clicked()
-{
 
-    vp->stop();
-}
 void VrokMain::on_btnPause_clicked()
 {
     vp->pause();

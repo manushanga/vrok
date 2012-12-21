@@ -79,7 +79,6 @@ int MPEGPlayer::open(const char *url)
 
     set_metadata( rate,  channels);
 
-
     if (buffer!=NULL)
         delete buffer;
     buffer = new short[((VPlayer *)this)->BUFFER_FRAMES*((VPlayer *)this)->track_channels*2];
