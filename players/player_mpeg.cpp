@@ -64,6 +64,8 @@ void MPEGPlayer::reader()
 
 int MPEGPlayer::open(const char *url)
 {
+    mutex_control->lock();
+
     if (mpg123_open(mh, url) != MPG123_OK) {
         DBG("MPEGPlayer:open open file fail");
         return -1;
@@ -84,6 +86,8 @@ int MPEGPlayer::open(const char *url)
 
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
+
+    mutex_control->unlock();
 
     vpout_open();
     return 0;

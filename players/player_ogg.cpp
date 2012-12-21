@@ -11,6 +11,7 @@ OGGPlayer::OGGPlayer()
 }
 int OGGPlayer::open(const char *url)
 {
+    mutex_control->lock();
     int ret=ov_fopen(url,&vf);
     if (ret<0){
         DBG("OGGPlayer:open fail");
@@ -21,6 +22,7 @@ int OGGPlayer::open(const char *url)
     buffer = new float[VPlayer::BUFFER_FRAMES*track_channels*2];
     half_buffer_size = VPlayer::BUFFER_FRAMES*track_channels*sizeof(float);
 
+    mutex_control->unlock();
     vpout_open();
     return 0;
 }
