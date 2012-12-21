@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="btnPlay">
     <property name="geometry">
      <rect>
-      <x>120</x>
+      <x>170</x>
       <y>60</y>
       <width>100</width>
       <height>23</height>
@@ -33,7 +33,7 @@
    <widget class="QLineEdit" name="txtFile">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>60</x>
       <y>20</y>
       <width>431</width>
       <height>23</height>
@@ -46,7 +46,7 @@
    <widget class="QPushButton" name="btnFX">
     <property name="geometry">
      <rect>
-      <x>450</x>
+      <x>390</x>
       <y>60</y>
       <width>100</width>
       <height>23</height>
@@ -62,23 +62,10 @@
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="btnStop">
-    <property name="geometry">
-     <rect>
-      <x>340</x>
-      <y>60</y>
-      <width>100</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Stop</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="btnOpen">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>60</x>
       <y>60</y>
       <width>100</width>
       <height>23</height>
@@ -94,7 +81,7 @@
    <widget class="QPushButton" name="btnPause">
     <property name="geometry">
      <rect>
-      <x>230</x>
+      <x>280</x>
       <y>60</y>
       <width>100</width>
       <height>23</height>

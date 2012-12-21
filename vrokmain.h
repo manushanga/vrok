@@ -34,7 +34,6 @@ public:
 public slots:
     void on_btnPlay_clicked();
     void on_btnPause_clicked();
-    void on_btnStop_clicked();
     void on_btnOpen_clicked();
     void on_btnFX_clicked();
 
