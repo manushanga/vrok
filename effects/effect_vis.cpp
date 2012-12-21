@@ -48,7 +48,7 @@ void VPEffectPluginVis::process(float *buffer)
             xim +=mid*trig[1][b][i];
 
         }
-        newb = 2.0f*sqrtf(xre*xre + xim*xim)*sqrt(b+2.0f);
+        newb = sqrtf(xre*xre + xim*xim)*sqrt(b+2.0f);
         if (bar_array[b] < 0.1f && bar_array[b] > 0.0f)
             bar_array[b] = 0.0f;
         else if (bar_array[b] >= newb)

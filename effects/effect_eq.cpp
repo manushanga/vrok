@@ -7,7 +7,7 @@ static const char *sb_bandnames[] = { "Preamp", "55 Hz", "77 Hz", "110 Hz",
     "1.8 kHz", "2.5 kHz", "3.5 kHz", "5 kHz", "7 kHz", "10 kHz", "14 kHz",
     "20 kHz"
 };
-static float sb_bands[18]= {0.4f,0.7f,0.55f,0.45f,0.4f,0.3f,
+static float sb_bands[18]= {0.6f,0.8f,0.55f,0.45f,0.4f,0.3f,
                             0.2f,0.1f,0.1f,0.1f,0.2f,0.3f,
                             0.3f,0.35f,0.4f,0.5f,0.55f,0.3f};
 
@@ -37,7 +37,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
 {
     owner = v;
     equ_init (&sb_state, 10, owner->track_channels);
-    sb_preamp = 1.0f;
+    sb_preamp = 2.6f;
     sb_recalc_table();
     return 1;
 }

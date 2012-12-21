@@ -29,14 +29,13 @@ void VrokMain::vis_updater(VrokMain *self)
     while (self->visuals){
         self->vis->mutex_vis.lock();
         for (int i=0;i<VPEffectPluginVis::BARS;i++){
-            self->gbars[i]->setRect(i*12,0,10,self->bars[i]*-2.0f);
-            //self->gs->addItem(self->gbars[i]);
+            self->gbars[i]->setRect(i*14,0,10,self->bars[i]*-1.2f);
         }
         self->vis->mutex_vis.unlock();
         self->gs->update(0.0f,0.0f,100.0f,-100.0f);
-        usleep(30000);
+        usleep(23000);
         self->ui->gvBox->viewport()->update();
-        //self->gs->clear();
+
     }
 
 }
@@ -45,30 +44,10 @@ VrokMain::VrokMain(QWidget *parent) :
     ui(new Ui::VrokMain)
 {
     ui->setupUi(this);
-   // //vp = new MPEGPlayer();
-   // vp= new FLACPlayer();
-  // vp->prepare();
-   //vp->open((char *)"/home/madura/Downloads/Lenny Kravitz - Greatest Hits (2000) [FLAC]/02 - Fly Away.flac");
-   // vp->play();
-    //sleep(5);
-    //vp->pause();
-    //sleep(5);
-    //vp->play();
-    //vp->open((char *)"/media/ENT/Dump/Downloads/PSY_-_Gangnam_Style.mp3");
-    //vp->open((char *)"/media/ENT/Dump/Downloads/GTA Radio/FLASH.mp3");
-    //vp->play();
-    //sleep(3);
-    //vp->pause();
-    //sleep(1);
-   // vp->play();
-   // sleep(3);
-    //vp->stop();
-    //sleep(1);
-    //vp->play();
-    //vp->end();
 
     vp=NULL;
     th=NULL;
+    vis=NULL;
     gs = new QGraphicsScene();
     QBrush z(Qt::darkGreen);
     QPen x(Qt::darkGreen);
@@ -79,6 +58,8 @@ VrokMain::VrokMain(QWidget *parent) :
         gs->addItem(gbars[i]);
     }
     ui->gvBox->setScene(gs);
+    eq =new VPEffectPluginEQ();
+    vis = new VPEffectPluginVis(bars);
 }
 
 void VrokMain::on_btnStop_clicked()
@@ -118,16 +99,13 @@ void VrokMain::on_btnOpen_clicked()
         vp = new OGGPlayer();
     }
 
-    vp->addEffect((VPEffectPlugin *)new VPEffectPluginEQ());
-    vis = new VPEffectPluginVis(bars);
+    vp->addEffect((VPEffectPlugin *) eq);
     vp->addEffect((VPEffectPlugin *) vis);
     vp->open((char *)ui->txtFile->text().toUtf8().data() );
 
-    vp->effects_active =ui->btnFX->isChecked();
+    vp->effects_active = ui->btnFX->isChecked();
     visuals = true;
     th  = new std::thread(VrokMain::vis_updater,this);
-
-
 
 }
 void VrokMain::on_btnFX_clicked()
@@ -142,6 +120,10 @@ VrokMain::~VrokMain()
     visuals=false;
     th->join();
     delete ui;
+    if (eq)
+        delete eq;
+    if (vis)
+        delete vis;
     if (vp)
         delete vp;
 }

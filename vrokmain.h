@@ -11,6 +11,7 @@
 */
 
 #include <vplayer.h>
+#include "effects/effect_eq.h"
 #include "effects/effect_vis.h"
 #include <thread>
 #include <QGraphicsScene>
@@ -37,13 +38,13 @@ public slots:
     void on_btnOpen_clicked();
     void on_btnFX_clicked();
 
-
 private:
     Ui::VrokMain *ui;
     VPlayer *vp;
     VPEffectPluginVis *vis;
     QGraphicsScene *gs;
     QGraphicsRectItem *gbars[16];
+    VPEffectPluginEQ *eq;
     std::thread *th;
     bool visuals;
 };
