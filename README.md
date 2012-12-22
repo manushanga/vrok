@@ -1,7 +1,7 @@
-vrok
-====
+Vrok - smokin"'" audio
+======================
 
-plays FLAC, MPEG and AAC(planned)<br>
+Plays FLAC, MPEG and Ogg Vorbis<br>
 Shibatch SuperEQ<br>
 Windows support and JACK support is planned<br>
 Gapless, not implemented yet<br>
@@ -9,7 +9,14 @@ Gapless, not implemented yet<br>
 Compiling
 ---------
 
-run these commands in the project directory
+Make sure you have these dependencies,<br>
+<br>
+ALSA development headers<br>
+libFLAC and headers<br>
+libmpg123 and headers<br>
+libvorbisfile and headers<br>
+
+Run these commands in the project directory
 
 <pre>
 qmake
