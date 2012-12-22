@@ -157,10 +157,10 @@ int VPlayer::vpout_open()
     if (vpout)
         delete vpout;
     vpout = (VPOutPlugin *) new VPOutPluginAlsa();
-    DBG(track_channels);
-    DBG(track_samplerate);
-    DBG(vpout->getChannels());
-    DBG(vpout->getSamplerate());
+    DBG("track chs:"<<track_channels);
+    DBG("track rate:"<<track_samplerate);
+    DBG("hw max chs:"<<vpout->getChannels());
+    DBG("hw max rate:"<<vpout->getSamplerate());
 
     if (!gapless_compatible){
         for (std::vector<VPEffectPlugin *>::iterator it=effects.begin();it!=effects.end();it++) {

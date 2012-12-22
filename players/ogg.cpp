@@ -21,6 +21,7 @@ int OGGPlayer::open(const char *url)
     half_buffer_size = VPlayer::BUFFER_FRAMES*track_channels*sizeof(float);
 
     mutex_control.unlock();
+    DBG("OGG Vorbis meta done");
     vpout_open();
     return 0;
 }
@@ -42,7 +43,6 @@ void OGGPlayer::reader()
                     buffer[j]=pcm[ch][i]*volume;
                     j++;
                 }
-
             }
             done+=ret;
         }

@@ -87,7 +87,7 @@ int MPEGPlayer::open(const char *url)
     mpg123_format(mh, rate, channels, encoding);
 
     mutex_control.unlock();
-
+    DBG("MPEG meta done");
     vpout_open();
     return 0;
 }
