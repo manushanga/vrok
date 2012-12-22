@@ -11,8 +11,8 @@
 */
 
 #include <vplayer.h>
-#include "effects/effect_eq.h"
-#include "effects/effect_vis.h"
+#include "effects/eq.h"
+#include "effects/vis.h"
 #include <thread>
 #include <QGraphicsScene>
 

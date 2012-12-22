@@ -22,13 +22,13 @@ SOURCES += main.cpp\
     out.cpp \
     effects/shibatch/Equ.cpp \
     effects/shibatch/Fftsg_fl.c \
-    outs/out_alsa.cpp \
-    players/player_flac.cpp \
-    players/player_mpeg.cpp \
-    effects/effect_eq.cpp \
     effect.cpp \
-    players/player_ogg.cpp \
-    effects/effect_vis.cpp
+    effects/eq.cpp \
+    effects/vis.cpp \
+    outs/alsa.cpp \
+    players/flac.cpp \
+    players/mpeg.cpp \
+    players/ogg.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -36,13 +36,13 @@ HEADERS  += vrokmain.h \
     out.h \
     effects/shibatch/paramlist.hpp \
     effects/shibatch/Equ.h \
-    outs/out_alsa.h \
-    players/player_flac.h \
-    players/player_mpeg.h \
     effect.h \
-    effects/effect_eq.h \
-    players/player_ogg.h \
-    effects/effect_vis.h
+    effects/eq.h \
+    effects/vis.h \
+    outs/alsa.h \
+    players/flac.h \
+    players/mpeg.h \
+    players/ogg.h
 
 FORMS    += vrokmain.ui
 

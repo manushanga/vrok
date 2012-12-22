@@ -1,5 +1,6 @@
 #include <cmath>
-#include "effect_vis.h"
+
+#include "vis.h"
 
 #define PI M_PI
 #define fFRAMES VPlayer::BUFFER_FRAMES*1.0
@@ -45,11 +46,11 @@ void VPEffectPluginVis::process(float *buffer)
             xre +=mid*trig[0][b][i];
             xim +=mid*trig[1][b][i];
         }
-        newb = sqrtf(xre*xre + xim*xim)*sqrt(b+2.0f);
+        newb = sqrtf(xre*xre + xim*xim)*sqrt((b+1)*2.0f);
         if (bar_array[b] < 0.1f && bar_array[b] > 0.0f)
             bar_array[b] = 0.0f;
         else if (bar_array[b] >= newb)
-            bar_array[b] -= 0.5f+bar_array[b]*0.06f;
+            bar_array[b] -= 0.25f+bar_array[b]*0.01;
         else
             bar_array[b] = newb;
     }
@@ -59,4 +60,11 @@ void VPEffectPluginVis::process(float *buffer)
 int VPEffectPluginVis::finit()
 {
     return 0;
+}
+VPEffectPluginVis::~VPEffectPluginVis()
+{
+    for (size_t i=0;i<BARS;i++){
+        delete trig[0][i];
+        delete trig[1][i];
+    }
 }

@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "effect_eq.h"
+#include "eq.h"
 
 static const char *sb_bandnames[] = { "Preamp", "55 Hz", "77 Hz", "110 Hz",
     "156 Hz", "220 Hz", "311 Hz", "440 Hz", "622 Hz", "880 Hz", "1.2 kHz",
@@ -40,6 +40,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
     sb_preamp = 2.6f;
     sb_recalc_table();
     return 1;
+
 }
 
 void VPEffectPluginEQ::process(float *buffer)
@@ -49,5 +50,6 @@ void VPEffectPluginEQ::process(float *buffer)
 
 int VPEffectPluginEQ::finit()
 {
+    equ_quit(&sb_state);
     return 1;
 }

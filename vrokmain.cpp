@@ -14,11 +14,11 @@
 #include "vplayer.h"
 #include <unistd.h>
 
-#include "players/player_flac.h"
-#include "players/player_mpeg.h"
-#include "players/player_ogg.h"
-#include "effects/effect_eq.h"
-#include "effects/effect_vis.h"
+#include "players/flac.h"
+#include "players/mpeg.h"
+#include "players/ogg.h"
+#include "effects/eq.h"
+#include "effects/vis.h"
 
 #include <QFileDialog>
 #include <QGraphicsScene>
@@ -94,9 +94,9 @@ void VrokMain::on_btnOpen_clicked()
     } else {
         vp = new OGGPlayer();
     }
-
-    vp->addEffect((VPEffectPlugin *) eq);
     vp->addEffect((VPEffectPlugin *) vis);
+    vp->addEffect((VPEffectPlugin *) eq);
+
     vp->open((char *)ui->txtFile->text().toUtf8().data() );
 
     vp->effects_active = ui->btnFX->isChecked();
@@ -116,10 +116,16 @@ VrokMain::~VrokMain()
     visuals=false;
     th->join();
     delete ui;
+    for (int i=0;i<VPEffectPluginVis::BARS;i++){
+        delete gbars[i];
+    }
+    if (vp)
+        delete vp;
+    if (gs)
+        delete gs;
     if (eq)
         delete eq;
     if (vis)
         delete vis;
-    if (vp)
-        delete vp;
+
 }

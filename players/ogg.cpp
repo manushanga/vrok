@@ -1,9 +1,7 @@
 #include <stdlib.h>
 #include <cstring>
 
-#include "player_ogg.h"
-
-
+#include "ogg.h"
 
 OGGPlayer::OGGPlayer()
 {

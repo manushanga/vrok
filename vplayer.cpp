@@ -17,8 +17,8 @@
 #include <thread>
 
 #include "vplayer.h"
-#include "outs/out_alsa.h"
-#include "effects/effect_eq.h"
+#include "outs/alsa.h"
+#include "effects/eq.h"
 
 void VPlayer::play_work(VPlayer *self)
 {
@@ -116,6 +116,7 @@ void VPlayer::post_process(float *buffer)
 
 VPlayer::~VPlayer()
 {
+    DBG("VPlayer:~VPlayer");
 
 }
 void VPlayer::set_metadata(unsigned samplerate, unsigned channels)

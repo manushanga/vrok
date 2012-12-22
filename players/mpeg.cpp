@@ -6,7 +6,7 @@
   See LICENSE for details.
 */
 
-#include "player_mpeg.h"
+#include "mpeg.h"
 #include "effect.h"
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)
@@ -108,7 +108,10 @@ unsigned long MPEGPlayer::getPosition()
 }
 MPEGPlayer::~MPEGPlayer()
 {
+    DBG("MPEGPlayer:~MPEGPlayer");
     vpout_close();
+    mpg123_close(mh);
+    mpg123_exit();
     if (buffer)
         delete buffer;
 }

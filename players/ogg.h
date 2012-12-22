@@ -2,6 +2,7 @@
 #define PLAYER_AAC_H
 
 #include <vorbis/vorbisfile.h>
+
 #include "../vplayer.h"
 
 class OGGPlayer : public VPlayer

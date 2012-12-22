@@ -6,7 +6,7 @@
   See LICENSE for details.
 */
 
-#include "out_alsa.h"
+#include "alsa.h"
 
 static const char *name="Advanced Linux Sound Architecture";
 static const snd_pcm_uframes_t PERIOD_SIZE = 512;
@@ -94,6 +94,7 @@ unsigned VPOutPluginAlsa::getSamplerate()
     snd_pcm_t *h;
     if (snd_pcm_open(&h, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
         DBG("Alsa:getSamplerate: failed to open pcm");
+        snd_pcm_close(h);
         return 0;
     }
     snd_pcm_hw_params_alloca(&params);
@@ -112,6 +113,7 @@ unsigned VPOutPluginAlsa::getChannels()
     snd_pcm_t *h;
     if (snd_pcm_open(&h, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
         DBG("Alsa:getChannels: failed to open pcm");
+        snd_pcm_close(h);
         return 0;
     }
     snd_pcm_hw_params_alloca(&params);
@@ -123,6 +125,7 @@ unsigned VPOutPluginAlsa::getChannels()
         return 0;
     }
     snd_pcm_close(h);
+
 }
 int VPOutPluginAlsa::finit()
 {

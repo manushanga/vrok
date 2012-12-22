@@ -14,10 +14,12 @@ private:
 public:
     static const unsigned BARS = BAR_COUNT;
     std::mutex mutex_vis;
+
     VPEffectPluginVis(float *bars);
     int init(VPlayer *v);
     void process(float *buffer);
     int finit();
+    ~VPEffectPluginVis();
 };
 
 #endif // EFFECT_VIS_H

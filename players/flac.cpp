@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "player_flac.h"
+#include "flac.h"
 #include "effect.h"
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)
