@@ -37,10 +37,9 @@ void VPlayer::removeEffect(unsigned idx)
 }
 VPlayer::VPlayer()
 {
-    mutex_control = new std::mutex();
-    mutex_control->unlock();
+    mutex_control.unlock();
 
-    mutex_control->lock();
+    mutex_control.lock();
     track_channels = 0;
     track_samplerate = 0;
 
@@ -48,8 +47,7 @@ VPlayer::VPlayer()
     buffer2 = NULL;
 
     for (int i=0;i<4;i++){
-        mutexes[i] = new std::mutex();
-        mutexes[i]->try_lock();
+        mutexes[i].try_lock();
     }
 
     play_worker = NULL;
@@ -63,20 +61,20 @@ VPlayer::VPlayer()
     gapless_compatible = false;
     effects.clear();
 
-    mutex_control->unlock();
+    mutex_control.unlock();
 }
 
 int VPlayer::play()
 {
     if (paused) {
         work = true;
-        mutex_control->lock();
+        mutex_control.lock();
         paused = false;
         vpout->resume();
         if (!play_worker){
             play_worker = new std::thread(VPlayer::play_work, this);
         }
-        mutex_control->unlock();
+        mutex_control.unlock();
     }
     return 1;
 }
@@ -84,10 +82,10 @@ int VPlayer::play()
 void VPlayer::pause()
 {
     if (!paused) {
-        mutex_control->lock();
+        mutex_control.lock();
         vpout->pause();
         paused = true;
-        mutex_control->unlock();
+        mutex_control.unlock();
     }
 }
 bool VPlayer::isPlaying()
@@ -140,12 +138,12 @@ float VPlayer::getVolume()
 int VPlayer::vpout_open()
 {
     int ret;
-    mutex_control->lock();
+    mutex_control.lock();
 
-    mutexes[0]->unlock();
-    mutexes[1]->try_lock();
-    mutexes[2]->unlock();
-    mutexes[3]->try_lock();
+    mutexes[0].unlock();
+    mutexes[1].try_lock();
+    mutexes[2].unlock();
+    mutexes[3].try_lock();
 
     if (buffer1)
         delete buffer1;
@@ -181,7 +179,7 @@ int VPlayer::vpout_open()
 
     }
 
-    mutex_control->unlock();
+    mutex_control.unlock();
     return ret;
 }
 int VPlayer::vpout_close()
@@ -189,7 +187,7 @@ int VPlayer::vpout_close()
     if(paused)
         play();
 
-    mutex_control->lock();
+    mutex_control.lock();
 
     work=false;
 
@@ -199,8 +197,8 @@ int VPlayer::vpout_close()
     // if its done multiple times include the work check in between them. see
     // player_flac.cpp's worker function
 
-    mutexes[0]->unlock();
-    mutexes[2]->unlock();
+    mutexes[0].unlock();
+    mutexes[2].unlock();
 
     play_worker->join();
     DBG("player thread joined");
@@ -209,6 +207,6 @@ int VPlayer::vpout_close()
         delete vpout;
         vpout=NULL;
     }
-    mutex_control->unlock();
+    mutex_control.unlock();
 
 }

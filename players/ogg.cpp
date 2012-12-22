@@ -9,7 +9,7 @@ OGGPlayer::OGGPlayer()
 }
 int OGGPlayer::open(const char *url)
 {
-    mutex_control->lock();
+    mutex_control.lock();
     int ret=ov_fopen(url,&vf);
     if (ret<0){
         DBG("OGGPlayer:open fail");
@@ -20,7 +20,7 @@ int OGGPlayer::open(const char *url)
     buffer = new float[VPlayer::BUFFER_FRAMES*track_channels*2];
     half_buffer_size = VPlayer::BUFFER_FRAMES*track_channels*sizeof(float);
 
-    mutex_control->unlock();
+    mutex_control.unlock();
     vpout_open();
     return 0;
 }
@@ -49,15 +49,15 @@ void OGGPlayer::reader()
 
         if (ret == 0)
             break;
-        mutexes[0]->lock();
+        mutexes[0].lock();
         memcpy(buffer1,buffer,VPlayer::BUFFER_FRAMES*track_channels*sizeof(float) );
         post_process(buffer1);
-        mutexes[1]->unlock();
+        mutexes[1].unlock();
 
-        mutexes[2]->lock();
+        mutexes[2].lock();
         memcpy(buffer2,buffer+VPlayer::BUFFER_FRAMES*track_channels ,VPlayer::BUFFER_FRAMES*track_channels*sizeof(float) );
         post_process(buffer2);
-        mutexes[3]->unlock();
+        mutexes[3].unlock();
 
     }
 }

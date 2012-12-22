@@ -23,7 +23,7 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder,
         me->set_metadata(  metadata->data.stream_info.sample_rate,  metadata->data.stream_info.channels);
         DBG("FLAC meta ok");
         me->half_buffer_bytes = VPlayer::BUFFER_FRAMES*me->track_channels*sizeof(float);
-        me->mutex_control->unlock();
+        me->mutex_control.unlock();
         if (me->buffer != NULL)
             delete me->buffer;
 
@@ -91,7 +91,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             i++;
         }
 
-        self->mutexes[0]->lock();
+        self->mutexes[0].lock();
         j=0;
         DBG("wb1");
         // write buffer1
@@ -101,9 +101,9 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             j++;
         }*/
         self->post_process(self->buffer1);
-        self->mutexes[1]->unlock();
+        self->mutexes[1].unlock();
 
-        self->mutexes[2]->lock();
+        self->mutexes[2].lock();
         j=0;
         DBG("wb2");
         // write buffer2
@@ -114,7 +114,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             j++;
         }*/
         self->post_process(self->buffer2);
-        self->mutexes[3]->unlock();
+        self->mutexes[3].unlock();
 
         selfp->buffer_write=0;
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
@@ -132,7 +132,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             i++;
         }
 
-        self->mutexes[0]->lock();
+        self->mutexes[0].lock();
         j=0;
         // write buffer1
         memcpy(self->buffer1,selfp->buffer,selfp->half_buffer_bytes);
@@ -141,9 +141,9 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             j++;
         }*/
         self->post_process(self->buffer1);
-        self->mutexes[1]->unlock();
+        self->mutexes[1].unlock();
         //DBG("s3");
-        self->mutexes[2]->lock();
+        self->mutexes[2].lock();
         j=0;
         // write buffer2
         memcpy(self->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
@@ -152,14 +152,14 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             j++;
         }*/
         self->post_process(self->buffer2);
-        self->mutexes[3]->unlock();
+        self->mutexes[3].unlock();
 
         if (!self->work)
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
         while (frame->header.blocksize-i > VPlayer::BUFFER_FRAMES*2 ){
 
-            self->mutexes[0]->lock();
+            self->mutexes[0].lock();
             j=0;
             // write buffer1
             while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
@@ -170,9 +170,9 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
                 i++;
             }
             self->post_process(self->buffer1);
-            self->mutexes[1]->unlock();
+            self->mutexes[1].unlock();
 
-            self->mutexes[2]->lock();
+            self->mutexes[2].lock();
             j=0;
             // write buffer2
             while(j<VPlayer::BUFFER_FRAMES*self->track_channels){
@@ -183,7 +183,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
                 i++;
             }
             self->post_process(self->buffer2);
-            self->mutexes[3]->unlock();
+            self->mutexes[3].unlock();
 
             if (!self->work)
                 return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
@@ -231,7 +231,7 @@ FLACPlayer::~FLACPlayer()
 
 int FLACPlayer::open(const char *url)
 {
-    mutex_control->lock();
+    mutex_control.lock();
 
     init_status = FLAC__stream_decoder_init_file(decoder, url, write_callback, metadata_callback, error_callback, (void *) this);
     if (init_status != FLAC__STREAM_DECODER_INIT_STATUS_OK){
@@ -241,7 +241,7 @@ int FLACPlayer::open(const char *url)
         FLAC__stream_decoder_process_until_end_of_metadata(decoder);
     }
 
-    mutex_control->unlock();
+    mutex_control.unlock();
     return ret_vpout_open;
 }
 void FLACPlayer::reader()

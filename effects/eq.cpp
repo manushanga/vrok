@@ -13,8 +13,8 @@ static float sb_bands[18]= {0.6f,0.8f,0.55f,0.45f,0.4f,0.3f,
 
 void VPEffectPluginEQ::sb_recalc_table()
 {
-   // this->owner->mutexes[0]->lock();
-   // this->owner->mutexes[2]->lock();
+   // this->owner->mutexes[0].lock();
+   // this->owner->mutexes[2].lock();
 
     void *params = paramlist_alloc ();
 
@@ -29,8 +29,8 @@ void VPEffectPluginEQ::sb_recalc_table()
     paramlist_free (sb_paramsroot);
     sb_paramsroot = params;
 
-    //this->owner->mutexes[0]->unlock();
-    //this->owner->mutexes[2]->unlock();
+    //this->owner->mutexes[0].unlock();
+    //this->owner->mutexes[2].unlock();
 
 }
 int VPEffectPluginEQ::init(VPlayer *v)

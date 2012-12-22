@@ -45,11 +45,11 @@ public:
     float *buffer2;
 
     // mutexes[0..1] for buffer1, mutexes[2..3] for buffer2
-    std::mutex *mutexes[4];
+    std::mutex mutexes[4];
 
     // open, play, pause, stop event control all are considered as cirtical
     // sections, none run interleaved.
-    std::mutex *mutex_control;
+    std::mutex mutex_control;
 
     // internal, play_worker runs only if work==true, if not it MUST return
     bool work;

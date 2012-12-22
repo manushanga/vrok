@@ -37,19 +37,19 @@ void MPEGPlayer::reader()
             break;
         } else {
 
-            mutexes[0]->lock();
+            mutexes[0].lock();
             for (size_t i=0;i<count/2;i++){
                 buffer1[i]=SHORTTOFL*buffer[i]*volume;
             }
             post_process(buffer1);
-            mutexes[1]->unlock();
+            mutexes[1].unlock();
 
-            mutexes[2]->lock();
+            mutexes[2].lock();
             for (size_t i=0;i<count/2;i++){
                 buffer2[i]=SHORTTOFL*buffer[count/2+i]*volume;
             }
             post_process(buffer2);
-            mutexes[3]->unlock();
+            mutexes[3].unlock();
         }
 
         if (err == MPG123_DONE){
@@ -64,7 +64,7 @@ void MPEGPlayer::reader()
 
 int MPEGPlayer::open(const char *url)
 {
-    mutex_control->lock();
+    mutex_control.lock();
 
     if (mpg123_open(mh, url) != MPG123_OK) {
         DBG("MPEGPlayer:open open file fail");
@@ -86,7 +86,7 @@ int MPEGPlayer::open(const char *url)
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
 
-    mutex_control->unlock();
+    mutex_control.unlock();
 
     vpout_open();
     return 0;

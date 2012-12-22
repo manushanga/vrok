@@ -24,17 +24,17 @@ static void worker_run(VPOutPluginAlsa *self)
             snd_pcm_start (self->handle);
         }
 
-        self->owner->mutexes[1]->lock();
+        self->owner->mutexes[1].lock();
         ret = snd_pcm_writei(self->handle,
                              self->owner->buffer1,
                              VPlayer::BUFFER_FRAMES);
-        self->owner->mutexes[0]->unlock();
+        self->owner->mutexes[0].unlock();
 
-        self->owner->mutexes[3]->lock();
+        self->owner->mutexes[3].lock();
         ret = snd_pcm_writei(self->handle,
                              self->owner->buffer2,
                              VPlayer::BUFFER_FRAMES);
-        self->owner->mutexes[2]->unlock();
+        self->owner->mutexes[2].unlock();
         if (ret < 0 && ret != -EAGAIN){
             DBG("Alsa:run: write error "<<ret);
         }
@@ -132,8 +132,8 @@ int VPOutPluginAlsa::finit()
     work=false;
     if(!paused)
         pause();
-    owner->mutexes[1]->unlock();
-    owner->mutexes[3]->unlock();
+    owner->mutexes[1].unlock();
+    owner->mutexes[3].unlock();
 
     resume();
     if (worker){
