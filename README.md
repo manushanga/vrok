@@ -1,4 +1,4 @@
-Vrok - smokin\' audio
+Vrok - smokin' audio
 ======================
 
 Plays FLAC, MPEG and Ogg Vorbis<br>
