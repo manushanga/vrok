@@ -10,7 +10,7 @@
 #define OUT_H
 
 #include <stdint.h>
-#include <thread>
+#include <map>
 
 #include "vputils.h"
 #include "vplayer.h"
@@ -20,15 +20,13 @@ public:
     bool work;
     std::mutex *mutex_pause;
 
-    virtual const char *getName() = 0;
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels) = 0;
     virtual void resume() = 0;
     virtual void pause() = 0;
-    virtual unsigned getSamplerate() = 0;
-    virtual unsigned getChannels() = 0;
+    virtual unsigned get_samplerate() = 0;
+    virtual unsigned get_channels() = 0;
     virtual int finit() = 0;
     virtual ~VPOutPlugin();
 };
-
 
 #endif // OUT_H

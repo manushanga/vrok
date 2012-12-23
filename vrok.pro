@@ -6,8 +6,15 @@
 
 CONFIG   += qt thread
 QT       += core gui
-LIBS     += -lsupc++ -lm -lasound -lFLAC -lmpg123 -lvorbisfile
+LIBS     += -lsupc++ -lm -lFLAC -lmpg123 -lvorbisfile
 
+linux-g++* {
+LIBS     += -lasound
+}
+
+win32 {
+LIBS     += -lboost_system -lboost_thread
+}
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 QMAKE_CXXFLAGS += -O4 -std=c++11
@@ -25,10 +32,18 @@ SOURCES += main.cpp\
     effect.cpp \
     effects/eq.cpp \
     effects/vis.cpp \
-    outs/alsa.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
-    players/ogg.cpp
+    players/ogg.cpp \
+    config.cpp
+
+linux-g++* {
+SOURCES += outs/alsa.cpp
+}
+
+win32 {
+SOURCES += outs/waveout.cpp
+}
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -39,10 +54,19 @@ HEADERS  += vrokmain.h \
     effect.h \
     effects/eq.h \
     effects/vis.h \
-    outs/alsa.h \
     players/flac.h \
     players/mpeg.h \
-    players/ogg.h
+    players/ogg.h \
+    thread_compat.h \
+    config.h
+
+linux-g++* {
+HEADERS  += outs/alsa.h
+}
+
+win32 {
+HEADERS  += outs/waveout.h
+}
 
 FORMS    += vrokmain.ui
 

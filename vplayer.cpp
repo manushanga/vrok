@@ -14,10 +14,11 @@
   Only play_worker is managed here.
 */
 
-#include <thread>
+#include "thread_compat.h"
 
 #include "vplayer.h"
-#include "outs/alsa.h"
+#include "config.h"
+
 #include "effects/eq.h"
 
 void VPlayer::play_work(VPlayer *self)
@@ -61,6 +62,7 @@ VPlayer::VPlayer()
     gapless_compatible = false;
     effects.clear();
 
+    config_init();
     mutex_control.unlock();
 }
 
@@ -115,7 +117,7 @@ void VPlayer::post_process(float *buffer)
 VPlayer::~VPlayer()
 {
     DBG("VPlayer:~VPlayer");
-
+    config_finit();
 }
 void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
 {
@@ -156,24 +158,27 @@ int VPlayer::vpout_open()
 
     if (vpout)
         delete vpout;
-    vpout = (VPOutPlugin *) new VPOutPluginAlsa();
+
+    vpout = (VPOutPlugin *) config_get_VPOutPlugin_creator()();
+
+   // DBG(sizeof(_vpout_entries)/sizeof(_vpout_entry_t));
     DBG("track chs:"<<track_channels);
     DBG("track rate:"<<track_samplerate);
-    DBG("hw max chs:"<<vpout->getChannels());
-    DBG("hw max rate:"<<vpout->getSamplerate());
+    DBG("hw max chs:"<<vpout->get_channels());
+    DBG("hw max rate:"<<vpout->get_samplerate());
 
     if (!gapless_compatible){
         for (std::vector<VPEffectPlugin *>::iterator it=effects.begin();it!=effects.end();it++) {
             ret += (*it)->init(this);
         }
 
-        if (vpout->getChannels() >= track_channels && vpout->getSamplerate() >= track_samplerate)
+        if (vpout->get_channels() >= track_channels && vpout->get_samplerate() >= track_samplerate)
             ret += vpout->init(this, track_samplerate, track_channels);
-        else if (vpout->getSamplerate() < track_samplerate){
+        else if (vpout->get_samplerate() < track_samplerate){
             DBG("Can not initialize hardware for this samplerate");
         } else {
             DBG("Dropping channels due to hardware incompatibility");
-            track_channels = vpout->getChannels();
+            track_channels = vpout->get_channels();
             ret += vpout->init(this, track_samplerate, track_channels);
         }
 

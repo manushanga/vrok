@@ -23,6 +23,7 @@
 #include <QFileDialog>
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
+
 void VrokMain::vis_updater(VrokMain *self)
 {
 
@@ -113,9 +114,12 @@ void VrokMain::on_btnFX_clicked()
 }
 VrokMain::~VrokMain()
 {
-    visuals=false;
-    th->join();
     delete ui;
+
+    if (th){
+        visuals=false;
+        th->join();
+    }
     for (int i=0;i<VPEffectPluginVis::BARS;i++){
         delete gbars[i];
     }

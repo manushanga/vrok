@@ -8,8 +8,12 @@
 
 #include "alsa.h"
 
-static const char *name="Advanced Linux Sound Architecture";
 static const snd_pcm_uframes_t PERIOD_SIZE = 512;
+
+VPOutPlugin* _VPOutPluginAlsa_new()
+{
+    return (VPOutPlugin *) new VPOutPluginAlsa();
+}
 
 static void worker_run(VPOutPluginAlsa *self)
 {
@@ -43,10 +47,7 @@ static void worker_run(VPOutPluginAlsa *self)
 
 }
 
-const char *VPOutPluginAlsa::getName()
-{
-    return name;
-}
+
 void VPOutPluginAlsa::resume()
 {
     paused = false;
@@ -89,7 +90,7 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     return 0;
 }
 
-unsigned VPOutPluginAlsa::getSamplerate()
+unsigned VPOutPluginAlsa::get_samplerate()
 {
     snd_pcm_t *h;
     if (snd_pcm_open(&h, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
@@ -108,7 +109,7 @@ unsigned VPOutPluginAlsa::getSamplerate()
     snd_pcm_close(h);
 
 }
-unsigned VPOutPluginAlsa::getChannels()
+unsigned VPOutPluginAlsa::get_channels()
 {
     snd_pcm_t *h;
     if (snd_pcm_open(&h, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){

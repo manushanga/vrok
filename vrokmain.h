@@ -10,10 +10,10 @@
   See LICENSE for details.
 */
 
-#include <vplayer.h>
+#include "vplayer.h"
 #include "effects/eq.h"
 #include "effects/vis.h"
-#include <thread>
+
 #include <QGraphicsScene>
 
 #define BAR_COUNT 16

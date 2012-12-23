@@ -25,13 +25,14 @@ public:
     bool work;
     bool paused;
 
-    virtual const char *getName();
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);
     virtual void resume();
     virtual void pause();
-    virtual unsigned getSamplerate();
-    virtual unsigned getChannels();
+    virtual unsigned get_samplerate();
+    virtual unsigned get_channels();
     virtual int finit();
 };
+
+VPOutPlugin* _VPOutPluginAlsa_new();
 
 #endif // OUT_ALSA_H

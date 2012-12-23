@@ -18,10 +18,10 @@
 #define VPLAYER_H
 
 #include <vector>
-#include <thread>
-#include <mutex>
+
 
 #include "vputils.h"
+#include "thread_compat.h"
 
 enum VPState_t{VP_IDLE, VP_OPEN, VP_BUFFER, VP_PLAY, VP_PAUSE, VP_STOP, VP_END, VP_ERROR};
 
