@@ -22,6 +22,7 @@ static void worker_run(VPOutPluginAlsa *self)
         if (self->paused){
             // we do alsa syncs here, instead of the calling thread
             // because of thread syncing problems
+            DBG("alsa pause");
             snd_pcm_drain(self->handle);
             self->mutex_pause->lock();
             snd_pcm_prepare (self->handle);
@@ -61,6 +62,7 @@ void VPOutPluginAlsa::pause()
 
 int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
 {
+    DBG("Alsa:init");
     owner = v;
     if (snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0){
         DBG("Alsa:init: failed to open pcm");
@@ -84,9 +86,10 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     }
     mutex_pause = new std::mutex();
     mutex_pause->try_lock();
+    paused=true;
     work=true;
     worker = new std::thread(worker_run, this);
-
+    DBG("alsa thread made");
     return 0;
 }
 
@@ -128,7 +131,7 @@ unsigned VPOutPluginAlsa::get_channels()
     snd_pcm_close(h);
 
 }
-int VPOutPluginAlsa::finit()
+VPOutPluginAlsa::~VPOutPluginAlsa()
 {
     work=false;
     if(!paused)
@@ -145,5 +148,4 @@ int VPOutPluginAlsa::finit()
     delete mutex_pause;
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
-    return 1;
 }

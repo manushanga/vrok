@@ -25,8 +25,7 @@ public:
     virtual void pause() = 0;
     virtual unsigned get_samplerate() = 0;
     virtual unsigned get_channels() = 0;
-    virtual int finit() = 0;
-    virtual ~VPOutPlugin();
+    virtual ~VPOutPlugin() {}
 };
 
 #endif // OUT_H

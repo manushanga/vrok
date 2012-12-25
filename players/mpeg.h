@@ -12,20 +12,25 @@
 #include <mpg123.h>
 
 #include "../vplayer.h"
+#include "../decoder.h"
 
-class MPEGPlayer : public VPlayer
+class MPEGDecoder : public VPDecoder
 {
 public:
     mpg123_handle *mh;
     short *buffer;
+    VPlayer *owner;
 
-    MPEGPlayer();
+    MPEGDecoder();
+    void init(VPlayer *v);
     int open(const char *url);
     void reader();
     unsigned long getLength();
     void setPosition(unsigned long t);
     unsigned long getPosition();
-    ~MPEGPlayer();
+    ~MPEGDecoder();
 };
+
+VPDecoder* _VPDecoderMPEG_new();
 
 #endif // PLAYER_MPEG_H

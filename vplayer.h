@@ -17,26 +17,29 @@
 #ifndef VPLAYER_H
 #define VPLAYER_H
 
-#include <vector>
+#include <list>
 
 
 #include "vputils.h"
 #include "thread_compat.h"
 
-enum VPState_t{VP_IDLE, VP_OPEN, VP_BUFFER, VP_PLAY, VP_PAUSE, VP_STOP, VP_END, VP_ERROR};
 
 class VPOutPlugin;
 class VPEffectPlugin;
-
+class VPDecoder;
+struct effect_entry{
+    VPEffectPlugin *eff;
+    bool init;
+};
 class VPlayer
 {
 private:
     char *next_track;
     bool gapless_compatible;
-    std::vector<VPEffectPlugin *> effects;
+    std::list<effect_entry> effects;
 public:
     // smaller buffers have less cpu usage and more wakeups
-    static const unsigned BUFFER_FRAMES = 255;
+    static const unsigned BUFFER_FRAMES = 511;
 
     // from 0 to 1
     float volume;
@@ -54,6 +57,8 @@ public:
     // internal, play_worker runs only if work==true, if not it MUST return
     bool work;
 
+    bool done;
+
     // internal, paused state
     bool paused;
 
@@ -62,6 +67,7 @@ public:
 
     std::thread *play_worker;
     VPOutPlugin *vpout;
+    VPDecoder *vpdecode;
 
     unsigned track_samplerate;
     unsigned track_channels;
@@ -72,26 +78,21 @@ public:
     static void play_work(VPlayer *self);
     int vpout_open();
     int vpout_close();
-    virtual void reader() = 0;
     void ended();
     void post_process(float *buffer);
     void set_metadata(unsigned samplerate, unsigned channels);
 
     // external interface
-    virtual int open(const char *url) = 0;
+    int open(const char *url);
     int play();
     void pause();
-    void stop();
     void setVolume(float vol);
     float getVolume();
     void addEffect(VPEffectPlugin *eff);
     void removeEffect(unsigned idx);
     bool enqueGapless(const char *url);
     bool isPlaying();
-    virtual unsigned long getLength() = 0;
-    virtual void setPosition(unsigned long t) = 0;
-    virtual unsigned long getPosition() = 0;
-    virtual ~VPlayer() ;
+    ~VPlayer() ;
 };
 
 

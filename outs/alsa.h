@@ -30,7 +30,7 @@ public:
     virtual void pause();
     virtual unsigned get_samplerate();
     virtual unsigned get_channels();
-    virtual int finit();
+    virtual ~VPOutPluginAlsa();
 };
 
 VPOutPlugin* _VPOutPluginAlsa_new();

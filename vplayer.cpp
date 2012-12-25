@@ -13,82 +13,129 @@
 
   Only play_worker is managed here.
 */
+#include <cstring>
 
 #include "thread_compat.h"
 
 #include "vplayer.h"
+#include "decoder.h"
 #include "config.h"
 
 #include "effects/eq.h"
 
 void VPlayer::play_work(VPlayer *self)
 {
-    self->reader();
+    DBG("");
+    self->vpdecode->reader();
 }
 
 void VPlayer::addEffect(VPEffectPlugin *eff)
 {
-    effects.push_back(eff);
+    effect_entry e;
+    e.eff = eff;
+    e.init = false;
+    effects.push_back(e);
 }
 void VPlayer::removeEffect(unsigned idx)
 {
-    delete effects.at(idx);
-    effects.erase(effects.begin()+idx);
-
+    std::list<effect_entry>::iterator it=effects.begin();
+    for (int i=0;i<idx;i++){
+        it++;
+    }
+    effects.erase(it,it);
 }
 VPlayer::VPlayer()
 {
-    mutex_control.unlock();
+    mutex_control.try_lock();
 
-    mutex_control.lock();
     track_channels = 0;
     track_samplerate = 0;
 
     buffer1 = NULL;
     buffer2 = NULL;
 
-    for (int i=0;i<4;i++){
-        mutexes[i].try_lock();
-    }
+    mutexes[0].try_lock();
+    mutexes[1].try_lock();
+    mutexes[2].try_lock();
+    mutexes[3].try_lock();
 
     play_worker = NULL;
     work=false;
+    done=false;
     effects_active=false;
 
     paused = true;
     volume = 1.0f;
 
     vpout=NULL;
+    vpdecode=NULL;
+
     gapless_compatible = false;
     effects.clear();
 
     config_init();
     mutex_control.unlock();
 }
+int VPlayer::open(const char *url)
+{
+    mutex_control.lock();
+    if (vpdecode){
+        DBG("free decoder");
+        delete vpdecode;
+        vpdecode = NULL;
+    }
+    mutex_control.unlock();
 
+    unsigned len = strlen(url);
+    for (int i=0;i<sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);i++){
+        if (strcmp(url + len - strlen(vpdecoder_entries[i].ext),vpdecoder_entries[i].ext) == 0) {
+            DBG("open decoder "<<vpdecoder_entries[i].name);
+            vpdecode = (VPDecoder *)vpdecoder_entries[i].creator();
+        }
+    }
+
+    int ret = 0;
+
+    if (vpdecode){
+        vpdecode->init(this);
+        mutex_control.lock();
+        ret += vpdecode->open(url);
+        mutex_control.unlock();
+    } else {
+        ret = -1;
+    }
+    paused = true;
+    work=true;
+
+    mutexes[0].try_lock();
+    mutexes[1].unlock();
+    mutexes[2].try_lock();
+    mutexes[3].unlock();
+
+    if (!play_worker){
+        play_worker = new std::thread(VPlayer::play_work, this);
+    }
+    return ret;
+}
 int VPlayer::play()
 {
-    if (paused) {
-        work = true;
-        mutex_control.lock();
+    mutex_control.lock();
+    if (vpdecode && paused) {
         paused = false;
         vpout->resume();
-        if (!play_worker){
-            play_worker = new std::thread(VPlayer::play_work, this);
-        }
-        mutex_control.unlock();
     }
-    return 1;
+    mutex_control.unlock();
+    return 0;
 }
 
 void VPlayer::pause()
 {
-    if (!paused) {
-        mutex_control.lock();
+    mutex_control.lock();
+    if (vpdecode && !paused) {
         vpout->pause();
         paused = true;
-        mutex_control.unlock();
     }
+    mutex_control.unlock();
 }
 bool VPlayer::isPlaying()
 {
@@ -96,27 +143,35 @@ bool VPlayer::isPlaying()
 }
 void VPlayer::ended()
 {
+    char *next="/media/ENT/Dump/Downloads/Studio 37 (2011).mp3";
+    done = true;
+    open(next);
+    done = false;
 
-}
+    mutex_control.lock();
+    vpout->resume();
+    paused = false;
+    mutex_control.unlock();
 
-void VPlayer::stop()
-{
-
+    VPlayer::play_work(this);
 }
 
 void VPlayer::post_process(float *buffer)
 {
     if (effects_active){
-        for (std::vector<VPEffectPlugin *>::iterator it=effects.begin();it!=effects.end();it++) {
-            (*it)->process(buffer);
+        for (std::list<effect_entry>::iterator it=effects.begin();it!=effects.end();it++) {
+            (*it).eff->process(buffer);
         }
     }
-
 }
 
 VPlayer::~VPlayer()
 {
     DBG("VPlayer:~VPlayer");
+    if (vpdecode) {
+        delete vpdecode;
+        vpdecode = NULL;
+    }
     config_finit();
 }
 void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
@@ -139,63 +194,57 @@ float VPlayer::getVolume()
 }
 int VPlayer::vpout_open()
 {
-    int ret;
-    mutex_control.lock();
+    int ret=0;
+    DBG(done<<gapless_compatible);
 
-    mutexes[0].unlock();
-    mutexes[1].try_lock();
-    mutexes[2].unlock();
-    mutexes[3].try_lock();
+    if (!(done && gapless_compatible)) {
+        if (buffer1)
+            delete buffer1;
+        if (buffer2)
+            delete buffer2;
 
-    if (buffer1)
-        delete buffer1;
-    if (buffer2)
-        delete buffer2;
+        buffer1 = new float[VPlayer::BUFFER_FRAMES*track_channels];
+        buffer2 = new float[VPlayer::BUFFER_FRAMES*track_channels];
 
-    buffer1 = new float[VPlayer::BUFFER_FRAMES*track_channels];
-    buffer2 = new float[VPlayer::BUFFER_FRAMES*track_channels];
-
-
-    if (vpout)
-        delete vpout;
-
-    vpout = (VPOutPlugin *) config_get_VPOutPlugin_creator()();
-
-   // DBG(sizeof(_vpout_entries)/sizeof(_vpout_entry_t));
-    DBG("track chs:"<<track_channels);
-    DBG("track rate:"<<track_samplerate);
-    DBG("hw max chs:"<<vpout->get_channels());
-    DBG("hw max rate:"<<vpout->get_samplerate());
-
-    if (!gapless_compatible){
-        for (std::vector<VPEffectPlugin *>::iterator it=effects.begin();it!=effects.end();it++) {
-            ret += (*it)->init(this);
+        for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*track_channels;i++){
+            buffer1[i]=0.0f;
+            buffer2[i]=0.0f;
         }
 
-        if (vpout->get_channels() >= track_channels && vpout->get_samplerate() >= track_samplerate)
+        if (vpout){
+            delete vpout;
+            vpout=NULL;
+        }
+        vpout = (VPOutPlugin *) config_get_VPOutPlugin_creator()();
+
+        DBG("track chs:"<<track_channels);
+        DBG("track rate:"<<track_samplerate);
+        DBG("hw max chs:"<<vpout->get_channels());
+        DBG("hw max rate:"<<vpout->get_samplerate());
+
+        if (vpout->get_channels() >= track_channels && vpout->get_samplerate() >= track_samplerate) {
             ret += vpout->init(this, track_samplerate, track_channels);
-        else if (vpout->get_samplerate() < track_samplerate){
+        } else if (vpout->get_samplerate() < track_samplerate){
             DBG("Can not initialize hardware for this samplerate");
         } else {
-            DBG("Dropping channels due to hardware incompatibility");
+            DBG("Dropping channels because hardware is not capable");
             track_channels = vpout->get_channels();
             ret += vpout->init(this, track_samplerate, track_channels);
         }
 
+
+    }
+    for (std::list<effect_entry>::iterator it=effects.begin();it!=effects.end();it++) {
+        if (!(*it).init){
+            ret += (*it).eff->init(this);
+            (*it).init=true;
+        }
     }
 
-    mutex_control.unlock();
     return ret;
 }
 int VPlayer::vpout_close()
 {
-    if(paused)
-        play();
-
-    mutex_control.lock();
-
-    work=false;
-
     vpout->pause();
 
     // let play_worker roll, make sure that only these mutexes are locked once,
@@ -205,13 +254,11 @@ int VPlayer::vpout_close()
     mutexes[0].unlock();
     mutexes[2].unlock();
 
-    play_worker->join();
-    DBG("player thread joined");
-    if (vpout){
-        vpout->finit();
-        delete vpout;
-        vpout=NULL;
+    if (!done) {
+        work = false;
+        play_worker->join();
+        DBG("player thread joined");
+        delete play_worker;
+        play_worker = NULL;
     }
-    mutex_control.unlock();
-
 }

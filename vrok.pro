@@ -6,44 +6,27 @@
 
 CONFIG   += qt thread
 QT       += core gui
-LIBS     += -lsupc++ -lm -lFLAC -lmpg123 -lvorbisfile
+LIBS     += -lsupc++ -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
 
-linux-g++* {
-LIBS     += -lasound
-}
-
-win32 {
-LIBS     += -lboost_system -lboost_thread
-}
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-QMAKE_CXXFLAGS += -O4 -std=c++11
-TARGET = vrok
 TEMPLATE = app
+
+TARGET = vrok
 
 DEFINES += USE_OOURA
 
 SOURCES += main.cpp\
         vrokmain.cpp \
     vplayer.cpp \
-    out.cpp \
     effects/shibatch/Equ.cpp \
     effects/shibatch/Fftsg_fl.c \
-    effect.cpp \
     effects/eq.cpp \
     effects/vis.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
     config.cpp
-
-linux-g++* {
-SOURCES += outs/alsa.cpp
-}
-
-win32 {
-SOURCES += outs/waveout.cpp
-}
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -58,18 +41,29 @@ HEADERS  += vrokmain.h \
     players/mpeg.h \
     players/ogg.h \
     thread_compat.h \
+    decoder.h \
     config.h
-
-linux-g++* {
-HEADERS  += outs/alsa.h
-}
-
-win32 {
-HEADERS  += outs/waveout.h
-}
 
 FORMS    += vrokmain.ui
 
 OTHER_FILES += \
     README.md \
     LICENSE
+
+QMAKE_CXXFLAGS += -O3
+
+linux-g++* {
+LIBS    += -lasound
+QMAKE_CXXFLAGS +=  -std=c++11
+HEADERS  += outs/alsa.h
+SOURCES += outs/alsa.cpp
+}
+
+win32 {
+QMAKE_CXXFLAGS +=  -DBOOST_THREAD_USE_LIB
+LIBS    += -lboost_system-mgw44-mt-1_52 -lboost_thread-mgw44-mt-1_52 -lws2_32
+HEADERS  += outs/waveout.h
+SOURCES += outs/waveout.cpp
+}
+
+

@@ -12,7 +12,7 @@
 #define DEBUG
 #ifdef DEBUG
     #include <iostream>
-    #define DBG(...) std::cout<<"DBG "<<__VA_ARGS__<<std::endl
+    #define DBG(...) std::cout<<__VA_ARGS__<<" at "<<__PRETTY_FUNCTION__<<std::endl
 #else
     #define DBG(...)
 #endif

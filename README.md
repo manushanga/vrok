@@ -14,7 +14,8 @@ Make sure you have these dependencies,<br>
 ALSA development headers<br>
 libFLAC and headers<br>
 libmpg123 and headers<br>
-libvorbisfile and headers<br>
+libogg and headers<br>
+libvorbis and headers<br>
 
 Run these commands in the project directory
 

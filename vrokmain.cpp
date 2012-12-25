@@ -61,6 +61,12 @@ VrokMain::VrokMain(QWidget *parent) :
     ui->gvBox->setScene(gs);
     eq =new VPEffectPluginEQ();
     vis = new VPEffectPluginVis(bars);
+
+
+
+    vp = new VPlayer();
+        vp->addEffect((VPEffectPlugin *) vis);
+        vp->addEffect((VPEffectPlugin *) eq);
 }
 
 
@@ -82,21 +88,12 @@ void VrokMain::on_btnOpen_clicked()
         th=NULL;
     }
 
-    if (vp)
-        delete vp;
+
     ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
                                                     "",
                                                     tr("Supported Files (*.flac *.mp3 *.ogg)")));
 
-    if (ui->txtFile->text().endsWith(".flac",Qt::CaseInsensitive) == true) {
-        vp= new FLACPlayer();
-    } else if (ui->txtFile->text().endsWith(".mp3",Qt::CaseInsensitive) == true){
-        vp = new MPEGPlayer();
-    } else {
-        vp = new OGGPlayer();
-    }
-    vp->addEffect((VPEffectPlugin *) vis);
-    vp->addEffect((VPEffectPlugin *) eq);
+
 
     vp->open((char *)ui->txtFile->text().toUtf8().data() );
 

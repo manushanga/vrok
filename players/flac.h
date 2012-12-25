@@ -12,8 +12,9 @@
 #include <FLAC/stream_decoder.h>
 
 #include "../vplayer.h"
+#include "../decoder.h"
 
-class FLACPlayer : public VPlayer
+class FLACDecoder : public VPDecoder
 {
 public:
     FLAC__StreamDecoder *decoder;
@@ -22,14 +23,18 @@ public:
     unsigned buffer_write;
     unsigned half_buffer_bytes;
     int ret_vpout_open;
+    VPlayer *owner;
 
-    FLACPlayer();
+    FLACDecoder();
+    void init(VPlayer *v);
     int open(const char *url);
     void reader();
     unsigned long getLength();
     void setPosition(unsigned long t);
     unsigned long getPosition();
-    ~FLACPlayer();
+    ~FLACDecoder();
 };
+
+VPDecoder* _VPDecoderFLAC_new();
 
 #endif // PLAYER_FLAC_H
