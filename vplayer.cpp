@@ -20,12 +20,10 @@
 #include "vplayer.h"
 #include "decoder.h"
 #include "config.h"
-
-#include "effects/eq.h"
+#include "effect.h"
 
 void VPlayer::play_work(VPlayer *self)
 {
-    DBG("");
     self->vpdecode->reader();
 }
 
@@ -43,6 +41,10 @@ void VPlayer::removeEffect(unsigned idx)
         it++;
     }
     effects.erase(it,it);
+}
+void VPlayer::setGapplessCB(gapless_cb_t gcb)
+{
+    gapless_cb = gcb;
 }
 VPlayer::VPlayer()
 {
@@ -71,6 +73,9 @@ VPlayer::VPlayer()
     vpdecode=NULL;
 
     gapless_compatible = false;
+    next_track[0]='\0';
+    gapless_cb = NULL;
+
     effects.clear();
 
     config_init();
@@ -143,17 +148,21 @@ bool VPlayer::isPlaying()
 }
 void VPlayer::ended()
 {
-    char *next="/media/ENT/Dump/Downloads/Studio 37 (2011).mp3";
-    done = true;
-    open(next);
-    done = false;
+    if (gapless_cb)
+        gapless_cb(&next_track[0]);
 
-    mutex_control.lock();
-    vpout->resume();
-    paused = false;
-    mutex_control.unlock();
+    if (next_track[0]!='\0') {
+        done = true;
+        open(next_track);
+        done = false;
 
-    VPlayer::play_work(this);
+        mutex_control.lock();
+        vpout->resume();
+        paused = false;
+        mutex_control.unlock();
+
+        VPlayer::play_work(this);
+    }
 }
 
 void VPlayer::post_process(float *buffer)
@@ -167,7 +176,7 @@ void VPlayer::post_process(float *buffer)
 
 VPlayer::~VPlayer()
 {
-    DBG("VPlayer:~VPlayer");
+    DBG("");
     if (vpdecode) {
         delete vpdecode;
         vpdecode = NULL;
@@ -231,8 +240,6 @@ int VPlayer::vpout_open()
             track_channels = vpout->get_channels();
             ret += vpout->init(this, track_samplerate, track_channels);
         }
-
-
     }
     for (std::list<effect_entry>::iterator it=effects.begin();it!=effects.end();it++) {
         if (!(*it).init){

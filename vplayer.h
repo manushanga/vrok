@@ -19,22 +19,25 @@
 
 #include <list>
 
-
 #include "vputils.h"
 #include "thread_compat.h"
-
 
 class VPOutPlugin;
 class VPEffectPlugin;
 class VPDecoder;
+
+typedef void(*gapless_cb_t)(char *url);
+
 struct effect_entry{
     VPEffectPlugin *eff;
     bool init;
 };
+
 class VPlayer
 {
 private:
-    char *next_track;
+    gapless_cb_t gapless_cb;
+    char next_track[256];
     bool gapless_compatible;
     std::list<effect_entry> effects;
 public:
@@ -90,10 +93,11 @@ public:
     float getVolume();
     void addEffect(VPEffectPlugin *eff);
     void removeEffect(unsigned idx);
-    bool enqueGapless(const char *url);
+    // should copy the next track's path whe ngcb is called
+    // max 256 chars including \0
+    void setGapplessCB(gapless_cb_t gcb);
     bool isPlaying();
     ~VPlayer() ;
 };
-
 
 #endif // VPLAYER_H
