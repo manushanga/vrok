@@ -1,6 +1,9 @@
 #ifndef WAVEOUT_H
 #define WAVEOUT_H
 
+#include <windows.h>
+#include <mmsystem.h>
+
 #include "../vplayer.h"
 #include "../out.h"
 
@@ -10,7 +13,8 @@ public:
     std::thread *worker;
     bool work;
     bool paused;
-
+    short *wbuffer1;
+    short *wbuffer2;
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);
     virtual void resume();
     virtual void pause();

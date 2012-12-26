@@ -5,6 +5,7 @@
 
   See LICENSE for details.
 */
+#include <unistd.h>
 
 #include "mpeg.h"
 #include "effect.h"
