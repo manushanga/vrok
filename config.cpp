@@ -15,8 +15,8 @@ void config_init()
 }
 creator_t config_get_VPOutPlugin_creator()
 {
-    char *set = settings.value("plugins/out").toString().toAscii().data();
-
+    const char *set = settings.value("plugins/out").toString().toStdString().c_str();
+    DBG(set);
     for (unsigned i=0;i<sizeof(vpout_entries)/sizeof(vpout_entry_t);i++){
         if (strcmp(vpout_entries[i].name, set) == 0) {
             DBG("config: VPOutPlugin: "<<vpout_entries[i].name);

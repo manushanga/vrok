@@ -40,8 +40,13 @@ static void worker_run(VPOutPluginAlsa *self)
                              self->owner->buffer2,
                              VPlayer::BUFFER_FRAMES);
         self->owner->mutexes[2].unlock();
-        if (ret < 0 && ret != -EAGAIN){
-            DBG("Alsa:run: write error "<<ret);
+        if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE){
+            DBG("trying to recover");
+            if ( snd_pcm_recover(self->handle, ret, 0) < 0 ) {
+                DBG("recover failed for "<<ret);
+            }
+        } else if (ret < 0 && ret != -EAGAIN){
+            DBG("write error "<<ret);
         }
 
     }

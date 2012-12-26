@@ -111,7 +111,6 @@ void VrokMain::on_btnFX_clicked()
 }
 VrokMain::~VrokMain()
 {
-    delete ui;
 
     if (th){
         visuals=false;
@@ -128,5 +127,5 @@ VrokMain::~VrokMain()
         delete eq;
     if (vis)
         delete vis;
-
+    delete ui;
 }
