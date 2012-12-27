@@ -17,8 +17,6 @@
     #define DBG(...)
 #endif
 
-#include <cstdlib>
-#define vp_new(_class, _size) malloc(_size); new(_class)()
-#define vp_free(_class, _obj) (_obj)->~(_class)(); free(_obj)
+#define strtolower(p) for ( ; *p; ++p) *p = tolower(*p)
 
 #endif // VPUTILS_H

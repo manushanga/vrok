@@ -8,7 +8,7 @@
 
 #include "alsa.h"
 
-static const snd_pcm_uframes_t PERIOD_SIZE = 512;
+static const snd_pcm_uframes_t PERIOD_SIZE = 128;
 
 VPOutPlugin* _VPOutPluginAlsa_new()
 {
@@ -19,15 +19,6 @@ static void worker_run(VPOutPluginAlsa *self)
 {
     int ret;
     while (self->work){
-        if (self->paused){
-            // we do alsa syncs here, instead of the calling thread
-            // because of thread syncing problems
-            DBG("alsa pause");
-            snd_pcm_drain(self->handle);
-            self->mutex_pause->lock();
-            snd_pcm_prepare (self->handle);
-            snd_pcm_start (self->handle);
-        }
 
         self->owner->mutexes[1].lock();
         ret = snd_pcm_writei(self->handle,
@@ -48,7 +39,6 @@ static void worker_run(VPOutPluginAlsa *self)
         } else if (ret < 0 && ret != -EAGAIN){
             DBG("write error "<<ret);
         }
-
     }
 
 }
@@ -56,13 +46,19 @@ static void worker_run(VPOutPluginAlsa *self)
 
 void VPOutPluginAlsa::resume()
 {
-    paused = false;
-    mutex_pause->unlock();
+    if (paused){
+        owner->mutexes[3].unlock();
+        owner->mutexes[1].unlock();
+        paused=false;
+    }
 }
 void VPOutPluginAlsa::pause()
 {
-    paused = true;
-    mutex_pause->try_lock();
+    if (!paused){
+        while (owner->mutexes[1].try_lock()) {}
+        while (owner->mutexes[3].try_lock()) {}
+        paused=true;
+    }
 }
 
 int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
@@ -89,8 +85,7 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
         DBG("Alsa:init: failed to set pcm params");
         return -1;
     }
-    mutex_pause = new std::mutex();
-    mutex_pause->try_lock();
+
     paused=true;
     work=true;
     worker = new std::thread(worker_run, this);
@@ -141,16 +136,12 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     work=false;
     if(!paused)
         pause();
-    owner->mutexes[1].unlock();
-    owner->mutexes[3].unlock();
-
     resume();
     if (worker){
         worker->join();
         DBG("out thread joined");
         delete worker;
     }
-    delete mutex_pause;
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
 }

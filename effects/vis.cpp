@@ -1,3 +1,10 @@
+/*
+  Vrok - smokin' audio
+  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
 #include <cmath>
 
 #include "vis.h"
@@ -13,7 +20,7 @@ VPEffectPluginVis::VPEffectPluginVis(float *bars)
 {
     bar_array = bars;
     mutex_vis.unlock();
-
+    DBG("s");
     for (size_t i=0;i<BARS;i++){
         bar_array[i] = 0.0f;
         trig[0][i]=(float *)new float[VPlayer::BUFFER_FRAMES*sizeof(float)];
@@ -54,7 +61,7 @@ void VPEffectPluginVis::process(float *buffer)
         if (bar_array[b] < 0.1f && bar_array[b] > 0.0f)
             bar_array[b] = 0.0f;
         else if (bar_array[b] >= newb)
-            bar_array[b] -= 0.25f+bar_array[b]*0.01;
+            bar_array[b] -= 0.20f+bar_array[b]*0.05;
         else
             bar_array[b] = newb;
     }

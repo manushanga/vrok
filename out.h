@@ -18,7 +18,6 @@
 class VPOutPlugin{
 public:
     bool work;
-    std::mutex *mutex_pause;
 
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels) = 0;
     virtual void resume() = 0;

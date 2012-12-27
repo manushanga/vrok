@@ -1,7 +1,3 @@
-#ifndef VROKMAIN_H
-#define VROKMAIN_H
-
-#include <QMainWindow>
 /*
   Vrok - smokin' audio
   (C) 2012 Madura A. released under GPL 2.0. All following copyrights
@@ -9,6 +5,11 @@
 
   See LICENSE for details.
 */
+#ifndef VROKMAIN_H
+#define VROKMAIN_H
+
+#include <QMainWindow>
+
 
 #include "vplayer.h"
 #include "effects/eq.h"
@@ -26,6 +27,9 @@ class VrokMain : public QMainWindow
     Q_OBJECT
     
 public:
+        Ui::VrokMain *ui;
+    QGraphicsScene *gs;
+    QGraphicsRectItem *gbars[16];
     float bars[VPEffectPluginVis::BARS];
     static void vis_updater(VrokMain *self);
     explicit VrokMain(QWidget *parent = 0);
@@ -38,11 +42,10 @@ public slots:
     void on_btnFX_clicked();
 
 private:
-    Ui::VrokMain *ui;
+
     VPlayer *vp;
     VPEffectPluginVis *vis;
-    QGraphicsScene *gs;
-    QGraphicsRectItem *gbars[16];
+
     VPEffectPluginEQ *eq;
     std::thread *th;
     bool visuals;

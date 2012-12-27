@@ -116,7 +116,6 @@ unsigned long MPEGDecoder::getPosition()
 }
 MPEGDecoder::~MPEGDecoder()
 {
-    DBG("MPEGPlayer:~MPEGPlayer");
     owner->vpout_close();
     mpg123_close(mh);
     mpg123_exit();

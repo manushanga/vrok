@@ -93,7 +93,7 @@ int VPlayer::open(const char *url)
 
     unsigned len = strlen(url);
     for (int i=0;i<sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);i++){
-        if (strcmp(url + len - strlen(vpdecoder_entries[i].ext),vpdecoder_entries[i].ext) == 0) {
+        if (strcasecmp(url + len - strlen(vpdecoder_entries[i].ext),vpdecoder_entries[i].ext) == 0) {
             DBG("open decoder "<<vpdecoder_entries[i].name);
             vpdecode = (VPDecoder *)vpdecoder_entries[i].creator();
         }
@@ -113,12 +113,12 @@ int VPlayer::open(const char *url)
     work=true;
 
     mutexes[0].try_lock();
-    mutexes[1].unlock();
+    mutexes[1].try_lock();
     mutexes[2].try_lock();
-    mutexes[3].unlock();
+    mutexes[3].try_lock();
 
     if (!play_worker){
-        play_worker = new std::thread(VPlayer::play_work, this);
+        play_worker = new std::thread((void(*)(void*))VPlayer::play_work, this);
     }
     return ret;
 }
@@ -169,7 +169,7 @@ void VPlayer::post_process(float *buffer)
 {
     if (effects_active){
         for (std::list<effect_entry>::iterator it=effects.begin();it!=effects.end();it++) {
-            (*it).eff->process(buffer);
+            (*it).eff->process( buffer);
         }
     }
 }
@@ -252,14 +252,16 @@ int VPlayer::vpout_open()
 }
 int VPlayer::vpout_close()
 {
-    vpout->pause();
-
+    if (paused){
+        vpout->resume();
+        paused = false;
+    }
     // let play_worker roll, make sure that only these mutexes are locked once,
     // if its done multiple times include the work check in between them. see
     // player_flac.cpp's worker function
 
-    mutexes[0].unlock();
     mutexes[2].unlock();
+    mutexes[0].unlock();
 
     if (!done) {
         work = false;
@@ -268,4 +270,8 @@ int VPlayer::vpout_close()
         delete play_worker;
         play_worker = NULL;
     }
+    mutexes[3].try_lock();
+    mutexes[1].try_lock();
+
+
 }

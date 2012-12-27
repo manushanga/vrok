@@ -14,9 +14,9 @@
 
 #include "waveout.h"   
 /*
- * some good values for block size and count
+ * some good values that can pause in time, before the user feels like shit
  */
-#define BLOCK_SIZE  8192
+#define BLOCK_SIZE  1024
 #define BLOCK_COUNT 20
 
 /*
@@ -47,26 +47,18 @@ VPOutPlugin* _VPOutPluginWaveOut_new()
 static void worker_run(VPOutPluginWaveOut *self)
 {
 
-    DBG("");
     while (self->work){
-        if (self->paused){
-            // we do alsa syncs here, instead of the calling thread
-            // because of thread syncing problems
-            DBG("going to pause");
-            self->mutex_pause->lock();
-            DBG("out of pause");
-        }
 
         self->owner->mutexes[1].lock();
         for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*self->owner->track_channels;i++){
-            self->wbuffer1[i]=(short)(self->owner->buffer1[i]*32768.0f);
+            self->wbuffer1[i]=(short)(self->owner->buffer1[i]*32700.0f);
         }
         writeAudio(hWaveOut,(char *) self->wbuffer1, VPlayer::BUFFER_FRAMES*self->owner->track_channels*sizeof(short));
         self->owner->mutexes[0].unlock();
 
         self->owner->mutexes[3].lock();
         for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*self->owner->track_channels;i++){
-            self->wbuffer2[i]=(short)(self->owner->buffer2[i]*32768.0f);
+            self->wbuffer2[i]=(short)(self->owner->buffer2[i]*32700.0f);
         }
 
         writeAudio(hWaveOut,(char *) self->wbuffer2, VPlayer::BUFFER_FRAMES*self->owner->track_channels*sizeof(short));
@@ -77,13 +69,19 @@ static void worker_run(VPOutPluginWaveOut *self)
 
 void VPOutPluginWaveOut::resume()
 {
-    paused = false;
-    mutex_pause->unlock();
+    if (paused){
+        owner->mutexes[3].unlock();
+        owner->mutexes[1].unlock();
+        paused = false;
+    }
 }
 void VPOutPluginWaveOut::pause()
 {
-    paused = true;
-    mutex_pause->try_lock();
+    if (!paused){
+        while (owner->mutexes[1].try_lock()) {}
+        while (owner->mutexes[3].try_lock()) {}
+        paused = true;
+    }
 }
 
 int VPOutPluginWaveOut::init(VPlayer *v, unsigned samplerate, unsigned channels)
@@ -93,11 +91,9 @@ int VPOutPluginWaveOut::init(VPlayer *v, unsigned samplerate, unsigned channels)
     wbuffer1=new short[VPlayer::BUFFER_FRAMES*channels];
     wbuffer2=new short[VPlayer::BUFFER_FRAMES*channels];
     start(samplerate, channels);
-    mutex_pause = new std::mutex();
-    mutex_pause->try_lock();
     paused=true;
     work=true;
-    worker = new std::thread(worker_run, this);
+    worker = new std::thread((void(*)(void*))worker_run, this);
     DBG("waveout thread made");
     return 0;
 }
@@ -105,29 +101,25 @@ int VPOutPluginWaveOut::init(VPlayer *v, unsigned samplerate, unsigned channels)
 unsigned VPOutPluginWaveOut::get_samplerate()
 {
     // problem?
-    return 192001;
+    return 192000;
 }
 unsigned VPOutPluginWaveOut::get_channels()
 {
     // another problem?
-    return 8;
+    return 9;
 }
 VPOutPluginWaveOut::~VPOutPluginWaveOut()
 {
     work=false;
     if(!paused)
         pause();
-    owner->mutexes[1].unlock();
-    owner->mutexes[3].unlock();
-
     resume();
+    stop();
     if (worker){
         worker->join();
         DBG("out thread joined");
         delete worker;
     }
-    delete mutex_pause;
-    stop();
 }
 int stop()
 {
@@ -176,9 +168,9 @@ int start(unsigned samplerate, unsigned channels)
     /*
      * set up the WAVEFORMATEX structure.
      */
-    wfx.nSamplesPerSec  = 44100;  /* sample rate */
+    wfx.nSamplesPerSec  = samplerate;  /* sample rate */
     wfx.wBitsPerSample  = 16;     /* sample size */
-    wfx.nChannels       = 2;      /* channels    */
+    wfx.nChannels       = channels;      /* channels    */
     wfx.cbSize          = 0;      /* size of _extra_ info */
     wfx.wFormatTag      = WAVE_FORMAT_PCM;
     wfx.nBlockAlign     = (wfx.wBitsPerSample * wfx.nChannels) >> 3;

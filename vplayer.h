@@ -1,4 +1,3 @@
-
 /*
   Vrok - smokin' audio
   (C) 2012 Madura A. released under GPL 2.0. All following copyrights
@@ -42,7 +41,7 @@ private:
     std::list<effect_entry> effects;
 public:
     // smaller buffers have less cpu usage and more wakeups
-    static const unsigned BUFFER_FRAMES = 511;
+    static const unsigned BUFFER_FRAMES = 513;
 
     // from 0 to 1
     float volume;

@@ -1,3 +1,11 @@
+/*
+  Vrok - smokin' audio
+  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
+
 #include <cstring>
 
 #include "eq.h"
@@ -37,7 +45,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
 {
     owner = v;
     equ_init (&sb_state, 10, owner->track_channels);
-    sb_preamp = 2.6f;
+    sb_preamp = 2.3f;
     sb_recalc_table();
     return 1;
 

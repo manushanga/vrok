@@ -218,19 +218,11 @@ void FLACDecoder::init(VPlayer *v)
     owner = v;
 }
 FLACDecoder::~FLACDecoder()
-{   if (owner->work){
-        if (owner->paused)
-            owner->play();
-        owner->vpout_close();
-    }
+{
+    owner->vpout_close();
     FLAC__stream_decoder_finish(decoder);
     FLAC__stream_decoder_delete(decoder);
-   //
-    /*if (buffer != NULL)
-        delete buffer;
-    buffer_write = 0;*/
-    DBG("Flac delete");
-   // this->~VPlayer();*/
+
 }
 
 int FLACDecoder::open(const char *url)

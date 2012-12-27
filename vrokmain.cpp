@@ -25,8 +25,7 @@
 #include <QGraphicsRectItem>
 
 void VrokMain::vis_updater(VrokMain *self)
-{
-
+{/*
     while (self->visuals){
         self->vis->mutex_vis.lock();
         for (int i=0;i<VPEffectPluginVis::BARS;i++){
@@ -35,10 +34,10 @@ void VrokMain::vis_updater(VrokMain *self)
         self->vis->mutex_vis.unlock();
         self->gs->update(0.0f,0.0f,100.0f,-100.0f);
         usleep(23000);
-        self->ui->gvBox->viewport()->update();
 
-    }
+        //self->ui->gvBox->viewport()->update();
 
+    }*/
 }
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
@@ -61,8 +60,6 @@ VrokMain::VrokMain(QWidget *parent) :
     ui->gvBox->setScene(gs);
     eq =new VPEffectPluginEQ();
     vis = new VPEffectPluginVis(bars);
-
-
 
     vp = new VPlayer();
         vp->addEffect((VPEffectPlugin *) vis);
@@ -99,7 +96,7 @@ void VrokMain::on_btnOpen_clicked()
 
     vp->effects_active = ui->btnFX->isChecked();
     visuals = true;
-    th  = new std::thread(VrokMain::vis_updater,this);
+    th  = new std::thread((void(*)(void*))VrokMain::vis_updater,this);
 
 }
 void VrokMain::on_btnFX_clicked()
