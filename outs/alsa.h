@@ -22,7 +22,9 @@ public:
     snd_pcm_t *handle;
     snd_pcm_hw_params_t *params;
     std::thread *worker;
+    std::mutex m_pause;
     bool work;
+    bool pause_check;
     bool paused;
 
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);

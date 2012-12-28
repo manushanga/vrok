@@ -25,7 +25,7 @@
 #include <QGraphicsRectItem>
 
 void VrokMain::vis_updater(VrokMain *self)
-{/*
+{
     while (self->visuals){
         self->vis->mutex_vis.lock();
         for (int i=0;i<VPEffectPluginVis::BARS;i++){
@@ -34,10 +34,8 @@ void VrokMain::vis_updater(VrokMain *self)
         self->vis->mutex_vis.unlock();
         self->gs->update(0.0f,0.0f,100.0f,-100.0f);
         usleep(23000);
-
-        //self->ui->gvBox->viewport()->update();
-
-    }*/
+        self->ui->gvBox->viewport()->update();
+    }
 }
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
@@ -91,13 +89,13 @@ void VrokMain::on_btnOpen_clicked()
                                                     tr("Supported Files (*.flac *.mp3 *.ogg)")));
 
 
+    if (ui->txtFile->text().length()>0) {
+        vp->open((char *)ui->txtFile->text().toUtf8().data() );
 
-    vp->open((char *)ui->txtFile->text().toUtf8().data() );
-
-    vp->effects_active = ui->btnFX->isChecked();
-    visuals = true;
-    th  = new std::thread((void(*)(void*))VrokMain::vis_updater,this);
-
+        vp->effects_active = ui->btnFX->isChecked();
+        visuals = true;
+        //th  = new std::thread((void(*)(void*))VrokMain::vis_updater,this);
+    }
 }
 void VrokMain::on_btnFX_clicked()
 {

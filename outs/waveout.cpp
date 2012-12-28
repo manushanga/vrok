@@ -78,8 +78,8 @@ void VPOutPluginWaveOut::resume()
 void VPOutPluginWaveOut::pause()
 {
     if (!paused){
-        while (owner->mutexes[1].try_lock()) {}
-        while (owner->mutexes[3].try_lock()) {}
+        while (!owner->mutexes[1].try_lock()) {}
+        DBG("should be true"<<owner->mutexes[3].try_lock());
         paused = true;
     }
 }
@@ -111,15 +111,15 @@ unsigned VPOutPluginWaveOut::get_channels()
 VPOutPluginWaveOut::~VPOutPluginWaveOut()
 {
     work=false;
-    if(!paused)
-        pause();
-    resume();
-    stop();
+    owner->mutexes[1].unlock();
+    owner->mutexes[3].unlock();
+
     if (worker){
         worker->join();
         DBG("out thread joined");
         delete worker;
     }
+    stop();
 }
 int stop()
 {

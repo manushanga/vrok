@@ -55,8 +55,9 @@ void VPOutPluginAlsa::resume()
 void VPOutPluginAlsa::pause()
 {
     if (!paused){
-        while (owner->mutexes[1].try_lock()) {}
-        while (owner->mutexes[3].try_lock()) {}
+        while (!owner->mutexes[1].try_lock()) {}
+        DBG("should be true"<<owner->mutexes[3].try_lock());
+
         paused=true;
     }
 }
@@ -134,9 +135,9 @@ unsigned VPOutPluginAlsa::get_channels()
 VPOutPluginAlsa::~VPOutPluginAlsa()
 {
     work=false;
-    if(!paused)
-        pause();
-    resume();
+    owner->mutexes[1].unlock();
+    owner->mutexes[3].unlock();
+
     if (worker){
         worker->join();
         DBG("out thread joined");

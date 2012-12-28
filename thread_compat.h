@@ -83,7 +83,7 @@ public:
     bool try_lock()
     {
         LONG result = InterlockedCompareExchange(&m_counter, 1, 0);
-        return (result == 1);
+        return (result == 0);
     }
 };
 }

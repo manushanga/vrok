@@ -24,7 +24,7 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder,
     FLACDecoder *me = (FLACDecoder*) client_data;
 
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
-        me->owner->set_metadata(  metadata->data.stream_info.sample_rate,  metadata->data.stream_info.channels);
+        me->owner->set_metadata(  metadata->data.stream_info.sample_rate, metadata->data.stream_info.channels);
         DBG("FLAC meta ok");
         me->half_buffer_bytes = VPlayer::BUFFER_FRAMES*me->owner->track_channels*sizeof(float);
         if (me->buffer)
@@ -143,7 +143,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         }*/
         self->post_process(self->buffer1);
         self->mutexes[1].unlock();
-        //DBG("s3");
+       // DBG("s3");
         self->mutexes[2].lock();
         j=0;
         // write buffer2
