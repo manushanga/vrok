@@ -76,18 +76,18 @@ VPlayer::VPlayer()
 }
 int VPlayer::open(const char *url)
 {
-    mutex_control.lock();
+   // mutex_control.lock();
     if (vpdecode && !paused) {
         vpout->rewind();
         paused = true;
     }
-
+ //   mutex_control.unlock();
     if (vpdecode){
         DBG("free decoder");
         delete vpdecode;
         vpdecode = NULL;
     }
-    mutex_control.unlock();
+
 
     mutexes[0].unlock();
     mutexes[1].try_lock();
@@ -204,7 +204,7 @@ float VPlayer::getVolume()
 int VPlayer::vpout_open()
 {
     int ret=0;
-
+    DBG(gapless_compatible);
     if (!gapless_compatible) {
         if (buffer1)
             delete buffer1;

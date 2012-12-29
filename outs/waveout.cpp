@@ -17,7 +17,7 @@
  * some good values for block size and count
  */
 #define BLOCK_SIZE  512
-#define BLOCK_COUNT 40
+#define BLOCK_COUNT 16
 
 /*
  * function prototypes
@@ -62,14 +62,14 @@ static void worker_run(VPOutPluginWaveOut *self)
 
         self->owner->mutexes[1].lock();
         for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*self->owner->track_channels;i++){
-            self->wbuffer1[i]=(short)(self->owner->buffer1[i]*32768.0f);
+            self->wbuffer1[i]=(short)(self->owner->buffer1[i]*32700.0f);
         }
         writeAudio(hWaveOut,(char *) self->wbuffer1, VPlayer::BUFFER_FRAMES*self->owner->track_channels*sizeof(short));
         self->owner->mutexes[0].unlock();
 
         self->owner->mutexes[3].lock();
         for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*self->owner->track_channels;i++){
-            self->wbuffer2[i]=(short)(self->owner->buffer2[i]*32768.0f);
+            self->wbuffer2[i]=(short)(self->owner->buffer2[i]*32700.0f);
         }
 
         writeAudio(hWaveOut,(char *) self->wbuffer2, VPlayer::BUFFER_FRAMES*self->owner->track_channels*sizeof(short));
@@ -77,7 +77,7 @@ static void worker_run(VPOutPluginWaveOut *self)
     }
 }
 
-void VPOutPluginWaveOut::rewind()
+void __attribute__((optimize("O0"))) VPOutPluginWaveOut::rewind()
 {
     if (!paused){
         m_pause.lock();
@@ -88,7 +88,7 @@ void VPOutPluginWaveOut::rewind()
         while (!paused) {  }
     }
 }
-void VPOutPluginWaveOut::resume()
+void __attribute__((optimize("O0"))) VPOutPluginWaveOut::resume()
 {
     if (paused){
         pause_check = false;
@@ -96,7 +96,7 @@ void VPOutPluginWaveOut::resume()
         while (paused) {  }
     }
 }
-void VPOutPluginWaveOut::pause()
+void __attribute__((optimize("O0"))) VPOutPluginWaveOut::pause()
 {
     if (!paused){
         m_pause.lock();
@@ -257,8 +257,8 @@ static void writeAudio(HWAVEOUT hWaveOut, LPSTR data, int size)
         /*
          * wait for a block to become free
          */
-        while(!waveFreeBlockCount)
-            Sleep(10);
+
+        while(!waveFreeBlockCount){ Sleep(1); }
 
         /*
          * point to the next block

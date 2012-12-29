@@ -13,9 +13,9 @@ public:
     std::thread *worker;
     std::mutex m_pause;
     std::mutex *mutex_pause;
-    bool work;
-    bool paused;
-    bool pause_check;
+    volatile bool work;
+    volatile bool paused;
+    volatile bool pause_check;
     short *wbuffer1;
     short *wbuffer2;
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);

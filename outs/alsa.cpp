@@ -21,13 +21,14 @@ static void worker_run(VPOutPluginAlsa *self)
 
     while (self->work){
         if (self->pause_check) {
-            self->paused=true;
             snd_pcm_drain(self->handle);
+            self->paused=true;
             self->m_pause.lock();
             self->m_pause.unlock();
+            self->paused = false;
             snd_pcm_prepare(self->handle);
             snd_pcm_start(self->handle);
-            self->paused = false;
+
         }
         self->owner->mutexes[1].lock();
         //DBG("1");
@@ -53,21 +54,21 @@ static void worker_run(VPOutPluginAlsa *self)
     }
 
 }
-void VPOutPluginAlsa::rewind()
+
+void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 {
+
     if (!paused){
         m_pause.lock();
-        pause_check = true;
+
         owner->mutexes[1].unlock();
         owner->mutexes[3].unlock();
-
-
+        pause_check = true;
         while (!paused) {}
     }
-
 }
 
-void VPOutPluginAlsa::resume()
+void __attribute__((optimize("O0"))) VPOutPluginAlsa::resume()
 {
     if (paused){
         pause_check = false;
@@ -75,9 +76,10 @@ void VPOutPluginAlsa::resume()
         while (paused) {}
     }
 }
-void VPOutPluginAlsa::pause()
+void __attribute__((optimize("O0"))) VPOutPluginAlsa::pause()
 {
     if (!paused){
+
         m_pause.lock();
         pause_check = true;
         while (!paused) {}
@@ -130,11 +132,12 @@ unsigned VPOutPluginAlsa::get_samplerate()
     snd_pcm_hw_params_any(h, params);
     unsigned s;
     if (snd_pcm_hw_params_get_rate_max(params, &s, 0) > -1){
+        snd_pcm_close(h);
         return s;
     } else {
+        snd_pcm_close(h);
         return 0;
     }
-    snd_pcm_close(h);
 
 }
 unsigned VPOutPluginAlsa::get_channels()
@@ -149,11 +152,13 @@ unsigned VPOutPluginAlsa::get_channels()
     snd_pcm_hw_params_any(h, params);
     unsigned c;
     if (snd_pcm_hw_params_get_channels_max(params, &c) > -1) {
+        snd_pcm_close(h);
         return c;
     } else {
+        snd_pcm_close(h);
         return 0;
     }
-    snd_pcm_close(h);
+
 
 }
 VPOutPluginAlsa::~VPOutPluginAlsa()

@@ -50,7 +50,7 @@ OTHER_FILES += \
     README.md \
     LICENSE
 
-#QMAKE_CXXFLAGS += -O3
+QMAKE_CXXFLAGS += -O3
 
 linux-g++* {
 LIBS    += -lasound

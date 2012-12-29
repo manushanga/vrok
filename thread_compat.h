@@ -75,7 +75,6 @@ public:
         {
             WaitForSingleObject(m_semaphore, INFINITE);
         }
-      //  Sleep(2);
     }
 
     void unlock()
@@ -84,7 +83,6 @@ public:
         {
             ReleaseSemaphore(m_semaphore, 1, NULL);
         }
-       // Sleep(2);
     }
     bool try_lock()
     {

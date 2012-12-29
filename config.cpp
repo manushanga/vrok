@@ -23,6 +23,7 @@ creator_t config_get_VPOutPlugin_creator()
             return vpout_entries[i].creator;
         }
     }
+    return NULL;
 }
 void config_finit()
 {
