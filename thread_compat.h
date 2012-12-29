@@ -15,12 +15,8 @@
 #include <process.h>
 // This is my own ugly implementation for Windows, and it replaces
 // boost's need in this project
-#include <boost/thread.hpp>
+
 namespace std{
-    typedef boost::mutex mutex;
-    typedef boost::thread thread;
-}
-/*namespace std{
 class thread
 {
 private:
@@ -53,6 +49,8 @@ public:
 
 // The below code was used for this implementation
 // http://preshing.com/20111124/always-use-a-lightweight-mutex
+
+
 class mutex
 {
 private:
@@ -77,6 +75,7 @@ public:
         {
             WaitForSingleObject(m_semaphore, INFINITE);
         }
+      //  Sleep(2);
     }
 
     void unlock()
@@ -85,6 +84,7 @@ public:
         {
             ReleaseSemaphore(m_semaphore, 1, NULL);
         }
+       // Sleep(2);
     }
     bool try_lock()
     {
@@ -92,7 +92,8 @@ public:
         return (result != 0);
     }
 };
-}x*/
+}
+
 #elif defined(__linux__)
 #include <thread>
 #include <mutex>

@@ -60,8 +60,7 @@ SOURCES += outs/alsa.cpp
 }
 
 win32 {
-QMAKE_CXXFLAGS +=  -DBOOST_THREAD_USE_LIB
-LIBS    +=  -lws2_32 -lwinmm -lboost_system-mgw44-mt-1_52 -lboost_thread-mgw44-mt-1_52
+LIBS    +=  -lws2_32 -lwinmm
 HEADERS  += outs/waveout.h
 SOURCES += outs/waveout.cpp
 }

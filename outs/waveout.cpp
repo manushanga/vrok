@@ -12,12 +12,12 @@
   All this is messy, I know and I don't care.
 */
 
-#include "waveout.h"   
+#include "waveout.h"
 /*
- * some good values that can pause in time, before the user feels like shit
+ * some good values for block size and count
  */
-#define BLOCK_SIZE  1024
-#define BLOCK_COUNT 8
+#define BLOCK_SIZE  512
+#define BLOCK_COUNT 40
 
 /*
  * function prototypes
@@ -47,24 +47,29 @@ VPOutPlugin* _VPOutPluginWaveOut_new()
 static void worker_run(VPOutPluginWaveOut *self)
 {
 
+    DBG("");
     while (self->work){
-        if (self->pause_check) {
+        if (self->pause_check){
+            // we do alsa syncs here, instead of the calling thread
+            // because of thread syncing problems
+            DBG("going to pause");
             self->paused=true;
             self->m_pause.lock();
             self->m_pause.unlock();
-            self->paused = false;
+            self->paused=false;
+            DBG("out of pause");
         }
 
         self->owner->mutexes[1].lock();
         for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*self->owner->track_channels;i++){
-            self->wbuffer1[i]=(short)(self->owner->buffer1[i]*32700.0f);
+            self->wbuffer1[i]=(short)(self->owner->buffer1[i]*32768.0f);
         }
         writeAudio(hWaveOut,(char *) self->wbuffer1, VPlayer::BUFFER_FRAMES*self->owner->track_channels*sizeof(short));
         self->owner->mutexes[0].unlock();
 
         self->owner->mutexes[3].lock();
         for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*self->owner->track_channels;i++){
-            self->wbuffer2[i]=(short)(self->owner->buffer2[i]*32700.0f);
+            self->wbuffer2[i]=(short)(self->owner->buffer2[i]*32768.0f);
         }
 
         writeAudio(hWaveOut,(char *) self->wbuffer2, VPlayer::BUFFER_FRAMES*self->owner->track_channels*sizeof(short));
@@ -75,21 +80,20 @@ static void worker_run(VPOutPluginWaveOut *self)
 void VPOutPluginWaveOut::rewind()
 {
     if (!paused){
-        owner->mutexes[1].unlock();
-        owner->mutexes[3].unlock();
         m_pause.lock();
         pause_check = true;
-        while (!paused) {}
+        owner->mutexes[1].unlock();
+        owner->mutexes[3].unlock();
+
+        while (!paused) {  }
     }
-
 }
-
 void VPOutPluginWaveOut::resume()
 {
     if (paused){
         pause_check = false;
         m_pause.unlock();
-        while (paused) { Sleep(10); }
+        while (paused) {  }
     }
 }
 void VPOutPluginWaveOut::pause()
@@ -97,7 +101,7 @@ void VPOutPluginWaveOut::pause()
     if (!paused){
         m_pause.lock();
         pause_check = true;
-        while (!paused) { Sleep(10); }
+        while (!paused) { }
     }
 }
 
@@ -109,10 +113,10 @@ int VPOutPluginWaveOut::init(VPlayer *v, unsigned samplerate, unsigned channels)
     wbuffer2=new short[VPlayer::BUFFER_FRAMES*channels];
     start(samplerate, channels);
     m_pause.unlock();
-    paused=false;
     pause_check=false;
+    paused=false;
     work=true;
-    worker = new std::thread((void(*)(void*))worker_run, this);
+    worker = new std::thread( (void(*)(void*))worker_run, this);
     DBG("waveout thread made");
     return 0;
 }
@@ -130,14 +134,16 @@ unsigned VPOutPluginWaveOut::get_channels()
 VPOutPluginWaveOut::~VPOutPluginWaveOut()
 {
     work=false;
-    if (paused)
-        resume();
+    owner->mutexes[1].unlock();
+    owner->mutexes[3].unlock();
 
     if (worker){
         worker->join();
         DBG("out thread joined");
         delete worker;
     }
+    delete wbuffer1;
+    delete wbuffer2;
     stop();
 }
 int stop()
@@ -187,9 +193,9 @@ int start(unsigned samplerate, unsigned channels)
     /*
      * set up the WAVEFORMATEX structure.
      */
-    wfx.nSamplesPerSec  = samplerate;  /* sample rate */
+    wfx.nSamplesPerSec  = 44100;  /* sample rate */
     wfx.wBitsPerSample  = 16;     /* sample size */
-    wfx.nChannels       = channels;      /* channels    */
+    wfx.nChannels       = 2;      /* channels    */
     wfx.cbSize          = 0;      /* size of _extra_ info */
     wfx.wFormatTag      = WAVE_FORMAT_PCM;
     wfx.nBlockAlign     = (wfx.wBitsPerSample * wfx.nChannels) >> 3;

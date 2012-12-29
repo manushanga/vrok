@@ -12,6 +12,7 @@ public:
     VPlayer *owner;
     std::thread *worker;
     std::mutex m_pause;
+    std::mutex *mutex_pause;
     bool work;
     bool paused;
     bool pause_check;

@@ -41,7 +41,7 @@ private:
     std::list<effect_entry> effects;
 public:
     // smaller buffers have less cpu usage and more wakeups
-    static const unsigned BUFFER_FRAMES = 512;
+    static const unsigned BUFFER_FRAMES = 1024;
 
     // from 0 to 1
     float volume;
