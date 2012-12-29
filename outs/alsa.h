@@ -28,6 +28,7 @@ public:
     bool paused;
 
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);
+    virtual void rewind();
     virtual void resume();
     virtual void pause();
     virtual unsigned get_samplerate();

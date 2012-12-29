@@ -17,7 +17,7 @@
  * some good values that can pause in time, before the user feels like shit
  */
 #define BLOCK_SIZE  1024
-#define BLOCK_COUNT 20
+#define BLOCK_COUNT 8
 
 /*
  * function prototypes
@@ -48,6 +48,12 @@ static void worker_run(VPOutPluginWaveOut *self)
 {
 
     while (self->work){
+        if (self->pause_check) {
+            self->paused=true;
+            self->m_pause.lock();
+            self->m_pause.unlock();
+            self->paused = false;
+        }
 
         self->owner->mutexes[1].lock();
         for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*self->owner->track_channels;i++){
@@ -66,21 +72,32 @@ static void worker_run(VPOutPluginWaveOut *self)
     }
 }
 
+void VPOutPluginWaveOut::rewind()
+{
+    if (!paused){
+        owner->mutexes[1].unlock();
+        owner->mutexes[3].unlock();
+        m_pause.lock();
+        pause_check = true;
+        while (!paused) {}
+    }
+
+}
 
 void VPOutPluginWaveOut::resume()
 {
     if (paused){
-        owner->mutexes[3].unlock();
-        owner->mutexes[1].unlock();
-        paused = false;
+        pause_check = false;
+        m_pause.unlock();
+        while (paused) { Sleep(10); }
     }
 }
 void VPOutPluginWaveOut::pause()
 {
     if (!paused){
-        while (!owner->mutexes[1].try_lock()) {}
-        DBG("should be true"<<owner->mutexes[3].try_lock());
-        paused = true;
+        m_pause.lock();
+        pause_check = true;
+        while (!paused) { Sleep(10); }
     }
 }
 
@@ -91,7 +108,9 @@ int VPOutPluginWaveOut::init(VPlayer *v, unsigned samplerate, unsigned channels)
     wbuffer1=new short[VPlayer::BUFFER_FRAMES*channels];
     wbuffer2=new short[VPlayer::BUFFER_FRAMES*channels];
     start(samplerate, channels);
-    paused=true;
+    m_pause.unlock();
+    paused=false;
+    pause_check=false;
     work=true;
     worker = new std::thread((void(*)(void*))worker_run, this);
     DBG("waveout thread made");
@@ -111,8 +130,8 @@ unsigned VPOutPluginWaveOut::get_channels()
 VPOutPluginWaveOut::~VPOutPluginWaveOut()
 {
     work=false;
-    owner->mutexes[1].unlock();
-    owner->mutexes[3].unlock();
+    if (paused)
+        resume();
 
     if (worker){
         worker->join();

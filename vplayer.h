@@ -41,7 +41,7 @@ private:
     std::list<effect_entry> effects;
 public:
     // smaller buffers have less cpu usage and more wakeups
-    static const unsigned BUFFER_FRAMES = 6991;
+    static const unsigned BUFFER_FRAMES = 512;
 
     // from 0 to 1
     float volume;
@@ -58,8 +58,6 @@ public:
 
     // internal, play_worker runs only if work==true, if not it MUST return
     bool work;
-
-    bool done;
 
     // internal, paused state
     bool paused;

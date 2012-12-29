@@ -11,11 +11,14 @@ class VPOutPluginWaveOut : public VPOutPlugin {
 public:
     VPlayer *owner;
     std::thread *worker;
+    std::mutex m_pause;
     bool work;
     bool paused;
+    bool pause_check;
     short *wbuffer1;
     short *wbuffer2;
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);
+    virtual void rewind();
     virtual void resume();
     virtual void pause();
     virtual unsigned get_samplerate();

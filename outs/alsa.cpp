@@ -18,15 +18,26 @@ VPOutPlugin* _VPOutPluginAlsa_new()
 static void worker_run(VPOutPluginAlsa *self)
 {
     int ret;
-    while (self->work){
 
+    while (self->work){
+        if (self->pause_check) {
+            self->paused=true;
+            snd_pcm_drain(self->handle);
+            self->m_pause.lock();
+            self->m_pause.unlock();
+            snd_pcm_prepare(self->handle);
+            snd_pcm_start(self->handle);
+            self->paused = false;
+        }
         self->owner->mutexes[1].lock();
+        //DBG("1");
         ret = snd_pcm_writei(self->handle,
                              self->owner->buffer1,
                              VPlayer::BUFFER_FRAMES);
         self->owner->mutexes[0].unlock();
 
         self->owner->mutexes[3].lock();
+        //DBG("2");
         ret = snd_pcm_writei(self->handle,
                              self->owner->buffer2,
                              VPlayer::BUFFER_FRAMES);
@@ -42,23 +53,34 @@ static void worker_run(VPOutPluginAlsa *self)
     }
 
 }
+void VPOutPluginAlsa::rewind()
+{
+    if (!paused){
+        m_pause.lock();
+        pause_check = true;
+        owner->mutexes[1].unlock();
+        owner->mutexes[3].unlock();
 
+
+        while (!paused) {}
+    }
+
+}
 
 void VPOutPluginAlsa::resume()
 {
     if (paused){
-        owner->mutexes[3].unlock();
-        owner->mutexes[1].unlock();
-        paused=false;
+        pause_check = false;
+        m_pause.unlock();
+        while (paused) {}
     }
 }
 void VPOutPluginAlsa::pause()
 {
     if (!paused){
-        while (!owner->mutexes[1].try_lock()) {}
-        DBG("should be true"<<owner->mutexes[3].try_lock());
-
-        paused=true;
+        m_pause.lock();
+        pause_check = true;
+        while (!paused) {}
     }
 }
 
@@ -86,9 +108,11 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
         DBG("Alsa:init: failed to set pcm params");
         return -1;
     }
-
-    paused=true;
+    m_pause.unlock();
+    pause_check=false;
+    paused=false;
     work=true;
+
     worker = new std::thread(worker_run, this);
     DBG("alsa thread made");
     return 0;

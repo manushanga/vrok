@@ -48,7 +48,7 @@ int VPEffectPluginVis::init(VPlayer *v)
 void VPEffectPluginVis::process(float *buffer)
 {
     float mid,xre,xim,newb;
-    mutex_vis.lock();
+    //mutex_vis.lock();
     for (size_t b=0;b<BARS;b++){
         xre=0.0;
         xim=0.0;
@@ -65,7 +65,7 @@ void VPEffectPluginVis::process(float *buffer)
         else
             bar_array[b] = newb;
     }
-    mutex_vis.unlock();
+    //mutex_vis.unlock();
 
 }
 int VPEffectPluginVis::finit()

@@ -56,14 +56,8 @@ VPlayer::VPlayer()
     buffer1 = NULL;
     buffer2 = NULL;
 
-    mutexes[0].try_lock();
-    mutexes[1].try_lock();
-    mutexes[2].try_lock();
-    mutexes[3].try_lock();
-
     play_worker = NULL;
     work=false;
-    done=false;
     effects_active=false;
 
     paused = true;
@@ -75,7 +69,6 @@ VPlayer::VPlayer()
     gapless_compatible = false;
     next_track[0]='\0';
     gapless_cb = NULL;
-
     effects.clear();
 
     config_init();
@@ -84,12 +77,22 @@ VPlayer::VPlayer()
 int VPlayer::open(const char *url)
 {
     mutex_control.lock();
+    if (vpdecode && !paused) {
+        vpout->rewind();
+        paused = true;
+    }
+
     if (vpdecode){
         DBG("free decoder");
         delete vpdecode;
         vpdecode = NULL;
     }
     mutex_control.unlock();
+
+    mutexes[0].unlock();
+    mutexes[1].try_lock();
+    mutexes[2].unlock();
+    mutexes[3].try_lock();
 
     unsigned len = strlen(url);
     for (int i=0;i<sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);i++){
@@ -109,17 +112,14 @@ int VPlayer::open(const char *url)
     } else {
         ret = -1;
     }
-    paused = true;
-    work=true;
 
-    mutexes[0].try_lock();
-    mutexes[1].try_lock();
-    mutexes[2].try_lock();
-    mutexes[3].try_lock();
+    work=true;
 
     if (!play_worker){
         play_worker = new std::thread((void(*)(void*))VPlayer::play_work, this);
     }
+
+    play();
     return ret;
 }
 int VPlayer::play()
@@ -152,9 +152,7 @@ void VPlayer::ended()
         gapless_cb(&next_track[0]);
 
     if (next_track[0]!='\0') {
-        done = true;
         open(next_track);
-        done = false;
 
         mutex_control.lock();
         vpout->resume();
@@ -162,6 +160,8 @@ void VPlayer::ended()
         mutex_control.unlock();
 
         VPlayer::play_work(this);
+    } else {
+        play_worker = NULL;
     }
 }
 
@@ -204,9 +204,8 @@ float VPlayer::getVolume()
 int VPlayer::vpout_open()
 {
     int ret=0;
-    DBG(done<<gapless_compatible);
 
-    if (!(done && gapless_compatible)) {
+    if (!gapless_compatible) {
         if (buffer1)
             delete buffer1;
         if (buffer2)
@@ -221,6 +220,7 @@ int VPlayer::vpout_open()
         }
 
         if (vpout){
+            vpout->resume();
             delete vpout;
             vpout=NULL;
         }
@@ -252,26 +252,18 @@ int VPlayer::vpout_open()
 }
 int VPlayer::vpout_close()
 {
-    if (paused){
-        vpout->resume();
-        paused = false;
-    }
+
     // let play_worker roll, make sure that only these mutexes are locked once,
     // if its done multiple times include the work check in between them. see
     // player_flac.cpp's worker function
 
-    mutexes[2].unlock();
-    mutexes[0].unlock();
-
-    if (!done) {
+    if (play_worker) {
         work = false;
+        mutexes[0].unlock();
+        mutexes[2].unlock();
         play_worker->join();
         DBG("player thread joined");
         delete play_worker;
         play_worker = NULL;
     }
-    mutexes[3].try_lock();
-    mutexes[1].try_lock();
-
-
 }

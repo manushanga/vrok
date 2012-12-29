@@ -20,6 +20,7 @@ public:
     bool work;
 
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels) = 0;
+    virtual void rewind() = 0;
     virtual void resume() = 0;
     virtual void pause() = 0;
     virtual unsigned get_samplerate() = 0;

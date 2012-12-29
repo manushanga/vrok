@@ -12,9 +12,15 @@
 // mingw is used for compiling and this way is better, for now.
 
 #include <windows.h>
+#include <process.h>
 // This is my own ugly implementation for Windows, and it replaces
 // boost's need in this project
+#include <boost/thread.hpp>
 namespace std{
+    typedef boost::mutex mutex;
+    typedef boost::thread thread;
+}
+/*namespace std{
 class thread
 {
 private:
@@ -41,7 +47,7 @@ public:
     }
     ~thread()
     {
-        TerminateThread(th,0);
+        CloseHandle(th);
     }
 };
 
@@ -83,10 +89,10 @@ public:
     bool try_lock()
     {
         LONG result = InterlockedCompareExchange(&m_counter, 1, 0);
-        return (result == 0);
+        return (result != 0);
     }
 };
-}
+}x*/
 #elif defined(__linux__)
 #include <thread>
 #include <mutex>
