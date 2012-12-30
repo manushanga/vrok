@@ -258,6 +258,10 @@ static void writeAudio(HWAVEOUT hWaveOut, LPSTR data, int size)
          * wait for a block to become free
          */
 
+        // without a proper replacement for futex in Windows,
+        // and with the restrictions of calling locks from cb
+        // there's no way in hell this can be removed.
+
         while(!waveFreeBlockCount){ Sleep(1); }
 
         /*
