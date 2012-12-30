@@ -48,7 +48,6 @@ void MPEGDecoder::reader()
         } else {
 
             owner->mutexes[0].lock();
-            DBG("1");
             for (size_t i=0;i<count/2;i++){
                 owner->buffer1[i]=SHORTTOFL*buffer[i]*owner->volume;
             }
@@ -56,7 +55,6 @@ void MPEGDecoder::reader()
             owner->mutexes[1].unlock();
 
             owner->mutexes[2].lock();
-            DBG("2");
             for (size_t i=0;i<count/2;i++){
                 owner->buffer2[i]=SHORTTOFL*buffer[count/2+i]*owner->volume;
             }

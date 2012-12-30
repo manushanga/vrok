@@ -57,14 +57,16 @@ static void worker_run(VPOutPluginAlsa *self)
 
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 {
-
     if (!paused){
-        m_pause.lock();
-
-        owner->mutexes[1].unlock();
         owner->mutexes[3].unlock();
+        owner->mutexes[1].unlock();
+
+        m_pause.lock();
         pause_check = true;
-        while (!paused) {}
+        while (!paused) {
+            owner->mutexes[3].unlock();
+            owner->mutexes[1].unlock();
+        }
     }
 }
 

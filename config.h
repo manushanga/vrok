@@ -44,6 +44,8 @@ static vpdecoder_entry_t vpdecoder_entries[] = {
                                                };
 
 void config_init();
+float config_get_volume();
+void config_set_volume();
 creator_t config_get_VPOutPlugin_creator();
 void config_finit();
 

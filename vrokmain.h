@@ -16,7 +16,14 @@
 #include "effects/vis.h"
 
 #include <QGraphicsScene>
+#include <QStringListModel>
+#include <QDir>
+#include <QFileDialog>
+#include <QGraphicsScene>
+#include <QGraphicsRectItem>
+#include <QThread>
 
+#include "drawspectrum.h"
 #define BAR_COUNT 16
 namespace Ui {
 class VrokMain;
@@ -28,11 +35,10 @@ class VrokMain : public QMainWindow
     
 public:
         Ui::VrokMain *ui;
-    QGraphicsScene *gs;
-    QGraphicsRectItem *gbars[16];
-    float bars[VPEffectPluginVis::BARS];
-    static void vis_updater(VrokMain *self);
+
     explicit VrokMain(QWidget *parent = 0);
+    QStringListModel *fileslist;
+    QDir *dir;
     ~VrokMain();
 
 public slots:
@@ -40,12 +46,12 @@ public slots:
     void on_btnPause_clicked();
     void on_btnOpen_clicked();
     void on_btnFX_clicked();
-
+    void on_btnOpenDir_clicked();
+    void on_lvFiles_doubleClicked(QModelIndex i);
 private:
-
+    QThread *th_spec;
+    DrawSpectrum *spec;
     VPlayer *vp;
-    VPEffectPluginVis *vis;
-
     VPEffectPluginEQ *eq;
     std::thread *th;
     bool visuals;

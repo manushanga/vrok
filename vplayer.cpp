@@ -42,10 +42,7 @@ void VPlayer::removeEffect(unsigned idx)
     }
     effects.erase(it,it);
 }
-void VPlayer::setGapplessCB(gapless_cb_t gcb)
-{
-    gapless_cb = gcb;
-}
+
 VPlayer::VPlayer()
 {
     mutex_control.try_lock();
@@ -68,26 +65,24 @@ VPlayer::VPlayer()
 
     gapless_compatible = false;
     next_track[0]='\0';
-    gapless_cb = NULL;
     effects.clear();
+    play_worker_done = false;
 
     config_init();
     mutex_control.unlock();
 }
 int VPlayer::open(const char *url)
 {
-   // mutex_control.lock();
-    if (vpdecode && !paused) {
-        vpout->rewind();
-        paused = true;
-    }
- //   mutex_control.unlock();
     if (vpdecode){
+        if (!paused) {
+            vpout->rewind();
+            paused = true;
+        }
+
         DBG("free decoder");
         delete vpdecode;
         vpdecode = NULL;
     }
-
 
     mutexes[0].unlock();
     mutexes[1].try_lock();
@@ -148,17 +143,17 @@ bool VPlayer::isPlaying()
 }
 void VPlayer::ended()
 {
-    if (gapless_cb)
-        gapless_cb(&next_track[0]);
-
     if (next_track[0]!='\0') {
+        play_worker_done=true;
         open(next_track);
+        play_worker_done=false;
 
         mutex_control.lock();
         vpout->resume();
         paused = false;
         mutex_control.unlock();
 
+        next_track[0]='\0';
         VPlayer::play_work(this);
     } else {
         play_worker = NULL;
@@ -257,7 +252,7 @@ int VPlayer::vpout_close()
     // if its done multiple times include the work check in between them. see
     // player_flac.cpp's worker function
 
-    if (play_worker) {
+    if (!play_worker_done && play_worker) {
         work = false;
         mutexes[0].unlock();
         mutexes[2].unlock();

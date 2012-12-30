@@ -11,7 +11,17 @@ void config_init()
     if (!settings.contains("plugins/out")) {
         DBG("config: setting defaults");
         settings.setValue("plugins/out", DEFAULT_VPOUT_PLUGIN);
+        settings.setValue("general/volume", 1.0f);
     }
+}
+
+float config_get_volume()
+{
+    return settings.value("general/volume").toFloat();
+}
+void config_set_volume(float vol)
+{
+    settings.setValue("general/volume", vol);
 }
 creator_t config_get_VPOutPlugin_creator()
 {
@@ -25,6 +35,7 @@ creator_t config_get_VPOutPlugin_creator()
     }
     return NULL;
 }
+
 void config_finit()
 {
     DBG("config: dying");

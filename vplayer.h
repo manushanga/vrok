@@ -25,8 +25,6 @@ class VPOutPlugin;
 class VPEffectPlugin;
 class VPDecoder;
 
-typedef void(*gapless_cb_t)(char *url);
-
 struct effect_entry{
     VPEffectPlugin *eff;
     bool init;
@@ -35,11 +33,13 @@ struct effect_entry{
 class VPlayer
 {
 private:
-    gapless_cb_t gapless_cb;
-    char next_track[256];
     bool gapless_compatible;
     std::list<effect_entry> effects;
+    bool play_worker_done;
 public:
+    // take lock on mutex_control when writing to this
+    char next_track[256];
+
     // smaller buffers have less cpu usage and more wakeups
     static const unsigned BUFFER_FRAMES = 512;
 
@@ -90,9 +90,6 @@ public:
     float getVolume();
     void addEffect(VPEffectPlugin *eff);
     void removeEffect(unsigned idx);
-    // should copy the next track's path whe ngcb is called
-    // max 256 chars including \0
-    void setGapplessCB(gapless_cb_t gcb);
     bool isPlaying();
     ~VPlayer() ;
 };

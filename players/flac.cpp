@@ -245,6 +245,7 @@ void FLACDecoder::reader()
     } else {
         DBG("FLACDecoder:reader "<<FLAC__StreamDecoderInitStatusString[init_status]);
     }
+
     if (owner->work)
         owner->ended();
 }

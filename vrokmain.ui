@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>574</width>
-    <height>402</height>
+    <width>579</width>
+    <height>336</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,11 +17,23 @@
    <widget class="QPushButton" name="btnPlay">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>60</y>
+      <x>90</x>
+      <y>40</y>
       <width>100</width>
       <height>23</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>100</width>
+      <height>23</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>100</width>
+      <height>23</height>
+     </size>
     </property>
     <property name="text">
      <string>Play </string>
@@ -33,9 +45,9 @@
    <widget class="QLineEdit" name="txtFile">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>20</y>
-      <width>431</width>
+      <x>10</x>
+      <y>10</y>
+      <width>291</width>
       <height>23</height>
      </rect>
     </property>
@@ -46,11 +58,23 @@
    <widget class="QPushButton" name="btnFX">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>60</y>
-      <width>100</width>
+      <x>10</x>
+      <y>70</y>
+      <width>291</width>
       <height>23</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>100</width>
+      <height>23</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>500</width>
+      <height>23</height>
+     </size>
     </property>
     <property name="text">
      <string>FX</string>
@@ -65,11 +89,23 @@
    <widget class="QPushButton" name="btnOpen">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>60</y>
-      <width>100</width>
+      <x>10</x>
+      <y>40</y>
+      <width>71</width>
       <height>23</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>71</width>
+      <height>23</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>71</width>
+      <height>23</height>
+     </size>
     </property>
     <property name="text">
      <string>Open</string>
@@ -81,24 +117,52 @@
    <widget class="QPushButton" name="btnPause">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>60</y>
+      <x>200</x>
+      <y>40</y>
       <width>100</width>
       <height>23</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>100</width>
+      <height>23</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>100</width>
+      <height>23</height>
+     </size>
     </property>
     <property name="text">
      <string>Pause</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="gvBox">
+   <widget class="QListView" name="lvFiles">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>100</y>
-      <width>551</width>
-      <height>231</height>
+      <x>310</x>
+      <y>10</y>
+      <width>261</width>
+      <height>251</height>
      </rect>
+    </property>
+    <property name="editTriggers">
+     <set>QAbstractItemView::NoEditTriggers</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnOpenDir">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>260</y>
+      <width>261</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Open Dir</string>
     </property>
    </widget>
   </widget>
@@ -107,7 +171,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>574</width>
+     <width>579</width>
      <height>21</height>
     </rect>
    </property>

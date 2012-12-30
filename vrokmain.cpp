@@ -20,23 +20,6 @@
 #include "effects/eq.h"
 #include "effects/vis.h"
 
-#include <QFileDialog>
-#include <QGraphicsScene>
-#include <QGraphicsRectItem>
-
-void VrokMain::vis_updater(VrokMain *self)
-{
-    while (self->visuals){
-        self->vis->mutex_vis.lock();
-        for (int i=0;i<VPEffectPluginVis::BARS;i++){
-            self->gbars[i]->setRect(i*14,0,10,self->bars[i]*-1.2f);
-        }
-        self->vis->mutex_vis.unlock();
-        self->gs->update(0.0f,0.0f,100.0f,-100.0f);
-        usleep(23000);
-        self->ui->gvBox->viewport()->update();
-    }
-}
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VrokMain)
@@ -45,24 +28,29 @@ VrokMain::VrokMain(QWidget *parent) :
 
     vp=NULL;
     th=NULL;
-    vis=NULL;
-    gs = new QGraphicsScene();
-    QBrush z(Qt::darkGreen);
-    QPen x(Qt::darkGreen);
-    for (int i=0;i<VPEffectPluginVis::BARS;i++){
-        gbars[i] = new QGraphicsRectItem(i*11,0,10,0);
-        gbars[i]->setBrush(z);
-        gbars[i]->setPen(x);
-        gs->addItem(gbars[i]);
-    }
-    ui->gvBox->setScene(gs);
+
+
     eq =new VPEffectPluginEQ();
-    vis = new VPEffectPluginVis(bars);
+
 
     vp = new VPlayer();
-        vp->addEffect((VPEffectPlugin *) vis);
-        vp->addEffect((VPEffectPlugin *) eq);
+    vp->addEffect((VPEffectPlugin *) eq);
+    fileslist=NULL;
+    dir=NULL;
+
+    spec = new DrawSpectrum(vp,this);
+    th_spec = new QThread();
+    spec->work = true;
+    spec->moveToThread(th_spec);
+    spec->gv->move(10,110);
+    spec->gv->resize(290,190);
+
+    connect(th_spec, SIGNAL(started()), spec, SLOT(process()));
+
+    connect(spec, SIGNAL(finished()), th_spec, SLOT(quit()));
+    th_spec->start();
 }
+
 
 
 void VrokMain::on_btnPause_clicked()
@@ -71,8 +59,33 @@ void VrokMain::on_btnPause_clicked()
 }
 void VrokMain::on_btnPlay_clicked()
 {
-
     vp->play();
+}
+void VrokMain::on_btnOpenDir_clicked()
+{
+    QString d = QFileDialog::getExistingDirectory(this, "Select directory","");
+    if (dir)
+        delete dir;
+    dir = new QDir(d);
+    dir->setFilter(QDir::Files|QDir::Hidden);
+    dir->setNameFilters(QStringList()<<"*.flac"<<"*.mp3"<<"*.ogg");
+    QStringList list = dir->entryList();
+    if (fileslist)
+        delete fileslist;
+    fileslist = new QStringListModel(list);
+    ui->lvFiles->setModel(fileslist);
+}
+void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
+{
+    QString n(dir->absoluteFilePath(i.data().toString()));
+    DBG(n.toStdString());
+
+    vp->open((char *) n.toUtf8().data());
+    if (i.row() < fileslist->rowCount()-1 ){
+
+        strcpy (vp->next_track,(char *) (dir->absoluteFilePath(fileslist->index(i.row()+1).data().toString())).toUtf8().data());
+    }
+    vp->effects_active = ui->btnFX->isChecked();
 }
 void VrokMain::on_btnOpen_clicked()
 {
@@ -107,20 +120,11 @@ void VrokMain::on_btnFX_clicked()
 VrokMain::~VrokMain()
 {
 
-    if (th){
-        visuals=false;
-        th->join();
-    }
-    for (int i=0;i<VPEffectPluginVis::BARS;i++){
-        delete gbars[i];
-    }
+
     if (vp)
         delete vp;
-    if (gs)
-        delete gs;
     if (eq)
         delete eq;
-    if (vis)
-        delete vis;
+
     delete ui;
 }

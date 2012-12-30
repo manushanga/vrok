@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    config.cpp
+    config.cpp \
+    drawspectrum.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -42,7 +43,8 @@ HEADERS  += vrokmain.h \
     players/ogg.h \
     thread_compat.h \
     decoder.h \
-    config.h
+    config.h \
+    drawspectrum.h
 
 FORMS    += vrokmain.ui
 

@@ -16,7 +16,7 @@
 /*
  * some good values for block size and count
  */
-#define BLOCK_SIZE  512
+#define BLOCK_SIZE  1024
 #define BLOCK_COUNT 16
 
 /*
@@ -35,7 +35,7 @@ static CRITICAL_SECTION waveCriticalSection;
 static WAVEHDR*         waveBlocks;
 static volatile int     waveFreeBlockCount;
 static int              waveCurrentBlock;
-
+HANDLE h_event;
 HWAVEOUT hWaveOut; /* device handle */
 WAVEFORMATEX wfx;  /* look this up in your documentation */
 
@@ -80,12 +80,15 @@ static void worker_run(VPOutPluginWaveOut *self)
 void __attribute__((optimize("O0"))) VPOutPluginWaveOut::rewind()
 {
     if (!paused){
+        owner->mutexes[3].unlock();
+        owner->mutexes[1].unlock();
+
         m_pause.lock();
         pause_check = true;
-        owner->mutexes[1].unlock();
-        owner->mutexes[3].unlock();
-
-        while (!paused) {  }
+        while (!paused) {
+            owner->mutexes[3].unlock();
+            owner->mutexes[1].unlock();
+        }
     }
 }
 void __attribute__((optimize("O0"))) VPOutPluginWaveOut::resume()
@@ -93,7 +96,7 @@ void __attribute__((optimize("O0"))) VPOutPluginWaveOut::resume()
     if (paused){
         pause_check = false;
         m_pause.unlock();
-        while (paused) {  }
+        while (paused) { }
     }
 }
 void __attribute__((optimize("O0"))) VPOutPluginWaveOut::pause()
@@ -175,6 +178,7 @@ int stop()
     DeleteCriticalSection(&waveCriticalSection);
     freeBlocks(waveBlocks);
     waveOutClose(hWaveOut);
+    CloseHandle(h_event);
     return 0;
 }
 int start(unsigned samplerate, unsigned channels)
@@ -218,6 +222,7 @@ int start(unsigned samplerate, unsigned channels)
         DBG("Opening WaveOut fail");
         return -1;
     }
+    h_event = CreateEvent(NULL,FALSE,FALSE,NULL);
     return 0;
 }
 
@@ -257,12 +262,10 @@ static void writeAudio(HWAVEOUT hWaveOut, LPSTR data, int size)
         /*
          * wait for a block to become free
          */
+        if (!waveFreeBlockCount)
+           WaitForSingleObject(h_event,INFINITE);
 
-        // without a proper replacement for futex in Windows,
-        // and with the restrictions of calling locks from cb
-        // there's no way in hell this can be removed.
-
-        while(!waveFreeBlockCount){ Sleep(1); }
+        //while(!waveFreeBlockCount){ Sleep(1); }
 
         /*
          * point to the next block
@@ -329,10 +332,17 @@ static void CALLBACK waveOutProc(
      * ignore calls that occur due to openining and closing the
      * device.
      */
+
     if(uMsg != WOM_DONE)
         return;
 
+
     EnterCriticalSection(&waveCriticalSection);
+    if (!*freeBlockCounter)
+        SetEvent(h_event);
     (*freeBlockCounter)++;
+
     LeaveCriticalSection(&waveCriticalSection);
+
+
 }
