@@ -21,9 +21,8 @@
 #include <QFileDialog>
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
-#include <QThread>
+#include <QTimer>
 
-#include "drawspectrum.h"
 #define BAR_COUNT 16
 namespace Ui {
 class VrokMain;
@@ -39,6 +38,8 @@ public:
     explicit VrokMain(QWidget *parent = 0);
     QStringListModel *fileslist;
     QDir *dir;
+    float bars[VPEffectPluginVis::BARS];
+
     ~VrokMain();
 
 public slots:
@@ -48,13 +49,18 @@ public slots:
     void on_btnFX_clicked();
     void on_btnOpenDir_clicked();
     void on_lvFiles_doubleClicked(QModelIndex i);
+    void process();
 private:
     QThread *th_spec;
-    DrawSpectrum *spec;
+
     VPlayer *vp;
     VPEffectPluginEQ *eq;
     std::thread *th;
     bool visuals;
+    QGraphicsScene *gs;
+    QGraphicsRectItem *gbars[16];
+    VPEffectPluginVis *vis;
+    QTimer *tx;
 };
 
 #endif // VROKMAIN_H

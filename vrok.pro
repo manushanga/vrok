@@ -26,9 +26,7 @@ SOURCES += main.cpp\
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    config.cpp \
-    drawspectrum.cpp \
-    outs/dsound.cpp
+    config.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -44,9 +42,7 @@ HEADERS  += vrokmain.h \
     players/ogg.h \
     thread_compat.h \
     decoder.h \
-    config.h \
-    drawspectrum.h \
-    outs/dsound.h
+    config.h
 
 FORMS    += vrokmain.ui
 
@@ -65,8 +61,8 @@ SOURCES += outs/alsa.cpp
 
 win32 {
 LIBS    +=  -lws2_32 -ldxguid -lole32 -ldsound
-HEADERS  +=
-SOURCES +=
+HEADERS  +=  outs/dsound.h
+SOURCES += outs/dsound.cpp
 }
 
 

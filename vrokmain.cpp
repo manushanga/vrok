@@ -34,27 +34,44 @@ VrokMain::VrokMain(QWidget *parent) :
 
 
     vp = new VPlayer();
+    vis = new VPEffectPluginVis(bars,100);
+    vp->addEffect((VPEffectPlugin *) vis);
     vp->addEffect((VPEffectPlugin *) eq);
+
+
     fileslist=NULL;
     dir=NULL;
+    tx = new QTimer(this);
+    tx->setSingleShot(false);
+    tx->setInterval(50);
+    gs = new QGraphicsScene();
+    QBrush z(Qt::darkGreen);
+    QPen x(Qt::darkGreen);
 
+    for (int i=0;i<VPEffectPluginVis::BARS;i++){
+        gbars[i] = new QGraphicsRectItem(i*11,0,10,0);
+        gbars[i]->setBrush(z);
+        gbars[i]->setPen(x);
+        gs->addItem(gbars[i]);
+    }
+    ui->gv->setScene(gs);
 
-
-    spec = new DrawSpectrum(vp, this);
-    th_spec = new QThread();
-    spec->work = true;
-    spec->moveToThread(th_spec);
-
-
-    connect(th_spec, SIGNAL(started()), spec, SLOT(process()), Qt::QueuedConnection);
-
-   // connect(spec, SIGNAL(finished()), th_spec, SLOT(quit()), Qt::QueuedConnection);
-  //  th_spec->start();
+    connect(tx, SIGNAL(timeout()), this, SLOT(process()));
 
 }
 
 
+void VrokMain::process()
+{
 
+    vis->mutex_vis.lock();
+    for (int i=0;i<VPEffectPluginVis::BARS;i++){
+        gbars[i]->setRect(i*14,0,10,bars[i]*-1.2f);
+    }
+    vis->mutex_vis.unlock();
+    gs->update(0.0f,0.0f,100.0f,-100.0f);
+    ui->gv->viewport()->update();
+}
 void VrokMain::on_btnPause_clicked()
 {
     vp->pause();
@@ -91,12 +108,6 @@ void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 }
 void VrokMain::on_btnOpen_clicked()
 {
-    if (th){
-        visuals =false;
-        th->join();
-        delete th;
-        th=NULL;
-    }
 
 
     ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
@@ -108,19 +119,19 @@ void VrokMain::on_btnOpen_clicked()
         vp->open((char *)ui->txtFile->text().toUtf8().data() );
 
         vp->effects_active = ui->btnFX->isChecked();
-        visuals = true;
-        //th  = new std::thread((void(*)(void*))VrokMain::vis_updater,this);
+
     }
 }
 void VrokMain::on_btnFX_clicked()
 {
 
-    if (vp->effects_active)
+    if (vp->effects_active){
         vp->effects_active = false;
-    else
+        tx->stop();
+    }else{
         vp->effects_active = true;
-
-
+        tx->start();
+    }
 }
 VrokMain::~VrokMain()
 {

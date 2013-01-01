@@ -16,7 +16,7 @@
 #define PI M_PI
 #define fFRAMES VPlayer::BUFFER_FRAMES*1.0
 
-VPEffectPluginVis::VPEffectPluginVis(float *bars)
+VPEffectPluginVis::VPEffectPluginVis(float *bars, float cap)
 {
     bar_array = bars;
     mutex_vis.unlock();
@@ -36,6 +36,7 @@ VPEffectPluginVis::VPEffectPluginVis(float *bars)
             trig[1][b][i]=sinf(fi*i);
         }
     }
+    limit= cap;
 
 }
 
@@ -61,9 +62,9 @@ void VPEffectPluginVis::process(float *buffer)
         if (bar_array[b] < 0.1f && bar_array[b] > 0.0f)
             bar_array[b] = 0.0f;
         else if (bar_array[b] >= newb)
-            bar_array[b] -= 0.20f+bar_array[b]*0.05;
+            bar_array[b] -= 0.2f+bar_array[b]*0.02;
         else
-            bar_array[b] = newb;
+            bar_array[b] = (newb>limit)?limit:newb;
     }
     mutex_vis.unlock();
 

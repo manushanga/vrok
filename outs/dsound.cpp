@@ -180,7 +180,9 @@ int VPOutPluginDSound::init(VPlayer *v, unsigned samplerate, unsigned channels)
         }
     }
 
+    m_pause.try_lock();
     m_pause.unlock();
+
     pause_check=false;
     paused=false;
     work=true;

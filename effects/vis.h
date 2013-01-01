@@ -10,12 +10,12 @@ private:
     float *bar_array;
     float *bars[2];
     float *trig[2][BAR_COUNT];
-
+    float limit;
 public:
     static const unsigned BARS = BAR_COUNT;
     std::mutex mutex_vis;
 
-    VPEffectPluginVis(float *bars);
+    VPEffectPluginVis(float *bars, float cap);
     int init(VPlayer *v);
     void process(float *buffer);
     int finit();
