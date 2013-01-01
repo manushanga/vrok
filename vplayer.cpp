@@ -17,9 +17,9 @@
 
 #include "thread_compat.h"
 
+#include "config.h"
 #include "vplayer.h"
 #include "decoder.h"
-#include "config.h"
 #include "effect.h"
 
 void VPlayer::play_work(VPlayer *self)

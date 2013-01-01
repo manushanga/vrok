@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>579</width>
-    <height>336</height>
+    <width>577</width>
+    <height>334</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -165,13 +165,23 @@
      <string>Open Dir</string>
     </property>
    </widget>
+   <widget class="QWidget" name="wd" native="true">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>291</width>
+      <height>171</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>579</width>
+     <width>577</width>
      <height>21</height>
     </rect>
    </property>

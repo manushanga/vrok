@@ -28,7 +28,7 @@ static void worker_run(VPOutPluginAlsa *self)
             self->paused = false;
             snd_pcm_prepare(self->handle);
             snd_pcm_start(self->handle);
-
+            self->pause_check = false;
         }
         self->owner->mutexes[1].lock();
         //DBG("1");

@@ -38,17 +38,19 @@ VrokMain::VrokMain(QWidget *parent) :
     fileslist=NULL;
     dir=NULL;
 
-    spec = new DrawSpectrum(vp,this);
+
+
+    spec = new DrawSpectrum(vp, this);
     th_spec = new QThread();
     spec->work = true;
     spec->moveToThread(th_spec);
-    spec->gv->move(10,110);
-    spec->gv->resize(290,190);
 
-    connect(th_spec, SIGNAL(started()), spec, SLOT(process()));
 
-    connect(spec, SIGNAL(finished()), th_spec, SLOT(quit()));
-    th_spec->start();
+    connect(th_spec, SIGNAL(started()), spec, SLOT(process()), Qt::QueuedConnection);
+
+   // connect(spec, SIGNAL(finished()), th_spec, SLOT(quit()), Qt::QueuedConnection);
+  //  th_spec->start();
+
 }
 
 
@@ -112,10 +114,13 @@ void VrokMain::on_btnOpen_clicked()
 }
 void VrokMain::on_btnFX_clicked()
 {
+
     if (vp->effects_active)
         vp->effects_active = false;
     else
         vp->effects_active = true;
+
+
 }
 VrokMain::~VrokMain()
 {

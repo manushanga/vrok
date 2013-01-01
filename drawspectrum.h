@@ -14,9 +14,10 @@ private:
     QGraphicsScene *gs;
     QGraphicsRectItem *gbars[16];
     VPEffectPluginVis *vis;
+    QWidget *p;
 public:
     float bars[VPEffectPluginVis::BARS];
-    explicit DrawSpectrum(VPlayer *v, QWidget *gvparent, QObject *parent = 0);
+    explicit DrawSpectrum(VPlayer *v, QWidget *gvparent , QObject *parent=0);
     QGraphicsScene *getScene();
     QGraphicsView *gv;
     bool work;

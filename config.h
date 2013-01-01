@@ -19,10 +19,10 @@ typedef struct _vpdecoder_entry{
 
 
 #ifdef _WIN32
-    #include "outs/waveout.h"
-    #define DEFAULT_VPOUT_PLUGIN "WaveOut"
+    #include "outs/dsound.h"
+    #define DEFAULT_VPOUT_PLUGIN "DSound"
 
-    static vpout_entry_t vpout_entries[] = { {"WaveOut", (creator_t)_VPOutPluginWaveOut_new } };
+    static vpout_entry_t vpout_entries[] = { {"DSound", (creator_t)_VPOutPluginDSound_new } };
 #elif defined(__linux__)
     #include "outs/alsa.h"
     #define DEFAULT_VPOUT_PLUGIN "ALSA"

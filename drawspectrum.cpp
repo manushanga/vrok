@@ -2,12 +2,22 @@
 #include "effect.h"
 #include <unistd.h>
 
-DrawSpectrum::DrawSpectrum( VPlayer *v, QWidget *gvparent, QObject *parent) :
+DrawSpectrum::DrawSpectrum( VPlayer *v, QWidget *gvparent,QObject *parent) :
     QObject(parent)
 {
     work = false;
     vis=new VPEffectPluginVis(bars);
     v->addEffect((VPEffectPlugin *)vis);
+    p=gvparent;
+}
+
+QGraphicsScene *DrawSpectrum::getScene()
+{
+    return gs;
+}
+
+void DrawSpectrum::process()
+{
     gs = new QGraphicsScene();
     QBrush z(Qt::darkGreen);
     QPen x(Qt::darkGreen);
@@ -18,17 +28,10 @@ DrawSpectrum::DrawSpectrum( VPlayer *v, QWidget *gvparent, QObject *parent) :
         gbars[i]->setPen(x);
         gs->addItem(gbars[i]);
     }
-    gv = new QGraphicsView(gvparent);
+    gv = new QGraphicsView(p);
     gv->setScene(gs);
-}
-
-QGraphicsScene *DrawSpectrum::getScene()
-{
-    return gs;
-}
-
-void DrawSpectrum::process()
-{
+    gv->move(10,110);
+    gv->resize(290,190);
     while (work){
         vis->mutex_vis.lock();
         for (int i=0;i<VPEffectPluginVis::BARS;i++){
@@ -39,10 +42,6 @@ void DrawSpectrum::process()
         gv->viewport()->update();
         usleep(23000);
     }
-    emit finished();
-}
-DrawSpectrum::~DrawSpectrum()
-{
     for (int i=0;i<VPEffectPluginVis::BARS;i++){
         delete gbars[i];
     }
@@ -51,4 +50,9 @@ DrawSpectrum::~DrawSpectrum()
         delete gs;
     if (vis)
         delete vis;
+    emit finished();
+}
+DrawSpectrum::~DrawSpectrum()
+{
+
 }
