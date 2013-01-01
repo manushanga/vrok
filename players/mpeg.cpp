@@ -7,8 +7,8 @@
 */
 #include <unistd.h>
 
+#include "config_out.h"
 #include "mpeg.h"
-#include "effect.h"
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)
 
@@ -35,7 +35,7 @@ void MPEGDecoder::reader()
 {
     int err = MPG123_OK;
     size_t done=0;
-    size_t count = owner->BUFFER_FRAMES*owner->track_channels*2;
+    size_t count = VPBUFFER_FRAMES*owner->track_channels*2;
 
     while (owner->work) {
         while (done<count*sizeof(short) && err != MPG123_DONE){
@@ -90,7 +90,7 @@ int MPEGDecoder::open(const char *url)
 
     if (buffer!=NULL)
         delete buffer;
-    buffer = new short[owner->BUFFER_FRAMES*owner->track_channels*2];
+    buffer = new short[VPBUFFER_FRAMES*owner->track_channels*2];
 
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);

@@ -7,7 +7,7 @@
 */
 
 #include <cstring>
-
+#include "config_out.h"
 #include "eq.h"
 
 static const char *sb_bandnames[] = { "Preamp", "55 Hz", "77 Hz", "110 Hz",
@@ -53,7 +53,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
 
 void VPEffectPluginEQ::process(float *buffer)
 {
-    equ_modifySamples_float(&sb_state, (char *)buffer, owner->BUFFER_FRAMES, owner->track_channels);
+    equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, owner->track_channels);
 }
 
 int VPEffectPluginEQ::finit()

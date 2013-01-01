@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <cstring>
 
+#include "config_out.h"
 #include "ogg.h"
 
 VPDecoder *_VPDecoderOgg_new()
@@ -26,8 +27,8 @@ int OGGDecoder::open(const char *url)
     }
 
     owner->set_metadata(ov_info(&vf,0)->rate, ov_info(&vf,0)->channels);
-    buffer = new float[VPlayer::BUFFER_FRAMES*owner->track_channels*2];
-    half_buffer_size = VPlayer::BUFFER_FRAMES*owner->track_channels*sizeof(float);
+    buffer = new float[VPBUFFER_FRAMES*owner->track_channels*2];
+    half_buffer_size = VPBUFFER_FRAMES*owner->track_channels*sizeof(float);
 
     DBG("OGG Vorbis meta done");
     owner->vpout_open();
@@ -44,8 +45,8 @@ void OGGDecoder::reader()
         j=0;
         ret=1;
         done=0;
-        while (done<VPlayer::BUFFER_FRAMES*2 && ret > 0){
-            ret = ov_read_float( &vf, &pcm, VPlayer::BUFFER_FRAMES*2 - done,&bit );
+        while (done<VPBUFFER_FRAMES*2 && ret > 0){
+            ret = ov_read_float( &vf, &pcm, VPBUFFER_FRAMES*2 - done,&bit );
             for (size_t i=0;i<ret;i++){
                 for (size_t ch=0;ch<owner->track_channels;ch++){
                     buffer[j]=pcm[ch][i]*owner->volume;
@@ -58,12 +59,12 @@ void OGGDecoder::reader()
         if (ret == 0)
             break;
         owner->mutexes[0].lock();
-        memcpy(owner->buffer1,buffer,VPlayer::BUFFER_FRAMES*owner->track_channels*sizeof(float) );
+        memcpy(owner->buffer1,buffer,VPBUFFER_FRAMES*owner->track_channels*sizeof(float) );
         owner->post_process(owner->buffer1);
         owner->mutexes[1].unlock();
 
         owner->mutexes[2].lock();
-        memcpy(owner->buffer2,buffer+VPlayer::BUFFER_FRAMES*owner->track_channels ,VPlayer::BUFFER_FRAMES*owner->track_channels*sizeof(float) );
+        memcpy(owner->buffer2,buffer+VPBUFFER_FRAMES*owner->track_channels ,VPBUFFER_FRAMES*owner->track_channels*sizeof(float) );
         owner->post_process(owner->buffer2);
         owner->mutexes[3].unlock();
 

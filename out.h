@@ -15,6 +15,8 @@
 #include "vputils.h"
 #include "vplayer.h"
 
+class VPlayer;
+
 class VPOutPlugin{
 public:
     bool work;

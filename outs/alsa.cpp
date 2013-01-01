@@ -6,9 +6,10 @@
   See LICENSE for details.
 */
 
+#include "config_out.h"
 #include "alsa.h"
 
-static const snd_pcm_uframes_t PERIOD_SIZE = 128;
+static const snd_pcm_uframes_t PERIOD_SIZE = 512;
 
 VPOutPlugin* _VPOutPluginAlsa_new()
 {
@@ -34,14 +35,14 @@ static void worker_run(VPOutPluginAlsa *self)
         //DBG("1");
         ret = snd_pcm_writei(self->handle,
                              self->owner->buffer1,
-                             VPlayer::BUFFER_FRAMES);
+                             VPBUFFER_FRAMES);
         self->owner->mutexes[0].unlock();
 
         self->owner->mutexes[3].lock();
         //DBG("2");
         ret = snd_pcm_writei(self->handle,
                              self->owner->buffer2,
-                             VPlayer::BUFFER_FRAMES);
+                             VPBUFFER_FRAMES);
         self->owner->mutexes[2].unlock();
         if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE){
             DBG("trying to recover");

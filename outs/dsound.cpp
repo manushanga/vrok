@@ -6,6 +6,7 @@
   See LICENSE for details.
 */
 #include "dsound.h"
+#include "config_out.h"
 
 LPDIRECTSOUND8 lpds;
 LPDIRECTSOUNDBUFFER lpdsbuffer;
@@ -40,7 +41,7 @@ DSBUFFERDESC setBufferDescription(unsigned size){
     DSBUFFERDESC dsbdesc;
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
     dsbdesc.dwSize = sizeof(DSBUFFERDESC);
-    dsbdesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GETCURRENTPOSITION2;
+    dsbdesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLVOLUME;
     dsbdesc.dwBufferBytes = size;
     dsbdesc.lpwfxFormat = &wfx;
     return dsbdesc;
@@ -71,6 +72,8 @@ static void worker_run(VPOutPluginDSound *self)
             ((short *)lpvWrite)[i]=0;
         }
         hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
+        lpdsbuffer->SetCurrentPosition(0);
+        lpdsbuffer->SetVolume(DSBVOLUME_MAX);
         lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
     } else {
         DBG("fail");
@@ -155,8 +158,8 @@ int VPOutPluginDSound::init(VPlayer *v, unsigned samplerate, unsigned channels)
 {
     owner = v;
 
-    wbuffer=new short[VPlayer::BUFFER_FRAMES*channels*2];
-    half_buffer_size = VPlayer::BUFFER_FRAMES*channels;
+    wbuffer=new short[VPBUFFER_FRAMES*channels*2];
+    half_buffer_size = VPBUFFER_FRAMES*channels;
 
     HRESULT hr;
     createSoundObject();
@@ -213,5 +216,10 @@ VPOutPluginDSound::~VPOutPluginDSound()
         delete worker;
     }
     delete wbuffer;
+    lpdsbuffer->Stop();
+
+    lpdsbuffer->Release();
+
+    lpds->Release();
 }
 

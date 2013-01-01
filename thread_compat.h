@@ -91,17 +91,9 @@ public:
     }
 };
 }
-
-// Windows seems not to care about it but ALSA does
-#define VP_BUFFER_SIZE 8192
-
 #elif defined(__linux__)
 #include <thread>
 #include <mutex>
-
-// Save some precious CPU cycles
-#define VP_BUFFER_SIZE 512
-
 #else
 #error "Mac OS? Nope not supported, others? may be after Jack is implemented."
 #endif

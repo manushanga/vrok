@@ -18,8 +18,8 @@
 
 #include <list>
 
-#include "vputils.h"
 #include "thread_compat.h"
+#include "vputils.h"
 
 class VPOutPlugin;
 class VPEffectPlugin;
@@ -39,9 +39,6 @@ private:
 public:
     // take lock on mutex_control when writing to this
     char next_track[256];
-
-    // smaller buffers have less cpu usage and more wakeups
-    static const unsigned BUFFER_FRAMES = 512;
 
     // from 0 to 1
     float volume;

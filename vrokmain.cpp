@@ -35,8 +35,9 @@ VrokMain::VrokMain(QWidget *parent) :
 
     vp = new VPlayer();
     vis = new VPEffectPluginVis(bars,100);
-    vp->addEffect((VPEffectPlugin *) vis);
     vp->addEffect((VPEffectPlugin *) eq);
+    vp->addEffect((VPEffectPlugin *) vis);
+
 
 
     fileslist=NULL;

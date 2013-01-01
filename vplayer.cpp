@@ -17,8 +17,10 @@
 
 #include "thread_compat.h"
 
-#include "config.h"
 #include "vplayer.h"
+#include "config_out.h"
+#include "config.h"
+#include "out.h"
 #include "decoder.h"
 #include "effect.h"
 
@@ -206,10 +208,10 @@ int VPlayer::vpout_open()
         if (buffer2)
             delete buffer2;
 
-        buffer1 = new float[VPlayer::BUFFER_FRAMES*track_channels];
-        buffer2 = new float[VPlayer::BUFFER_FRAMES*track_channels];
+        buffer1 = new float[VPBUFFER_FRAMES*track_channels];
+        buffer2 = new float[VPBUFFER_FRAMES*track_channels];
 
-        for (unsigned i=0;i<VPlayer::BUFFER_FRAMES*track_channels;i++){
+        for (unsigned i=0;i<VPBUFFER_FRAMES*track_channels;i++){
             buffer1[i]=0.0f;
             buffer2[i]=0.0f;
         }
@@ -219,7 +221,7 @@ int VPlayer::vpout_open()
             delete vpout;
             vpout=NULL;
         }
-        vpout = (VPOutPlugin *) config_get_VPOutPlugin_creator()();
+        vpout = (VPOutPlugin *) vpout_entries[DEFAULT_VPOUT_PLUGIN].creator();
 
         DBG("track chs:"<<track_channels);
         DBG("track rate:"<<track_samplerate);

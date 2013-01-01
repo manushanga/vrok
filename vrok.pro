@@ -42,7 +42,8 @@ HEADERS  += vrokmain.h \
     players/ogg.h \
     thread_compat.h \
     decoder.h \
-    config.h
+    config.h \
+    config_out.h
 
 FORMS    += vrokmain.ui
 
