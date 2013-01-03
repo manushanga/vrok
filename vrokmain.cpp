@@ -19,6 +19,7 @@
 #include "players/ogg.h"
 #include "effects/eq.h"
 #include "effects/vis.h"
+#include "config.h"
 
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
@@ -57,6 +58,16 @@ VrokMain::VrokMain(QWidget *parent) :
     }
     ui->gv->setScene(gs);
     vis_counter = 0;
+    if (config_get_lastopen().length()>0) {
+        dir = new QDir(config_get_lastopen());
+        dir->setFilter(QDir::Files|QDir::Hidden);
+        dir->setNameFilters(QStringList()<<"*.flac"<<"*.mp3"<<"*.ogg");
+        QStringList list = dir->entryList();
+        if (fileslist)
+            delete fileslist;
+        fileslist = new QStringListModel(list);
+        ui->lvFiles->setModel(fileslist);
+    }
     connect(tx, SIGNAL(timeout()), this, SLOT(process()));
 
 }
@@ -97,6 +108,7 @@ void VrokMain::on_btnPlay_clicked()
 void VrokMain::on_btnOpenDir_clicked()
 {
     QString d = QFileDialog::getExistingDirectory(this, "Select directory","");
+    config_set_lastopen(d);
     if (dir)
         delete dir;
     dir = new QDir(d);
@@ -114,6 +126,7 @@ void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
     DBG(n.toStdString());
 
     vp->open((char *) n.toUtf8().data());
+
     if (i.row() < fileslist->rowCount()-1 ){
 
         strcpy (vp->next_track,(char *) (dir->absoluteFilePath(fileslist->index(i.row()+1).data().toString())).toUtf8().data());
@@ -131,9 +144,7 @@ void VrokMain::on_btnOpen_clicked()
 
     if (ui->txtFile->text().length()>0) {
         vp->open((char *)ui->txtFile->text().toUtf8().data() );
-
         vp->effects_active = ui->btnFX->isChecked();
-
     }
 }
 void VrokMain::on_btnFX_clicked()
@@ -152,7 +163,8 @@ void VrokMain::on_btnFX_clicked()
 VrokMain::~VrokMain()
 {
 
-
+    if (tx)
+        delete tx;
     if (vp)
         delete vp;
     if (eq)

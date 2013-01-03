@@ -13,6 +13,16 @@ void config_init()
     }
 }
 
+QString config_get_lastopen()
+{
+    return settings.value("user/lastopen").toString();
+}
+
+void config_set_lastopen(QString last)
+{
+    settings.setValue("user/lastopen",last);
+}
+
 float config_get_volume()
 {
     return settings.value("general/volume").toFloat();
