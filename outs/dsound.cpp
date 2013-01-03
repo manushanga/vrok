@@ -8,19 +8,20 @@
 #include "dsound.h"
 #include "config_out.h"
 
-LPDIRECTSOUND8 lpds;
+LPDIRECTSOUND lpds;
 LPDIRECTSOUNDBUFFER lpdsbuffer;
 WAVEFORMATEX wfx;
 DSBUFFERDESC dsbdesc;
 HANDLE NotifyEvent[2];
-LPDIRECTSOUNDNOTIFY8 lpDsNotify;
+LPDIRECTSOUNDNOTIFY lpDsNotify;
 DSBPOSITIONNOTIFY PositionNotify[2];
 
 HRESULT createSoundObject(void){
     HRESULT hr;
-    hr = DirectSoundCreate8(NULL,&lpds,NULL);
+
+    hr = DirectSoundCreate(NULL,&lpds,NULL);
     hr = CoInitializeEx(NULL, 0);
-    hr = lpds->SetCooperativeLevel(GetDesktopWindow(),DSSCL_PRIORITY);
+    hr = lpds->SetCooperativeLevel(GetForegroundWindow(),DSSCL_NORMAL);
     return hr;
 }
 
@@ -41,7 +42,7 @@ DSBUFFERDESC setBufferDescription(unsigned size){
     DSBUFFERDESC dsbdesc;
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
     dsbdesc.dwSize = sizeof(DSBUFFERDESC);
-    dsbdesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLVOLUME;
+    dsbdesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLVOLUME | DSBCAPS_GLOBALFOCUS ;
     dsbdesc.dwBufferBytes = size;
     dsbdesc.lpwfxFormat = &wfx;
     return dsbdesc;
@@ -170,7 +171,7 @@ int VPOutPluginDSound::init(VPlayer *v, unsigned samplerate, unsigned channels)
     NotifyEvent[0] = CreateEvent(NULL,FALSE,FALSE,NULL);
     NotifyEvent[1] = CreateEvent(NULL,FALSE,FALSE,NULL);
 
-    if (hr = lpdsbuffer->QueryInterface(IID_IDirectSoundNotify8,(LPVOID*)&lpDsNotify) == DS_OK){
+    if (hr = lpdsbuffer->QueryInterface(IID_IDirectSoundNotify,(LPVOID*)&lpDsNotify) == DS_OK){
         PositionNotify[0].dwOffset = half_buffer_size*sizeof(short)-1;
         PositionNotify[0].hEventNotify = NotifyEvent[0];
         PositionNotify[1].dwOffset = half_buffer_size*sizeof(short)*2-1;

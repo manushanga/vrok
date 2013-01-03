@@ -34,17 +34,16 @@ VrokMain::VrokMain(QWidget *parent) :
 
 
     vp = new VPlayer();
-    vis = new VPEffectPluginVis(bars,100);
-    vp->addEffect((VPEffectPlugin *) eq);
+    vis = new VPEffectPluginVis(100);
     vp->addEffect((VPEffectPlugin *) vis);
-
+    vp->addEffect((VPEffectPlugin *) eq);
 
 
     fileslist=NULL;
     dir=NULL;
     tx = new QTimer(this);
     tx->setSingleShot(false);
-    tx->setInterval(50);
+
     gs = new QGraphicsScene();
     QBrush z(Qt::darkGreen);
     QPen x(Qt::darkGreen);
@@ -54,9 +53,10 @@ VrokMain::VrokMain(QWidget *parent) :
         gbars[i]->setBrush(z);
         gbars[i]->setPen(x);
         gs->addItem(gbars[i]);
+        bar_vals[i]=0.0f;
     }
     ui->gv->setScene(gs);
-
+    vis_counter = 0;
     connect(tx, SIGNAL(timeout()), this, SLOT(process()));
 
 }
@@ -64,14 +64,27 @@ VrokMain::VrokMain(QWidget *parent) :
 
 void VrokMain::process()
 {
-
-    vis->mutex_vis.lock();
-    for (int i=0;i<VPEffectPluginVis::BARS;i++){
-        gbars[i]->setRect(i*14,0,10,bars[i]*-1.2f);
+    if (vis_counter==vis->getBarSetCount()){
+        vis_counter=0;
     }
-    vis->mutex_vis.unlock();
-    gs->update(0.0f,0.0f,100.0f,-100.0f);
+
+
+    float *bars = vis->bar_array + VPEffectPluginVis::BARS*vis_counter;
+    for (int b=0;b<VPEffectPluginVis::BARS;b++){
+        if (bar_vals[b] < 5.0f && bar_vals[b] > 0.0f)
+            bar_vals[b] = 0.0f;
+        else if (bar_vals[b] > 5.0f)
+            bar_vals[b] -= 3.0f+0.1f*bar_vals[b];
+        else
+            bar_vals[b] = bars[b];
+        gbars[b]->setRect(b*14,0,10,bar_vals[b] *-1.0f);
+    }
+
+   // gs->update(0.0f,0.0f,100.0f,-100.0f);
     ui->gv->viewport()->update();
+
+    vis_counter++;
+    usleep(500);
 }
 void VrokMain::on_btnPause_clicked()
 {
@@ -131,6 +144,8 @@ void VrokMain::on_btnFX_clicked()
         tx->stop();
     }else{
         vp->effects_active = true;
+        DBG(vis->getMiliSecondsPerSet());
+         tx->setInterval(50);
         tx->start();
     }
 }

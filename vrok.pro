@@ -61,8 +61,10 @@ SOURCES += outs/alsa.cpp
 }
 
 win32 {
-LIBS    +=  -lws2_32 -ldxguid -lole32 -ldsound
-HEADERS  +=  outs/dsound.h
+LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound
+HEADERS  +=  include/dsound.h \
+    include/d3dtypes.h \
+    outs/dsound.h
 SOURCES += outs/dsound.cpp
 }
 

@@ -38,7 +38,6 @@ public:
     explicit VrokMain(QWidget *parent = 0);
     QStringListModel *fileslist;
     QDir *dir;
-    float bars[VPEffectPluginVis::BARS];
 
     ~VrokMain();
 
@@ -61,6 +60,8 @@ private:
     QGraphicsRectItem *gbars[16];
     VPEffectPluginVis *vis;
     QTimer *tx;
+    unsigned vis_counter;
+    float bar_vals[VPEffectPluginVis::BARS];
 };
 
 #endif // VROKMAIN_H
