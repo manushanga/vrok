@@ -20,7 +20,6 @@
 VPEffectPluginVis::VPEffectPluginVis(float cap)
 {
     bar_array = NULL;
-    mutex_vis.unlock();
     DBG("s");
     for (size_t i=0;i<BARS;i++){
         trig[0][i]=(float *)new float[VPBUFFER_PERIOD*sizeof(float)];
@@ -90,6 +89,9 @@ void VPEffectPluginVis::process(float *buffer)
 }
 int VPEffectPluginVis::finit()
 {
+    if (bar_array)
+        delete bar_array;
+    bar_array = NULL;
     return 0;
 }
 VPEffectPluginVis::~VPEffectPluginVis()
@@ -98,4 +100,6 @@ VPEffectPluginVis::~VPEffectPluginVis()
         delete trig[0][i];
         delete trig[1][i];
     }
+    if (bar_array)
+        delete bar_array;
 }

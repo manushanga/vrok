@@ -22,8 +22,16 @@
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
 #include <QTimer>
+#include <QListView>
+
+#include "eqwidget.h"
 
 #define BAR_COUNT 16
+
+extern QListView *play_list;
+extern QStringListModel *fileslist;
+extern QDir *dir;
+
 namespace Ui {
 class VrokMain;
 }
@@ -36,8 +44,7 @@ public:
         Ui::VrokMain *ui;
 
     explicit VrokMain(QWidget *parent = 0);
-    QStringListModel *fileslist;
-    QDir *dir;
+
 
     ~VrokMain();
 
@@ -45,7 +52,9 @@ public slots:
     void on_btnPlay_clicked();
     void on_btnPause_clicked();
     void on_btnOpen_clicked();
-    void on_btnFX_clicked();
+    void on_btnEQt_clicked();
+    void on_btnSpec_clicked();
+    void on_btnEQ_clicked();
     void on_btnOpenDir_clicked();
     void on_lvFiles_doubleClicked(QModelIndex i);
     void process();
@@ -62,6 +71,7 @@ private:
     QTimer *tx;
     unsigned vis_counter;
     float bar_vals[VPEffectPluginVis::BARS];
+    EQWidget *ew;
 };
 
 #endif // VROKMAIN_H

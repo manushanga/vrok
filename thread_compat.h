@@ -37,6 +37,10 @@ public:
         runner = addr;
         th = CreateThread(NULL, 10, _std_thread_run, this ,0,&id);
     }
+    void detach()
+    {
+
+    }
     void join()
     {
         WaitForSingleObject(th, INFINITE);

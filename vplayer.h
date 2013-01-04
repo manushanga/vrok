@@ -25,17 +25,21 @@ class VPOutPlugin;
 class VPEffectPlugin;
 class VPDecoder;
 
+typedef void(*next_track_cb_t)(char *mem);
+
 struct effect_entry{
     VPEffectPlugin *eff;
-    bool init;
+    bool active;
 };
 
 class VPlayer
 {
 private:
     bool gapless_compatible;
+    next_track_cb_t next_track_cb;
     std::list<effect_entry> effects;
     bool play_worker_done;
+    std::mutex mutex_post_process;
 public:
     // take lock on mutex_control when writing to this
     char next_track[256];
@@ -69,7 +73,7 @@ public:
     unsigned track_samplerate;
     unsigned track_channels;
 
-    VPlayer();
+    VPlayer(next_track_cb_t cb);
 
     // internal interface
     static void play_work(VPlayer *self);
@@ -86,7 +90,8 @@ public:
     void setVolume(float vol);
     float getVolume();
     void addEffect(VPEffectPlugin *eff);
-    void removeEffect(unsigned idx);
+    bool isActiveEffect(VPEffectPlugin *eff);
+    void removeEffect(VPEffectPlugin *eff);
     bool isPlaying();
     ~VPlayer() ;
 };

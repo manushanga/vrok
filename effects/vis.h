@@ -17,7 +17,6 @@ private:
 public:
     float *bar_array;
     static const unsigned BARS = BAR_COUNT;
-    std::mutex mutex_vis;
 
     VPEffectPluginVis(float cap);
     int init(VPlayer *v);

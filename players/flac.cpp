@@ -222,7 +222,8 @@ FLACDecoder::~FLACDecoder()
     owner->vpout_close();
     FLAC__stream_decoder_finish(decoder);
     FLAC__stream_decoder_delete(decoder);
-
+    if (buffer)
+        delete buffer;
 }
 
 int FLACDecoder::open(const char *url)

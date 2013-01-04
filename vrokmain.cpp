@@ -20,7 +20,23 @@
 #include "effects/eq.h"
 #include "effects/vis.h"
 #include "config.h"
+#include <cstring>
 
+QListView *play_list;
+QStringListModel *fileslist;
+QDir *dir;
+void callback_next(char *mem)
+{
+
+    int i =play_list->selectionModel()->selectedRows().first().row();
+
+    if (i+1<fileslist->rowCount()){
+
+        strcpy(mem,(char *)dir->absoluteFilePath(fileslist->index(i+1).data().toString()).toUtf8().data());
+        play_list->selectionModel()->select(fileslist->index(i),QItemSelectionModel::Deselect);
+        play_list->selectionModel()->select(fileslist->index(i+1),QItemSelectionModel::Select);
+    }
+}
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VrokMain)
@@ -29,17 +45,16 @@ VrokMain::VrokMain(QWidget *parent) :
 
     vp=NULL;
     th=NULL;
-
+    ew=NULL;
 
     eq =new VPEffectPluginEQ();
 
 
-    vp = new VPlayer();
+    vp = new VPlayer(callback_next);
     vis = new VPEffectPluginVis(100);
-    vp->addEffect((VPEffectPlugin *) vis);
-    vp->addEffect((VPEffectPlugin *) eq);
 
 
+    play_list=ui->lvFiles;
     fileslist=NULL;
     dir=NULL;
     tx = new QTimer(this);
@@ -68,8 +83,11 @@ VrokMain::VrokMain(QWidget *parent) :
         fileslist = new QStringListModel(list);
         ui->lvFiles->setModel(fileslist);
     }
+    tx->setInterval(50);
+    config_get_eq_bands(eq->getBands());
+    eq->setPreamp(config_get_eq_preamp());
     connect(tx, SIGNAL(timeout()), this, SLOT(process()));
-
+    vp->effects_active = true;
 }
 
 
@@ -84,14 +102,13 @@ void VrokMain::process()
     for (int b=0;b<VPEffectPluginVis::BARS;b++){
         if (bar_vals[b] < 5.0f && bar_vals[b] > 0.0f)
             bar_vals[b] = 0.0f;
-        else if (bar_vals[b] > 5.0f)
-            bar_vals[b] -= 3.0f+0.1f*bar_vals[b];
-        else
+        else if (bar_vals[b] < bars[b])
             bar_vals[b] = bars[b];
+        else
+            bar_vals[b] -= 3.0f+0.1f*bar_vals[b];
         gbars[b]->setRect(b*14,0,10,bar_vals[b] *-1.0f);
     }
 
-   // gs->update(0.0f,0.0f,100.0f,-100.0f);
     ui->gv->viewport()->update();
 
     vis_counter++;
@@ -99,11 +116,13 @@ void VrokMain::process()
 }
 void VrokMain::on_btnPause_clicked()
 {
+    tx->stop();
     vp->pause();
 }
 void VrokMain::on_btnPlay_clicked()
 {
     vp->play();
+    tx->start();
 }
 void VrokMain::on_btnOpenDir_clicked()
 {
@@ -119,6 +138,7 @@ void VrokMain::on_btnOpenDir_clicked()
         delete fileslist;
     fileslist = new QStringListModel(list);
     ui->lvFiles->setModel(fileslist);
+
 }
 void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 {
@@ -129,14 +149,12 @@ void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 
     if (i.row() < fileslist->rowCount()-1 ){
 
-        strcpy (vp->next_track,(char *) (dir->absoluteFilePath(fileslist->index(i.row()+1).data().toString())).toUtf8().data());
+      //  strcpy (vp->next_track,(char *) (dir->absoluteFilePath(fileslist->index(i.row()+1).data().toString())).toUtf8().data());
     }
-    vp->effects_active = ui->btnFX->isChecked();
+
 }
 void VrokMain::on_btnOpen_clicked()
 {
-
-
     ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
                                                     "",
                                                     tr("Supported Files (*.flac *.mp3 *.ogg)")));
@@ -144,31 +162,45 @@ void VrokMain::on_btnOpen_clicked()
 
     if (ui->txtFile->text().length()>0) {
         vp->open((char *)ui->txtFile->text().toUtf8().data() );
-        vp->effects_active = ui->btnFX->isChecked();
     }
 }
-void VrokMain::on_btnFX_clicked()
+void VrokMain::on_btnEQ_clicked()
 {
-
-    if (vp->effects_active){
-        vp->effects_active = false;
+    if (ew){
+        delete ew;
+    }
+    ew = new EQWidget(eq);
+    ew->show();
+}
+void VrokMain::on_btnEQt_clicked()
+{
+    if (vp->isActiveEffect((VPEffectPlugin *)eq))
+       vp->removeEffect((VPEffectPlugin *)eq);
+    else
+       vp->addEffect((VPEffectPlugin *)eq);
+}
+void VrokMain::on_btnSpec_clicked()
+{
+    if (vp->isActiveEffect((VPEffectPlugin *)vis)){
         tx->stop();
-    }else{
-        vp->effects_active = true;
-        DBG(vis->getMiliSecondsPerSet());
-         tx->setInterval(50);
+        vp->removeEffect((VPEffectPlugin *)vis);
+    }
+    else {
+        vp->addEffect((VPEffectPlugin *)vis);
         tx->start();
     }
+
 }
 VrokMain::~VrokMain()
 {
-
+    config_set_eq_bands(eq->getBands());
     if (tx)
         delete tx;
     if (vp)
         delete vp;
     if (eq)
         delete eq;
-
+    if (vis)
+        delete vis;
     delete ui;
 }

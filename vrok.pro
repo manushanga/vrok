@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    config.cpp
+    config.cpp \
+    eqwidget.cpp
 
 HEADERS  += vrokmain.h \
     vplayer.h \
@@ -43,9 +44,11 @@ HEADERS  += vrokmain.h \
     thread_compat.h \
     decoder.h \
     config.h \
-    config_out.h
+    config_out.h \
+    eqwidget.h
 
-FORMS    += vrokmain.ui
+FORMS    += vrokmain.ui \
+    eqwidget.ui
 
 OTHER_FILES += \
     README.md \

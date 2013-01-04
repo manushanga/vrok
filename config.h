@@ -27,6 +27,10 @@ void config_init();
 float config_get_volume();
 QString config_get_lastopen();
 void config_set_lastopen(QString last);
+float config_get_eq_preamp();
+void config_set_eq_preamp();
+void config_set_eq_bands(float *bands);
+void config_get_eq_bands(float *bands);
 void config_set_volume();
 void config_finit();
 

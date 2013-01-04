@@ -19,7 +19,14 @@ private:
     float sb_preamp;
     void *sb_paramsroot;
     void sb_recalc_table();
+    bool work;
 public:
+    VPEffectPluginEQ();
+    const char **getBandNames();
+    float *getBands();
+    void setBand(int i, float val);
+    void setPreamp(float val);
+    float getPreamp();
     int init(VPlayer *v);
     void process(float *buffer);
     int finit();

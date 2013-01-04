@@ -24,6 +24,7 @@
 #include "decoder.h"
 #include "effect.h"
 
+
 void VPlayer::play_work(VPlayer *self)
 {
     self->vpdecode->reader();
@@ -31,24 +32,46 @@ void VPlayer::play_work(VPlayer *self)
 
 void VPlayer::addEffect(VPEffectPlugin *eff)
 {
+    mutex_post_process.lock();
     effect_entry e;
     e.eff = eff;
-    e.init = false;
+    eff->init(this);
+    e.active = true;
     effects.push_back(e);
+    mutex_post_process.unlock();
 }
-void VPlayer::removeEffect(unsigned idx)
+bool VPlayer::isActiveEffect(VPEffectPlugin *eff)
 {
-    std::list<effect_entry>::iterator it=effects.begin();
-    for (int i=0;i<idx;i++){
-        it++;
+    if (eff) {
+        for (std::list<effect_entry>::iterator it=effects.begin();it!=effects.end();it++){
+            if ((*it).eff==eff){
+                return true;
+            }
+        }
     }
-    effects.erase(it,it);
+    return false;
+}
+void VPlayer::removeEffect(VPEffectPlugin *eff)
+{
+    if (eff) {
+        for (std::list<effect_entry>::iterator it=effects.begin();it!=effects.end();it++){
+            if ((*it).eff==eff){
+                mutex_post_process.lock();
+                (*it).active=false;
+                effects.erase(it);
+                eff->finit();
+                mutex_post_process.unlock();
+                break;
+            }
+        }
+    }
 }
 
-VPlayer::VPlayer()
+VPlayer::VPlayer(next_track_cb_t cb)
 {
     mutex_control.try_lock();
 
+    mutex_post_process.unlock();
     track_channels = 0;
     track_samplerate = 0;
 
@@ -66,6 +89,7 @@ VPlayer::VPlayer()
     vpdecode=NULL;
 
     gapless_compatible = false;
+    next_track_cb = cb;
     next_track[0]='\0';
     effects.clear();
     play_worker_done = false;
@@ -145,6 +169,12 @@ bool VPlayer::isPlaying()
 }
 void VPlayer::ended()
 {
+    next_track[0]='\0';
+
+    // better do this quick
+    if (next_track_cb)
+        next_track_cb(next_track);
+
     if (next_track[0]!='\0') {
         play_worker_done=true;
         open(next_track);
@@ -155,20 +185,25 @@ void VPlayer::ended()
         paused = false;
         mutex_control.unlock();
 
-        next_track[0]='\0';
         VPlayer::play_work(this);
     } else {
+        std::thread *p=play_worker;
         play_worker = NULL;
+        p->detach();
+        p->~thread();
     }
 }
 
 void VPlayer::post_process(float *buffer)
 {
+    mutex_post_process.lock();
     if (effects_active){
         for (std::list<effect_entry>::iterator it=effects.begin();it!=effects.end();it++) {
-            (*it).eff->process( buffer);
+            if ((*it).active)
+                (*it).eff->process( buffer);
         }
     }
+    mutex_post_process.unlock();
 }
 
 VPlayer::~VPlayer()
@@ -178,6 +213,10 @@ VPlayer::~VPlayer()
         delete vpdecode;
         vpdecode = NULL;
     }
+    if (buffer1)
+        delete buffer1;
+    if (buffer2)
+        delete buffer2;
     config_finit();
 }
 void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
@@ -221,6 +260,7 @@ int VPlayer::vpout_open()
             delete vpout;
             vpout=NULL;
         }
+        DBG("Init sound output on "<< vpout_entries[DEFAULT_VPOUT_PLUGIN].name);
         vpout = (VPOutPlugin *) vpout_entries[DEFAULT_VPOUT_PLUGIN].creator();
 
         DBG("track chs:"<<track_channels);
@@ -239,9 +279,9 @@ int VPlayer::vpout_open()
         }
     }
     for (std::list<effect_entry>::iterator it=effects.begin();it!=effects.end();it++) {
-        if (!(*it).init){
+        if (!(*it).active){
             ret += (*it).eff->init(this);
-            (*it).init=true;
+            (*it).active=true;
         }
     }
 
@@ -249,7 +289,6 @@ int VPlayer::vpout_open()
 }
 int VPlayer::vpout_close()
 {
-
     // let play_worker roll, make sure that only these mutexes are locked once,
     // if its done multiple times include the work check in between them. see
     // player_flac.cpp's worker function

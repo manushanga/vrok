@@ -92,5 +92,6 @@ OGGDecoder::~OGGDecoder()
 {
     owner->vpout_close();
     ov_clear(&vf);
-    delete buffer;
+    if (buffer)
+        delete buffer;
 }
