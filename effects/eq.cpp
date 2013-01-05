@@ -21,6 +21,7 @@ VPEffectPluginEQ::VPEffectPluginEQ()
 {
     sb_preamp = 1.0f;
     sb_paramsroot = NULL;
+    owner=NULL;
     memset(&sb_state, 0, sizeof(SuperEqState));
 }
 float VPEffectPluginEQ::getPreamp()
@@ -40,7 +41,7 @@ void VPEffectPluginEQ::sb_recalc_table()
         bands_copy[i] *= sb_preamp;
     }
 
-    equ_makeTable (&sb_state, bands_copy, params, owner->track_samplerate);
+    equ_makeTable (&sb_state, bands_copy, params, (owner->track_samplerate==0?44100:owner->track_samplerate));
     if (sb_paramsroot)
         paramlist_free (sb_paramsroot);
     sb_paramsroot = params;
@@ -56,12 +57,14 @@ const char **VPEffectPluginEQ::getBandNames()
 void VPEffectPluginEQ::setBand(int i, float val)
 {
     sb_bands[i]=val;
-    sb_recalc_table();
+    if (owner)
+        sb_recalc_table();
 }
 void VPEffectPluginEQ::setPreamp(float val)
 {
     sb_preamp = val;
-    sb_recalc_table();
+    if (owner)
+        sb_recalc_table();
 }
 float *VPEffectPluginEQ::getBands()
 {

@@ -94,6 +94,9 @@ VPlayer::VPlayer(next_track_cb_t cb)
     effects.clear();
     play_worker_done = false;
 
+    track_channels = 0;
+    track_samplerate = 0;
+
     config_init();
     mutex_control.unlock();
 }
@@ -302,4 +305,5 @@ int VPlayer::vpout_close()
         delete play_worker;
         play_worker = NULL;
     }
+    return 0;
 }

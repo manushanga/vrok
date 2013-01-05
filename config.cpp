@@ -50,7 +50,7 @@ void config_set_eq_preamp(float pa)
 }
 float config_get_eq_preamp()
 {
-    settings.value("general/eq/preamp").toFloat();
+    return settings.value("general/eq/preamp").toFloat();
 }
 
 void config_get_eq_bands(float *bands)
