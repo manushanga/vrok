@@ -1,3 +1,11 @@
+/*
+  Vrok - smokin' audio
+  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
+
 #include <stdlib.h>
 #include <cstring>
 
@@ -40,14 +48,14 @@ void OGGDecoder::reader()
     float **pcm;
     long ret=1;
     int bit;
-    size_t i,j,done=0;
+    size_t j,done=0;
     while (owner->work && ret > 0 ){
         j=0;
         ret=1;
         done=0;
         while (done<VPBUFFER_FRAMES*2 && ret > 0){
             ret = ov_read_float( &vf, &pcm, VPBUFFER_FRAMES*2 - done,&bit );
-            for (size_t i=0;i<ret;i++){
+            for (long i=0;i<ret;i++){
                 for (size_t ch=0;ch<owner->track_channels;ch++){
                     buffer[j]=pcm[ch][i]*owner->volume;
                     j++;

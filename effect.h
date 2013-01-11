@@ -17,5 +17,6 @@ public:
     virtual int init(VPlayer *v) = 0;
     virtual void process(float *buffer) = 0;
     virtual int finit() = 0;
+    virtual ~VPEffectPlugin() {}
 };
 #endif // EFFECT_H

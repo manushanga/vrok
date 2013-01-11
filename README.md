@@ -33,4 +33,4 @@ Running
 License
 -------
 
-Distributed under terms of GPL 2.0, for more see LICENSE.
+Distributed under the terms of GPL 2.0, for more see LICENSE.

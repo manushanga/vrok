@@ -8,6 +8,7 @@
 
 #include <cstring>
 #include "config_out.h"
+#include "config.h"
 #include "eq.h"
 
 static const char *sb_bandnames[] = { "55 Hz", "77 Hz", "110 Hz",
@@ -15,14 +16,18 @@ static const char *sb_bandnames[] = { "55 Hz", "77 Hz", "110 Hz",
     "1.8 kHz", "2.5 kHz", "3.5 kHz", "5 kHz", "7 kHz", "10 kHz", "14 kHz",
     "20 kHz"
 };
-static float sb_bands[18]= {1.0f,1.0f,1.0f,1.0f,1.0f,1.0f, 1.0f,1.0f,1.0f,1.0f,1.0f,1.0f, 1.0f,1.0f,1.0f,1.0f,1.0f,1.0f};
-
 VPEffectPluginEQ::VPEffectPluginEQ()
 {
-    sb_preamp = 1.0f;
+    sb_preamp = config_get_eq_preamp();
     sb_paramsroot = NULL;
     owner=NULL;
+    config_get_eq_bands(sb_bands);
+
     memset(&sb_state, 0, sizeof(SuperEqState));
+}
+VPEffectPluginEQ::~VPEffectPluginEQ()
+{
+
 }
 float VPEffectPluginEQ::getPreamp()
 {
@@ -30,9 +35,6 @@ float VPEffectPluginEQ::getPreamp()
 }
 void VPEffectPluginEQ::sb_recalc_table()
 {
-   // this->owner->mutexes[0.0f].lock();
-   // this->owner->mutexes[2].lock();
-
     void *params = paramlist_alloc ();
 
     float bands_copy[18];
@@ -45,9 +47,6 @@ void VPEffectPluginEQ::sb_recalc_table()
     if (sb_paramsroot)
         paramlist_free (sb_paramsroot);
     sb_paramsroot = params;
-
-    //this->owner->mutexes[0.0f].unlock();
-    //this->owner->mutexes[2].unlock();
 
 }
 const char **VPEffectPluginEQ::getBandNames()
@@ -74,9 +73,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
 {
     owner = v;
     equ_init (&sb_state, 10.0f, owner->track_channels);
-    sb_preamp = 1.0f;
     sb_recalc_table();
-
     work=false;
     return 0;
 
@@ -94,5 +91,7 @@ int VPEffectPluginEQ::finit()
     while (work){};
     equ_quit(&sb_state);
     memset(&sb_state, 0, sizeof(SuperEqState));
+    config_set_eq_bands(sb_bands);
+    config_set_eq_preamp(sb_preamp);
     return 0;
 }

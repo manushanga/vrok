@@ -15,7 +15,7 @@ typedef struct _vpout_entry{
 #ifdef _WIN32
     #include "outs/dsound.h"
 
-    static const vpout_entry_t vpout_entries[] = { {"DSound", (vpout_creator_t)_VPOutPluginDSound_new, VPBUFFER_PERIOD*8 } };
+    static const vpout_entry_t vpout_entries[] = { {"DSound", (vpout_creator_t)_VPOutPluginDSound_new, VPBUFFER_PERIOD*6 } };
 #elif defined(__linux__)
     #include "outs/alsa.h"
 

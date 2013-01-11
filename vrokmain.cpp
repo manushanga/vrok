@@ -12,7 +12,6 @@
 #include "ui_vrokmain.h"
 #include "vputils.h"
 #include "vplayer.h"
-#include <unistd.h>
 
 #include "players/flac.h"
 #include "players/mpeg.h"
@@ -47,10 +46,8 @@ VrokMain::VrokMain(QWidget *parent) :
     th=NULL;
     ew=NULL;
 
-    eq =new VPEffectPluginEQ();
-
-
     vp = new VPlayer(callback_next);
+    eq =new VPEffectPluginEQ();
     vis = new VPEffectPluginVis(100);
 
 
@@ -64,7 +61,7 @@ VrokMain::VrokMain(QWidget *parent) :
     QBrush z(Qt::darkGreen);
     QPen x(Qt::darkGreen);
 
-    for (int i=0;i<VPEffectPluginVis::BARS;i++){
+    for (unsigned i=0;i<VPEffectPluginVis::BARS;i++){
         gbars[i] = new QGraphicsRectItem(i*11,0,10,0);
         gbars[i]->setBrush(z);
         gbars[i]->setPen(x);
@@ -83,9 +80,8 @@ VrokMain::VrokMain(QWidget *parent) :
         fileslist = new QStringListModel(list);
         ui->lvFiles->setModel(fileslist);
     }
-    tx->setInterval(50);
-    config_get_eq_bands(eq->getBands());
-    eq->setPreamp(config_get_eq_preamp());
+    tx->setInterval(70);
+
     connect(tx, SIGNAL(timeout()), this, SLOT(process()));
     vp->effects_active = true;
 }
@@ -97,9 +93,8 @@ void VrokMain::process()
         vis_counter=0;
     }
 
-
     float *bars = vis->bar_array + VPEffectPluginVis::BARS*vis_counter;
-    for (int b=0;b<VPEffectPluginVis::BARS;b++){
+    for (unsigned b=0;b<VPEffectPluginVis::BARS;b++){
         if (bar_vals[b] < 5.0f && bar_vals[b] > 0.0f)
             bar_vals[b] = 0.0f;
         else if (bar_vals[b] < bars[b])
@@ -112,7 +107,6 @@ void VrokMain::process()
     ui->gv->viewport()->update();
 
     vis_counter++;
-    usleep(500);
 }
 void VrokMain::on_btnPause_clicked()
 {
@@ -148,7 +142,6 @@ void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
     vp->open((char *) n.toUtf8().data());
 
     if (i.row() < fileslist->rowCount()-1 ){
-
       //  strcpy (vp->next_track,(char *) (dir->absoluteFilePath(fileslist->index(i.row()+1).data().toString())).toUtf8().data());
     }
 
@@ -193,7 +186,6 @@ void VrokMain::on_btnSpec_clicked()
 }
 VrokMain::~VrokMain()
 {
-    config_set_eq_bands(eq->getBands());
     if (tx)
         delete tx;
     if (vp)

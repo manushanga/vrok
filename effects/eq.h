@@ -20,6 +20,7 @@ private:
     void *sb_paramsroot;
     void sb_recalc_table();
     bool work;
+    float sb_bands[18];
 public:
     VPEffectPluginEQ();
     const char **getBandNames();
@@ -30,6 +31,7 @@ public:
     int init(VPlayer *v);
     void process(float *buffer);
     int finit();
+    ~VPEffectPluginEQ();
 };
 
 #endif

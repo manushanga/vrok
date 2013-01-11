@@ -16,7 +16,7 @@ EQWidget::EQWidget(VPEffectPluginEQ *eq, QWidget *parent) :
         if (i)
             sliders[i]->setValue((plugin->getBands()[i-1]-1.0f)*300.0f);
         else
-            sliders[0]->setValue(0);
+            sliders[0]->setValue((plugin->getPreamp()-1.0f)*1000.0f);
         sliders[i]->setProperty("index",QVariant(i));
         connect(sliders[i],SIGNAL(valueChanged(int)),this,SLOT(changed(int)));
 
@@ -34,5 +34,7 @@ void EQWidget::changed(int)
 }
 EQWidget::~EQWidget()
 {
+    for (int i=0;i<19;i++)
+        delete sliders[i];
     delete ui;
 }

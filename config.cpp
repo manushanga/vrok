@@ -46,7 +46,7 @@ void config_set_eq_bands(float *bands)
 }
 void config_set_eq_preamp(float pa)
 {
-    settings.setValue("general/eq/preamp",QVariant(pa));
+    settings.setValue("general/eq/preamp",pa);
 }
 float config_get_eq_preamp()
 {

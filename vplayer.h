@@ -16,10 +16,10 @@
 #ifndef VPLAYER_H
 #define VPLAYER_H
 
-#include <list>
-
 #include "thread_compat.h"
 #include "vputils.h"
+
+#define MAX_EFFECTS 2
 
 class VPOutPlugin;
 class VPEffectPlugin;
@@ -27,7 +27,7 @@ class VPDecoder;
 
 typedef void(*next_track_cb_t)(char *mem);
 
-struct effect_entry{
+struct effect_entry_t{
     VPEffectPlugin *eff;
     bool active;
 };
@@ -37,7 +37,7 @@ class VPlayer
 private:
     bool gapless_compatible;
     next_track_cb_t next_track_cb;
-    std::list<effect_entry> effects;
+    effect_entry_t effects[MAX_EFFECTS];
     bool play_worker_done;
     std::mutex mutex_post_process;
 public:
