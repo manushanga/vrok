@@ -32,22 +32,19 @@ void VPlayer::addEffect(VPEffectPlugin *eff)
 {
     eff->init(this);
     mutex_post_process.lock();
-    for (unsigned i=0;i<MAX_EFFECTS;i++){
-        if (effects[i].eff==NULL){
-            effects[i].eff=eff;
-            effects[i].active=true;
-            break;
-        }
-    }
+    effect_entry_t e;
+    e.eff = eff;
+    e.active = true;
+    effects.push_back(e);
     mutex_post_process.unlock();
 }
 bool VPlayer::isActiveEffect(VPEffectPlugin *eff)
 {
     if (eff) {
-        for (unsigned i=0;i<MAX_EFFECTS;i++){
-            if (effects[i].eff==eff){
-                return effects[i].active;
-            }
+        for (std::vector<effect_entry_t>::iterator it=effects.begin();
+             it!=effects.end();it++){
+            if ((*it).eff==eff)
+                return true;
         }
     }
     return false;
@@ -55,14 +52,12 @@ bool VPlayer::isActiveEffect(VPEffectPlugin *eff)
 void VPlayer::removeEffect(VPEffectPlugin *eff)
 {
     if (eff) {
-        for (unsigned i=0;i<MAX_EFFECTS;i++){
-            if (effects[i].eff==eff){
+        for (std::vector<effect_entry_t>::iterator it=effects.begin();
+             it!=effects.end();it++){
+            if ((*it).eff==eff){
                 mutex_post_process.lock();
-                effects[i].eff=NULL;
-                effects[i].active=false;
+                effects.erase(it);
                 eff->finit();
-
-
                 mutex_post_process.unlock();
                 break;
             }
@@ -95,11 +90,6 @@ VPlayer::VPlayer(next_track_cb_t cb)
     next_track_cb = cb;
     next_track[0]='\0';
 
-    for (unsigned i=0;i<MAX_EFFECTS;i++){
-        effects[i].eff=NULL;
-        effects[i].active=false;
-    }
-
     play_worker_done = false;
 
     track_channels = 0;
@@ -110,6 +100,7 @@ VPlayer::VPlayer(next_track_cb_t cb)
 }
 int VPlayer::open(const char *url)
 {
+    this_track[0]='\0';
     if (vpdecode){
         if (!paused) {
             vpout->rewind();
@@ -150,8 +141,8 @@ int VPlayer::open(const char *url)
     if (!play_worker){
         play_worker = new std::thread((void(*)(void*))VPlayer::play_work, this);
     }
-
     play();
+    strcpy(this_track, url);
     return ret;
 }
 int VPlayer::play()
@@ -209,9 +200,10 @@ void VPlayer::post_process(float *buffer)
 {
     mutex_post_process.lock();
     if (effects_active){
-        for (unsigned i=0;i<MAX_EFFECTS;i++){
-            if (effects[i].eff && effects[i].active)
-                effects[i].eff->process( buffer);
+        for (std::vector<effect_entry_t>::iterator it=effects.begin();
+             it!=effects.end();it++){
+            if ((*it).active)
+                (*it).eff->process( buffer);
         }
     }
     mutex_post_process.unlock();
@@ -289,12 +281,18 @@ int VPlayer::vpout_open()
             ret += vpout->init(this, track_samplerate, track_channels);
         }
     }
-    for (unsigned i=0;i<MAX_EFFECTS;i++) {
-        if (effects[i].eff && !effects[i].active){
-            ret += effects[i].eff->init(this);
-            effects[i].active=true;
+    mutex_post_process.lock();
+    for (std::vector<effect_entry_t>::iterator it=effects.begin();
+         it!=effects.end();it++){
+        if (!(*it).active){
+            (*it).eff->init(this);
+            (*it).active=true;
+        } else {
+            (*it).eff->finit();
+            (*it).eff->init(this);
         }
     }
+    mutex_post_process.unlock();
 
     return ret;
 }

@@ -5,7 +5,7 @@
 
   See LICENSE for details.
 */
-#include "dsound.h"
+#include <dsound.h>
 #include "config_out.h"
 
 LPDIRECTSOUND lpds;

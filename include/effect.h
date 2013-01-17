@@ -16,6 +16,7 @@ class VPEffectPlugin
 public:
     virtual int init(VPlayer *v) = 0;
     virtual void process(float *buffer) = 0;
+    virtual void status_change(VPStatus status) {}
     virtual int finit() = 0;
     virtual ~VPEffectPlugin() {}
 };

@@ -1,9 +1,12 @@
 #ifndef EQWIDGET_H
 #define EQWIDGET_H
-
+#include <QWidget>
 #include <QDockWidget>
 #include <QSlider>
-#include "effects/eq.h"
+#include <QProgressBar>
+#include "../effects/eq.h"
+#include <QTimer>
+
 namespace Ui {
 class EQWidget;
 }
@@ -20,8 +23,15 @@ private:
     Ui::EQWidget *ui;
     VPEffectPluginEQ *plugin;
     QSlider *sliders[19];
+    QSlider *target_sliders[18];
+    QWidget *empty;
+    QProgressBar *levels[18];
+    QTimer *tx;
+
 public slots:
+    void process();
     void changed(int);
+    void target_changed(int);
 };
 
 #endif // EQWIDGET_H

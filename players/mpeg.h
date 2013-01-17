@@ -11,8 +11,8 @@
 
 #include <mpg123.h>
 
-#include "../vplayer.h"
-#include "../decoder.h"
+#include "vplayer.h"
+#include "decoder.h"
 
 class MPEGDecoder : public VPDecoder
 {

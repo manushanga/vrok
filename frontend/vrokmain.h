@@ -10,10 +10,9 @@
 
 #include <QMainWindow>
 
-
 #include "vplayer.h"
-#include "effects/eq.h"
-#include "effects/vis.h"
+#include "../effects/eq.h"
+
 
 #include <QGraphicsScene>
 #include <QStringListModel>
@@ -26,12 +25,6 @@
 
 #include "eqwidget.h"
 
-#define BAR_COUNT 16
-
-extern QListView *play_list;
-extern QStringListModel *fileslist;
-extern QDir *dir;
-
 namespace Ui {
 class VrokMain;
 }
@@ -41,17 +34,15 @@ class VrokMain : public QMainWindow
     Q_OBJECT
     
 public:
-        Ui::VrokMain *ui;
+    Ui::VrokMain *ui;
 
     explicit VrokMain(QWidget *parent = 0);
-
 
     ~VrokMain();
 
 public slots:
     void on_btnPlay_clicked();
     void on_btnPause_clicked();
-    void on_btnOpen_clicked();
     void on_btnEQt_clicked();
     void on_btnSpec_clicked();
     void on_btnEQ_clicked();
@@ -59,18 +50,16 @@ public slots:
     void on_lvFiles_doubleClicked(QModelIndex i);
     void process();
 private:
-    QThread *th_spec;
 
     VPlayer *vp;
     VPEffectPluginEQ *eq;
     std::thread *th;
     bool visuals;
     QGraphicsScene *gs;
-    QGraphicsRectItem *gbars[16];
-    VPEffectPluginVis *vis;
+    QGraphicsRectItem *gbars[BAR_COUNT];
     QTimer *tx;
     unsigned vis_counter;
-    float bar_vals[VPEffectPluginVis::BARS];
+    float bar_vals[BAR_COUNT];
     EQWidget *ew;
 };
 

@@ -6,10 +6,8 @@
   See LICENSE for details.
 */
 
-#include <unistd.h>
-
 #include <QApplication>
-#include "vrokmain.h"
+#include "frontend/vrokmain.h"
 #include "vplayer.h"
 
 int main(int argc, char *argv[])

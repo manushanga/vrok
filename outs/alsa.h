@@ -10,9 +10,10 @@
 #define OUT_ALSA_H
 
 #include <alsa/asoundlib.h>
+#include <samplerate.h>
 
-#include "../vplayer.h"
-#include "../out.h"
+#include "vplayer.h"
+#include "out.h"
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
 
@@ -26,6 +27,11 @@ public:
     volatile bool work;
     volatile bool pause_check;
     volatile bool paused;
+    unsigned in_srate, out_srate;
+    SRC_STATE *rs;
+    SRC_DATA rd;
+    float *out_buf;
+    unsigned out_frames;
 
     virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);
     virtual void rewind();

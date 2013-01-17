@@ -6,15 +6,25 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>352</width>
-    <height>185</height>
+    <width>421</width>
+    <height>288</height>
    </rect>
+  </property>
+  <property name="features">
+   <set>QDockWidget::DockWidgetFeatureMask</set>
   </property>
   <property name="windowTitle">
    <string>Shibatch Super EQ</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="lyUserBars">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMaximumSize</enum>
+      </property>
+     </layout>
+    </item>
     <item>
      <layout class="QHBoxLayout" name="lyBars">
       <property name="sizeConstraint">

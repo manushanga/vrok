@@ -30,7 +30,7 @@ int OGGDecoder::open(const char *url)
 
     int ret=ov_fopen(url,&vf);
     if (ret<0){
-        DBG("OGGPlayer:open fail");
+        DBG("open fail");
         return -1;
     }
 
@@ -38,7 +38,7 @@ int OGGDecoder::open(const char *url)
     buffer = new float[VPBUFFER_FRAMES*owner->track_channels*2];
     half_buffer_size = VPBUFFER_FRAMES*owner->track_channels*sizeof(float);
 
-    DBG("OGG Vorbis meta done");
+    DBG("meta done");
     owner->vpout_open();
     return 0;
 }

@@ -17,7 +17,6 @@
 #include "players/mpeg.h"
 #include "players/ogg.h"
 #include "effects/eq.h"
-#include "effects/vis.h"
 #include "config.h"
 #include <cstring>
 
@@ -26,7 +25,6 @@ QStringListModel *fileslist;
 QDir *dir;
 void callback_next(char *mem)
 {
-
     int i =play_list->selectionModel()->selectedRows().first().row();
 
     if (i+1<fileslist->rowCount()){
@@ -43,25 +41,27 @@ VrokMain::VrokMain(QWidget *parent) :
     ui->setupUi(this);
 
     vp=NULL;
-    th=NULL;
     ew=NULL;
 
+
     vp = new VPlayer(callback_next);
-    eq =new VPEffectPluginEQ();
-    vis = new VPEffectPluginVis(100);
+    eq =new VPEffectPluginEQ(100);
+
+    tx = new QTimer(this);
+    tx->setSingleShot(false);
+    tx->setInterval(50);
+    tx->stop();
 
 
     play_list=ui->lvFiles;
     fileslist=NULL;
     dir=NULL;
-    tx = new QTimer(this);
-    tx->setSingleShot(false);
 
     gs = new QGraphicsScene();
     QBrush z(Qt::darkGreen);
     QPen x(Qt::darkGreen);
 
-    for (unsigned i=0;i<VPEffectPluginVis::BARS;i++){
+    for (unsigned i=0;i<BAR_COUNT;i++){
         gbars[i] = new QGraphicsRectItem(i*11,0,10,0);
         gbars[i]->setBrush(z);
         gbars[i]->setPen(x);
@@ -69,32 +69,32 @@ VrokMain::VrokMain(QWidget *parent) :
         bar_vals[i]=0.0f;
     }
     ui->gv->setScene(gs);
-    vis_counter = 0;
+
     if (config_get_lastopen().length()>0) {
         dir = new QDir(config_get_lastopen());
         dir->setFilter(QDir::Files|QDir::Hidden);
         dir->setNameFilters(QStringList()<<"*.flac"<<"*.mp3"<<"*.ogg");
-        QStringList list = dir->entryList();
-        if (fileslist)
-            delete fileslist;
-        fileslist = new QStringListModel(list);
+        fileslist = new QStringListModel(dir->entryList());
         ui->lvFiles->setModel(fileslist);
     }
-    tx->setInterval(70);
-
+    vis_counter = 0;
     connect(tx, SIGNAL(timeout()), this, SLOT(process()));
     vp->effects_active = true;
+
 }
 
 
 void VrokMain::process()
 {
-    if (vis_counter==vis->getBarSetCount()){
+    if (eq->bar_array==NULL)
+        return;
+
+    if (vis_counter==eq->getBarSetCount()){
         vis_counter=0;
     }
 
-    float *bars = vis->bar_array + VPEffectPluginVis::BARS*vis_counter;
-    for (unsigned b=0;b<VPEffectPluginVis::BARS;b++){
+    float *bars = eq->bar_array + eq->getBarCount()*vis_counter;
+    for (unsigned b=0;b<eq->getBarCount();b++){
         if (bar_vals[b] < 5.0f && bar_vals[b] > 0.0f)
             bar_vals[b] = 0.0f;
         else if (bar_vals[b] < bars[b])
@@ -104,23 +104,30 @@ void VrokMain::process()
         gbars[b]->setRect(b*14,0,10,bar_vals[b] *-1.0f);
     }
 
+
     ui->gv->viewport()->update();
 
     vis_counter++;
 }
 void VrokMain::on_btnPause_clicked()
 {
-    tx->stop();
+    if (ui->btnSpec->isChecked())
+        tx->stop();
     vp->pause();
 }
 void VrokMain::on_btnPlay_clicked()
 {
     vp->play();
-    tx->start();
+    if (ui->btnSpec->isChecked())
+        tx->start();
 }
 void VrokMain::on_btnOpenDir_clicked()
 {
-    QString d = QFileDialog::getExistingDirectory(this, "Select directory","");
+
+
+    QString d = QFileDialog::getExistingDirectory(this, tr("Open Dir"),
+                                             "/home",
+                                             0);
     config_set_lastopen(d);
     if (dir)
         delete dir;
@@ -146,53 +153,42 @@ void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
     }
 
 }
-void VrokMain::on_btnOpen_clicked()
-{
-    ui->txtFile->setText(QFileDialog::getOpenFileName(this, tr("Open File"),
-                                                    "",
-                                                    tr("Supported Files (*.flac *.mp3 *.ogg)")));
-
-
-    if (ui->txtFile->text().length()>0) {
-        vp->open((char *)ui->txtFile->text().toUtf8().data() );
-    }
-}
 void VrokMain::on_btnEQ_clicked()
 {
-    if (ew){
+    if (ew)
         delete ew;
-    }
     ew = new EQWidget(eq);
-    ew->show();
+    this->addDockWidget(Qt::BottomDockWidgetArea,ew);
 }
 void VrokMain::on_btnEQt_clicked()
 {
-    if (vp->isActiveEffect((VPEffectPlugin *)eq))
+    if (vp->isActiveEffect((VPEffectPlugin *)eq)){
+      //  tx->stop();
        vp->removeEffect((VPEffectPlugin *)eq);
-    else
+    }
+    else{
        vp->addEffect((VPEffectPlugin *)eq);
+      // tx->start();
+           }
 }
 void VrokMain::on_btnSpec_clicked()
 {
-    if (vp->isActiveEffect((VPEffectPlugin *)vis)){
-        tx->stop();
-        vp->removeEffect((VPEffectPlugin *)vis);
-    }
-    else {
-        vp->addEffect((VPEffectPlugin *)vis);
-        tx->start();
+    if (vp->isActiveEffect((VPEffectPlugin *)eq)){
+        if (ui->btnSpec->isChecked())
+            tx->start();
+        else
+            tx->stop();
     }
 
 }
 VrokMain::~VrokMain()
 {
-    if (tx)
-        delete tx;
+
     if (vp)
         delete vp;
     if (eq)
         delete eq;
-    if (vis)
-        delete vis;
+    if (tx)
+        delete tx;
     delete ui;
 }

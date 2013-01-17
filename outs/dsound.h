@@ -2,14 +2,14 @@
 #define WAVEOUT_H
 
 #include <windows.h>
-#include "../include/dsound.h"
+#include "dsound.h"
 
 #define _USE_MATH_DEFINES
 
 #include <cmath>
 
-#include "../vplayer.h"
-#include "../out.h"
+#include "vplayer.h"
+#include "out.h"
 
 class VPOutPluginDSound : public VPOutPlugin {
 public:

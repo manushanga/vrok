@@ -25,7 +25,7 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder,
 
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
         me->owner->set_metadata(  metadata->data.stream_info.sample_rate, metadata->data.stream_info.channels);
-        DBG("FLAC meta ok");
+        DBG("meta ok");
         me->half_buffer_bytes = VPBUFFER_FRAMES*me->owner->track_channels*sizeof(float);
         if (me->buffer)
             delete me->buffer;
@@ -34,7 +34,7 @@ static void metadata_callback(const FLAC__StreamDecoder *decoder,
         me->ret_vpout_open = me->owner->vpout_open();
     }
 
-    DBG("FLAC meta done");
+    DBG("meta done");
 
 }
 
@@ -43,7 +43,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder,
                            void *client_data)
 {
 
-    DBG("FLAC:error_callback: "<< FLAC__StreamDecoderErrorStatusString[status]);
+    DBG(FLAC__StreamDecoderErrorStatusString[status]);
 }
 
 static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder,
@@ -228,10 +228,9 @@ FLACDecoder::~FLACDecoder()
 
 int FLACDecoder::open(const char *url)
 {
-
     init_status = FLAC__stream_decoder_init_file(decoder, url, write_callback, metadata_callback, error_callback, (void *) this);
     if (init_status != FLAC__STREAM_DECODER_INIT_STATUS_OK){
-        DBG("FLACPlayer:open: decoder init fail");
+        DBG("decoder init fail");
         return -1;
     } else {
         FLAC__stream_decoder_process_until_end_of_metadata(decoder);
@@ -244,7 +243,7 @@ void FLACDecoder::reader()
     if (init_status==FLAC__STREAM_DECODER_INIT_STATUS_OK) {
         FLAC__stream_decoder_process_until_end_of_stream(decoder);
     } else {
-        DBG("FLACDecoder:reader "<<FLAC__StreamDecoderInitStatusString[init_status]);
+        DBG("Error "<<FLAC__StreamDecoderInitStatusString[init_status]);
     }
 
     if (owner->work)

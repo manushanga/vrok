@@ -22,7 +22,7 @@ MPEGDecoder::MPEGDecoder()
     int err;
     mpg123_init();
     if ((mh = mpg123_new(NULL, &err)) == NULL){
-        DBG("MPEGPlayer:MPEGPlayer init fail");
+        DBG("init fail");
     }
     buffer = NULL;
 
@@ -76,13 +76,13 @@ int MPEGDecoder::open(const char *url)
 {
 
     if (mpg123_open(mh, url) != MPG123_OK) {
-        DBG("MPEGPlayer:open open file fail");
+        DBG("open file fail");
         return -1;
     }
     int channels, encoding;
     long rate;
     if (mpg123_getformat(mh, &rate, &channels, &encoding) != MPG123_OK){
-        DBG("MPEGPlayer:open getformat fail");
+        DBG("getformat fail");
         return -1;
     }
 
@@ -95,7 +95,7 @@ int MPEGDecoder::open(const char *url)
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
 
-    DBG("MPEG meta done");
+    DBG("meta done");
     owner->vpout_open();
     return 0;
 }

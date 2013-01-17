@@ -9,17 +9,19 @@
   Notes:
   * Please do not propose to use std::string, I hate it for backend usage.
   * There is no resampling or channel mixing support on the VPlayer and it is
-    not planned. If it can't be played on the hardware you have it won't be
+    not planned. If it can't be played on the hardware you have, it won't be
     played. Ofcause it is open for anyone else to implement!
 */
 
 #ifndef VPLAYER_H
 #define VPLAYER_H
 
+#include <vector>
+
 #include "thread_compat.h"
 #include "vputils.h"
 
-#define MAX_EFFECTS 2
+enum VPStatus{VP_STATUS_OPEN,VP_STATUS_PLAYING,VP_STATUS_PAUSED,VP_STATUS_STOPPED};
 
 class VPOutPlugin;
 class VPEffectPlugin;
@@ -37,10 +39,11 @@ class VPlayer
 private:
     bool gapless_compatible;
     next_track_cb_t next_track_cb;
-    effect_entry_t effects[MAX_EFFECTS];
+    std::vector<effect_entry_t> effects;
     bool play_worker_done;
     std::mutex mutex_post_process;
 public:
+    char this_track[256];
     // take lock on mutex_control when writing to this
     char next_track[256];
 

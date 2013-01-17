@@ -16,48 +16,43 @@ TARGET = vrok
 
 DEFINES += USE_OOURA
 
-SOURCES += main.cpp\
-        vrokmain.cpp \
+INCLUDEPATH += include
+
+SOURCES += main.cpp \
+        frontend/vrokmain.cpp \
+    frontend/eqwidget.cpp \
     vplayer.cpp \
     effects/shibatch/Equ.cpp \
     effects/shibatch/Fftsg_fl.c \
     effects/eq.cpp \
-    effects/vis.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    config.cpp \
-    eqwidget.cpp
-
-HEADERS  += vrokmain.h \
-    vplayer.h \
-    vputils.h \
-    out.h \
+    config.cpp
+HEADERS  += \
+    include/vplayer.h \
+    include/decoder.h \
+    include/effect.h \
+    include/config_out.h \
+    frontend/vrokmain.h \
+    frontend/eqwidget.h \
     effects/shibatch/paramlist.hpp \
     effects/shibatch/Equ.h \
-    effect.h \
     effects/eq.h \
-    effects/vis.h \
     players/flac.h \
     players/mpeg.h \
-    players/ogg.h \
-    thread_compat.h \
-    decoder.h \
-    config.h \
-    config_out.h \
-    eqwidget.h
-
-FORMS    += vrokmain.ui \
-    eqwidget.ui
+    players/ogg.h
+FORMS    += frontend/vrokmain.ui \
+            frontend/eqwidget.ui
 
 OTHER_FILES += \
     README.md \
     LICENSE
 
-QMAKE_CXXFLAGS += -O3
+QMAKE_CXXFLAGS +=  -O3
 
 linux-g++* {
-LIBS    += -lasound
+LIBS    += /opt/libsamplerate/lib/libsamplerate.a -lasound
 QMAKE_CXXFLAGS += -std=c++11
 HEADERS  += outs/alsa.h
 SOURCES += outs/alsa.cpp
@@ -65,9 +60,7 @@ SOURCES += outs/alsa.cpp
 
 win32 {
 LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound
-HEADERS  +=  include/dsound.h \
-    include/d3dtypes.h \
-    outs/dsound.h
+HEADERS  +=  outs/dsound.h
 SOURCES += outs/dsound.cpp
 }
 

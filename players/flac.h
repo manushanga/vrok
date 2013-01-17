@@ -11,8 +11,8 @@
 
 #include <FLAC/stream_decoder.h>
 
-#include "../vplayer.h"
-#include "../decoder.h"
+#include "vplayer.h"
+#include "decoder.h"
 
 class FLACDecoder : public VPDecoder
 {
