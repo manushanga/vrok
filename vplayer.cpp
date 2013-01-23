@@ -64,6 +64,15 @@ void VPlayer::removeEffect(VPEffectPlugin *eff)
         }
     }
 }
+void VPlayer::announce(VPStatus status)
+{
+    mutex_post_process.lock();
+    for (std::vector<effect_entry_t>::iterator it=effects.begin();
+         it!=effects.end();it++){
+        (*it).eff->status_change(status);
+    }
+    mutex_post_process.unlock();
+}
 
 VPlayer::VPlayer(next_track_cb_t cb)
 {
@@ -141,7 +150,9 @@ int VPlayer::open(const char *url)
     if (!play_worker){
         play_worker = new std::thread((void(*)(void*))VPlayer::play_work, this);
     }
+    announce(VP_STATUS_OPEN);
     play();
+
     strcpy(this_track, url);
     return ret;
 }
@@ -153,6 +164,7 @@ int VPlayer::play()
         vpout->resume();
     }
     mutex_control.unlock();
+    announce(VP_STATUS_PLAYING);
     return 0;
 }
 
@@ -164,6 +176,7 @@ void VPlayer::pause()
         paused = true;
     }
     mutex_control.unlock();
+    announce(VP_STATUS_PAUSED);
 }
 bool VPlayer::isPlaying()
 {
@@ -194,6 +207,7 @@ void VPlayer::ended()
         p->detach();
         p->~thread();
     }
+    announce(VP_STATUS_STOPPED);
 }
 
 void VPlayer::post_process(float *buffer)

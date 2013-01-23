@@ -48,6 +48,7 @@ public slots:
     void on_btnEQ_clicked();
     void on_btnOpenDir_clicked();
     void on_lvFiles_doubleClicked(QModelIndex i);
+    void on_btnAbout_clicked();
     void process();
 private:
 

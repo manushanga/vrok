@@ -34,6 +34,7 @@ HEADERS  += \
     include/decoder.h \
     include/effect.h \
     include/config_out.h \
+    include/thread_compat.h \
     frontend/vrokmain.h \
     frontend/eqwidget.h \
     effects/shibatch/paramlist.hpp \
@@ -49,10 +50,18 @@ OTHER_FILES += \
     README.md \
     LICENSE
 
-QMAKE_CXXFLAGS +=  -O3
+QMAKE_CXXFLAGS += -Wall -O3
 
 linux-g++* {
-LIBS    += /opt/libsamplerate/lib/libsamplerate.a -lasound
+
+linux-g++-64 {
+LIBS    += /opt/libsamplerate/lib/libsamplerate.a
+}
+linux-g++-32 {
+LIBS    += /opt/libsamplerate32/lib/libsamplerate.a
+}
+
+LIBS += -lasound
 QMAKE_CXXFLAGS += -std=c++11
 HEADERS  += outs/alsa.h
 SOURCES += outs/alsa.cpp

@@ -12,7 +12,7 @@ EQWidget::EQWidget(VPEffectPluginEQ *eq, QWidget *parent) :
         sliders[i] = new QSlider(Qt::Vertical);
         sliders[i]->setMaximum(1000);
         sliders[i]->setMinimum(-1000);
-
+        sliders[i]->setMinimumHeight(50);
         if (i){
             target_sliders[i] = new QSlider(Qt::Vertical);
             target_sliders[i]->setMaximum(1000);

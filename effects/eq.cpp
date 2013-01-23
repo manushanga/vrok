@@ -44,7 +44,20 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     period_count = 0;
 }
 
-
+void VPEffectPluginEQ::status_change(VPStatus status){
+    switch (status) {
+        case VP_STATUS_OPEN:
+        DBG("got status");
+        for (unsigned i=0;i<BAR_COUNT;i++){
+            sb_bands[i]=1.0f;
+            knowledge[i]=0.0f;
+        }
+        sched_recalc=true;
+        break;
+        default:
+        break;
+    }
+}
 VPEffectPluginEQ::~VPEffectPluginEQ()
 {
     for (size_t i=0;i<BAR_COUNT;i++){
@@ -123,7 +136,7 @@ void VPEffectPluginEQ::process(float *buffer)
                 xim +=mid*trig[1][b][i];
             }
             newb = sqrtf((xre*xre + xim*xim)*(1.5f+ b*5.7f));
-            bar_array_w[b] = (newb>limit)?limit:newb;
+            bar_array_w[b] = (newb<limit)?newb:limit;
             mids[b]=(mids[b]*0.8f+bar_array_w[b]*0.2f);
             knowledge[b]=knowledge[b]*0.8f+(target[b]/(mids[b]+freq_p[b]))*0.2f;
         }

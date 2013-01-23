@@ -63,6 +63,7 @@ VPOutPlugin* _VPOutPluginDSound_new()
 static void worker_run(VPOutPluginDSound *self)
 {
     LPVOID lpvWrite;
+    DWORD play_at;
     DWORD  dwLength;
     HRESULT hr;
 
@@ -93,33 +94,34 @@ static void worker_run(VPOutPluginDSound *self)
         }
 
         self->owner->mutexes[1].lock();
+        if (lpdsbuffer->GetCurrentPosition(&play_at,NULL) == DS_OK && play_at < self->half_buffer_size*sizeof(short)-1){
+            WaitForSingleObject(NotifyEvent[0], INFINITE);
+            hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
 
-        WaitForSingleObject(NotifyEvent[0], INFINITE);
-        hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
-
-        if(SUCCEEDED(hr)){
-            for (unsigned i=0;i<self->half_buffer_size;i++){
-                ((short *)lpvWrite)[i]=(short)(self->owner->buffer1[i]*32700.0f);
+            if(SUCCEEDED(hr)){
+                for (unsigned i=0;i<self->half_buffer_size;i++){
+                    ((short *)lpvWrite)[i]=(short)(self->owner->buffer1[i]*32700.0f);
+                }
+                hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
-            hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
         }
 
         self->owner->mutexes[0].unlock();
 
 
         self->owner->mutexes[3].lock();
+        if (lpdsbuffer->GetCurrentPosition(&play_at,NULL) == DS_OK && play_at > self->half_buffer_size*sizeof(short)-1){
+            WaitForSingleObject(NotifyEvent[1], INFINITE);
 
-        WaitForSingleObject(NotifyEvent[1], INFINITE);
+            hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
 
-        hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
-
-        if(SUCCEEDED(hr)){
-            for (unsigned i=0;i<self->half_buffer_size;i++){
-                ((short *)lpvWrite)[self->half_buffer_size+i]=(short)(self->owner->buffer2[i]*32700.0f);
+            if(SUCCEEDED(hr)){
+                for (unsigned i=0;i<self->half_buffer_size;i++){
+                    ((short *)lpvWrite)[self->half_buffer_size+i]=(short)(self->owner->buffer2[i]*32700.0f);
+                }
+                hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
-            hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
         }
-
         self->owner->mutexes[2].unlock();
     }
     lpdsbuffer->Stop();

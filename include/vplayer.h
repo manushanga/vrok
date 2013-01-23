@@ -42,6 +42,7 @@ private:
     std::vector<effect_entry_t> effects;
     bool play_worker_done;
     std::mutex mutex_post_process;
+    void announce(VPStatus status);
 public:
     char this_track[256];
     // take lock on mutex_control when writing to this

@@ -6,6 +6,10 @@
   See LICENSE for details.
 */
 
+#include <QDialog>
+#include <QHBoxLayout>
+#include <QLabel>
+
 #include <unistd.h>
 
 #include "vrokmain.h"
@@ -33,6 +37,31 @@ void callback_next(char *mem)
         play_list->selectionModel()->select(fileslist->index(i),QItemSelectionModel::Deselect);
         play_list->selectionModel()->select(fileslist->index(i+1),QItemSelectionModel::Select);
     }
+}
+void VrokMain::on_btnAbout_clicked()
+{
+    QDialog d(this);
+    d.setWindowTitle("About Vrok");
+    d.setModal(true);
+    QHBoxLayout h(&d);
+    d.setLayout(&h);
+    QLabel a("<center>"
+             "<span style=\"font-size: 12pt\"><b>Vrok</b> smokin' audio<br></span>"
+             "</center>"
+             "Copyright (C) 2012-2013 Madura A. <madura.x86@gmail.com><br>"
+             "<br>"
+             "<b>Libraries</b><br>"
+             "<br>"
+             "<a href=\"http://mega-nerd.com/SRC/\">libsamplerate</a>[static]: Used with ALSA output<br>"
+             "<a href=\"http://flac.sourceforge.net/\">libFLAC</a>: FLAC Decoder<br>"
+             "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>: Ogg Vorbis Decorder<br>"
+             "<a href=\"http://www.mpg123.de/\">libmpg123</a>: MPEG Layer 1,2,3 Decoder<br>"
+             "<a href=\"http://qt-project.org\">Qt</a>[static]: Frontend<br>"
+             "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br>"
+             "<br>"
+             "<span style=\"font-size: 8pt\">Bugs may exist. Built on " __DATE__ " at " __TIME__ ".</span>");
+    h.addWidget(&a);
+    d.exec();
 }
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
@@ -100,7 +129,7 @@ void VrokMain::process()
         else if (bar_vals[b] < bars[b])
             bar_vals[b] = bars[b];
         else
-            bar_vals[b] -= 3.0f+0.1f*bar_vals[b];
+            bar_vals[b] -= 8.0f;//+0.1f*bar_vals[b];
         gbars[b]->setRect(b*14,0,10,bar_vals[b] *-1.0f);
     }
 
@@ -126,7 +155,7 @@ void VrokMain::on_btnOpenDir_clicked()
 
 
     QString d = QFileDialog::getExistingDirectory(this, tr("Open Dir"),
-                                             "/home",
+                                             "",
                                              0);
     config_set_lastopen(d);
     if (dir)
