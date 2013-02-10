@@ -34,7 +34,6 @@ HEADERS  += \
     include/decoder.h \
     include/effect.h \
     include/config_out.h \
-    include/thread_compat.h \
     frontend/vrokmain.h \
     frontend/eqwidget.h \
     effects/shibatch/paramlist.hpp \
@@ -42,7 +41,8 @@ HEADERS  += \
     effects/eq.h \
     players/flac.h \
     players/mpeg.h \
-    players/ogg.h
+    players/ogg.h \
+    include/threads.h
 FORMS    += frontend/vrokmain.ui \
             frontend/eqwidget.ui
 
@@ -61,8 +61,7 @@ linux-g++-32 {
 LIBS    += /opt/libsamplerate32/lib/libsamplerate.a
 }
 
-LIBS += -lasound
-QMAKE_CXXFLAGS += -std=c++11
+LIBS += -lasound -lpthread
 HEADERS  += outs/alsa.h
 SOURCES += outs/alsa.cpp
 }

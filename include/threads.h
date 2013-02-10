@@ -1,20 +1,9 @@
-/*
-  Vrok - smokin' audio
-  (C) 2012 Madura A. released under GPL 2.0. All following copyrights
-  hold. This notice must be retained.
-
-  See LICENSE for details.
-*/
-#ifndef THREAD_COMPAT_H
-#define THREAD_COMPAT_H
+#ifndef THREADS_H
+#define THREADS_H
 
 #ifdef _WIN32
-// mingw is used for compiling and this way is better, for now.
-
 #include <windows.h>
 #include <process.h>
-// This is my own ugly implementation for Windows, and it replaces
-// boost's need in this project
 
 namespace std{
 class thread
@@ -96,10 +85,76 @@ public:
 };
 }
 #elif defined(__linux__)
-#include <thread>
-#include <mutex>
+//#include <thread>
+//#include <mutex>
+#include <pthread.h>
+#include <semaphore.h>
+namespace std{
+class thread{
+private:
+    pthread_t th;
+
+public:
+    void(*runner)(void *);
+    void *data;
+    static void *_std_thread_run(void *self)
+    {
+        ((std::thread*)self)->runner(((std::thread*)self)->data);
+        pthread_exit(0);
+    }
+    thread(void(*addr)(void *), void *user)
+    {
+        data = user;
+        runner = addr;
+
+        pthread_create(&th,NULL,_std_thread_run, this);
+    }
+    void detach()
+    {
+        pthread_detach(th);
+    }
+    void join()
+    {
+        pthread_join(th, NULL);
+    }
+    ~thread()
+    {
+
+    }
+};
+class mutex
+{
+private:
+    sem_t m_semaphore;
+
+public:
+    mutex()
+    {
+        sem_init(&m_semaphore,0,0);
+    }
+
+    ~mutex()
+    {
+        sem_close(&m_semaphore);
+    }
+
+    void lock()
+    {
+        sem_wait(&m_semaphore);
+    }
+
+    void unlock()
+    {
+        sem_post(&m_semaphore);
+    }
+    bool try_lock()
+    {
+        return (sem_trywait(&m_semaphore) != 0);
+    }
+};
+}
 #else
-#error "Mac OS? Nope not supported, others? may be after Jack is implemented."
+#error "Unsupported platform"
 #endif
 
-#endif // THREAD_COMPAT_H
+#endif // THREADS_H

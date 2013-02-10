@@ -18,7 +18,7 @@
 
 #include <vector>
 
-#include "thread_compat.h"
+#include "threads.h"
 #include "vputils.h"
 
 enum VPStatus{VP_STATUS_OPEN,VP_STATUS_PLAYING,VP_STATUS_PAUSED,VP_STATUS_STOPPED};

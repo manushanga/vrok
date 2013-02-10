@@ -173,10 +173,7 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     paused=false;
     work=true;
 
-    snd_pcm_prepare(handle);
-    snd_pcm_start(handle);
-
-    worker = new std::thread(worker_run, this);
+    worker = new std::thread((void(*)(void*))worker_run, this);
     DBG("alsa thread made");
     return 0;
 }

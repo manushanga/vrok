@@ -142,8 +142,7 @@ void VPEffectPluginEQ::process(float *buffer)
         for (unsigned b=0;b<BAR_COUNT;b++){
             for (unsigned h=0;h<10;h++){
                 knowledge[b] -= 0.0002f*(mids[b]*knowledge[b]-target[b])*mids[b];
-                if (knowledge[b]<0.01f)
-                    knowledge[b]=0.025f;
+
             }
         }
 
