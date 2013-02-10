@@ -15,6 +15,7 @@
 #include "shibatch/Equ.h"
 
 #include "config_out.h"
+#define BACK_LOG 18
 #define BAR_COUNT 18
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -37,16 +38,17 @@ class VPEffectPluginEQ : VPEffectPlugin {
 private:
     VPlayer *owner;
     SuperEqState sb_state;
+    unsigned log_write;
     float sb_preamp;
     void *sb_paramsroot;
-    float sb_bands[18];
-    float target[18];
+    float sb_bands[BAR_COUNT];
+    float target[BAR_COUNT];
     bool sched_recalc;
     float *bars[2];
     float *trig[2][BAR_COUNT];
-    float mids[BAR_COUNT];
+    float mids[BAR_COUNT+1];
     float limit;
-    float knowledge[BAR_COUNT];
+    float knowledge[BAR_COUNT+1];
     float freq_p[BAR_COUNT];
     unsigned period_count;
     void sb_recalc_table();
@@ -58,7 +60,7 @@ public:
     inline const float *getBands() const { return sb_bands; }
     inline const float *getTargetBands() const {  return target; }
     inline const float *getMids() const { return mids; }
-    inline void setTargetBand(int i, float val) { target[i]=val; }
+    inline void setTargetBand(int i, float val) { knowledge[i]+=(val-target[i]<0.0f)?-0.05f:0.05f; target[i]=val; }
     inline void setBand(int i, float val) { sb_bands[i]=val; sched_recalc=true; }
     inline void setPreamp(float val) { sb_preamp = val; sched_recalc=true; }
     inline float getPreamp() const { return sb_preamp; }

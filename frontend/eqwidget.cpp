@@ -64,7 +64,7 @@ void EQWidget::target_changed(int)
     QSlider *th = (QSlider *)sender();
     int h=th->property("index").toInt();
     if(h)
-        plugin->setTargetBand(h,th->value()/300.0f+1.0f);
+        plugin->setTargetBand(h-1,th->value()/300.0f+1.0f);
 
 }
 void EQWidget::changed(int)

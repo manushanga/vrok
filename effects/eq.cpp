@@ -37,8 +37,9 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
         }
     }
 
-    for (unsigned i=0;i<BAR_COUNT;i++){
-        knowledge[i]=1.0f;
+    for (unsigned i=0;i<BAR_COUNT+1;i++){
+        mids[i]=0.0f;
+        knowledge[i]=0.25f;
     }
     limit= cap;
     period_count = 0;
@@ -49,8 +50,7 @@ void VPEffectPluginEQ::status_change(VPStatus status){
         case VP_STATUS_OPEN:
         DBG("got status");
         for (unsigned i=0;i<BAR_COUNT;i++){
-            sb_bands[i]=1.0f;
-            knowledge[i]=0.0f;
+            knowledge[i]=0.25f;
         }
         sched_recalc=true;
         break;
@@ -94,7 +94,8 @@ int VPEffectPluginEQ::init(VPlayer *v)
         bar_array[i] = 0.0f;
     }
     for (unsigned i=0;i<BAR_COUNT;i++){
-        mids[i] = 1.0f;
+        mids[i] = 0.0f;
+
         sb_bands[i] = 0.6f*target[i];
     }
     owner = v;
@@ -106,10 +107,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
 void VPEffectPluginEQ::applyKnowledge()
 {
     for (unsigned i=0;i<BAR_COUNT;i++){
-        float k = knowledge[i]*(0.3f-freq_p[i]*0.3f);
-        if (k>0.6f)
-            k=0.6f;
-        sb_bands[i]=sb_bands[i]*0.3f+target[i]*0.4f + k ;
+        sb_bands[i]=(knowledge[i]-mids[i]*0.0001f)*mids[i]*0.6f+sb_bands[i]*0.4f;
     }
     sched_recalc=true;
 }
@@ -125,6 +123,7 @@ void VPEffectPluginEQ::process(float *buffer)
     float mid,xre,xim,newb;
     unsigned step=0,chans=owner->track_channels,ichans;
     float *bar_array_w=bar_array;
+    unsigned mid_write=0;
     while (step<BAR_SETS){
         for (size_t b=0;b<BAR_COUNT;b++){
             xre=0.0;
@@ -137,9 +136,17 @@ void VPEffectPluginEQ::process(float *buffer)
             }
             newb = sqrtf((xre*xre + xim*xim)*(1.5f+ b*5.7f));
             bar_array_w[b] = (newb<limit)?newb:limit;
-            mids[b]=(mids[b]*0.8f+bar_array_w[b]*0.2f);
-            knowledge[b]=knowledge[b]*0.8f+(target[b]/(mids[b]+freq_p[b]))*0.2f;
+            mids[b]=1.0f+mids[b]*0.79f+bar_array_w[b]*0.2f;
+
         }
+        for (unsigned b=0;b<BAR_COUNT;b++){
+            for (unsigned h=0;h<10;h++){
+                knowledge[b] -= 0.0002f*(mids[b]*knowledge[b]-target[b])*mids[b];
+                if (knowledge[b]<0.01f)
+                    knowledge[b]=0.025f;
+            }
+        }
+
         step+=1;
         bar_array_w += BAR_COUNT;
         buffer += VPBUFFER_PERIOD*owner->track_channels;

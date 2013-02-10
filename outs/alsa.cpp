@@ -9,7 +9,7 @@
 #include "config_out.h"
 #include "alsa.h"
 
-static const snd_pcm_uframes_t PERIOD_SIZE = 512;
+static const snd_pcm_uframes_t PERIOD_SIZE = 256;
 
 VPOutPlugin* _VPOutPluginAlsa_new()
 {
