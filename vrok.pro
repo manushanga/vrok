@@ -61,7 +61,8 @@ linux-g++-32 {
 LIBS    += /opt/libsamplerate32/lib/libsamplerate.a
 }
 
-LIBS += -lasound -lpthread
+LIBS += -lasound -pthread
+#QMAKE_CXXFLAGS += -std=c++11
 HEADERS  += outs/alsa.h
 SOURCES += outs/alsa.cpp
 }

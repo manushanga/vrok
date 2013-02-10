@@ -51,18 +51,18 @@ private:
     HANDLE m_semaphore;
 
 public:
-    mutex()
+    inline mutex()
     {
         m_counter = 0;
         m_semaphore = CreateSemaphore(NULL, 0, 1, NULL);
     }
 
-    ~mutex()
+    inline ~mutex()
     {
         CloseHandle(m_semaphore);
     }
 
-    void lock()
+    inline void lock()
     {
         if (InterlockedIncrement(&m_counter) > 1) // x86/64 guarantees acquire semantics
         {
@@ -70,14 +70,14 @@ public:
         }
     }
 
-    void unlock()
+    inline void unlock()
     {
         if (InterlockedDecrement(&m_counter) > 0) // x86/64 guarantees release semantics
         {
             ReleaseSemaphore(m_semaphore, 1, NULL);
         }
     }
-    bool try_lock()
+    inline bool try_lock()
     {
         LONG result = InterlockedCompareExchange(&m_counter, 1, 0);
         return (result != 0);
@@ -85,10 +85,8 @@ public:
 };
 }
 #elif defined(__linux__)
-//#include <thread>
-//#include <mutex>
+
 #include <pthread.h>
-#include <semaphore.h>
 namespace std{
 class thread{
 private:
@@ -109,11 +107,11 @@ public:
 
         pthread_create(&th,NULL,_std_thread_run, this);
     }
-    void detach()
+    inline void detach()
     {
         pthread_detach(th);
     }
-    void join()
+    inline void join()
     {
         pthread_join(th, NULL);
     }
@@ -125,31 +123,30 @@ public:
 class mutex
 {
 private:
-    sem_t m_semaphore;
-
+    pthread_mutex_t m_mutex;
 public:
-    mutex()
+    inline mutex()
     {
-        sem_init(&m_semaphore,0,0);
+        pthread_mutex_init(&m_mutex, NULL);
     }
 
-    ~mutex()
+    inline ~mutex()
     {
-        sem_close(&m_semaphore);
+        pthread_mutex_destroy(&m_mutex);
     }
 
-    void lock()
+    inline void lock()
     {
-        sem_wait(&m_semaphore);
+        pthread_mutex_lock(&m_mutex);
     }
 
-    void unlock()
+    inline void unlock()
     {
-        sem_post(&m_semaphore);
+        pthread_mutex_unlock(&m_mutex);
     }
-    bool try_lock()
+    inline bool try_lock()
     {
-        return (sem_trywait(&m_semaphore) != 0);
+        return ( pthread_mutex_trylock(&m_mutex) != 0);
     }
 };
 }
