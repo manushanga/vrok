@@ -46,9 +46,9 @@ private:
     bool sched_recalc;
     float *bars[2];
     float *trig[2][BAR_COUNT];
-    float mids[BAR_COUNT+1];
+    float mids[BAR_COUNT];
     float limit;
-    float knowledge[BAR_COUNT+1];
+    float knowledge[BAR_COUNT];
     float freq_p[BAR_COUNT];
     unsigned period_count;
     void sb_recalc_table();

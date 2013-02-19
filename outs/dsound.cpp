@@ -104,6 +104,17 @@ static void worker_run(VPOutPluginDSound *self)
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
+        } else {
+            WaitForSingleObject(NotifyEvent[1], INFINITE);
+
+            hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
+
+            if(SUCCEEDED(hr)){
+                for (unsigned i=0;i<self->half_buffer_size;i++){
+                    ((short *)lpvWrite)[self->half_buffer_size+i]=(short)(self->owner->buffer1[i]*32700.0f);
+                }
+                hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
+            }
         }
 
         self->owner->mutexes[0].unlock();
@@ -121,6 +132,17 @@ static void worker_run(VPOutPluginDSound *self)
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
+        } else {
+            WaitForSingleObject(NotifyEvent[0], INFINITE);
+            hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
+
+            if(SUCCEEDED(hr)){
+                for (unsigned i=0;i<self->half_buffer_size;i++){
+                    ((short *)lpvWrite)[i]=(short)(self->owner->buffer2[i]*32700.0f);
+                }
+                hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
+            }
+
         }
         self->owner->mutexes[2].unlock();
     }

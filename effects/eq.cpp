@@ -37,10 +37,10 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
         }
     }
 
-    for (unsigned i=0;i<BAR_COUNT+1;i++){
+    for (unsigned i=0;i<BAR_COUNT;i++){
         mids[i]=0.0f;
-        knowledge[i]=0.25f;
     }
+    config_get_eq_knowledge_bands(knowledge);
     limit= cap;
     period_count = 0;
 }
@@ -49,10 +49,7 @@ void VPEffectPluginEQ::status_change(VPStatus status){
     switch (status) {
         case VP_STATUS_OPEN:
         DBG("got status");
-        for (unsigned i=0;i<BAR_COUNT;i++){
-            knowledge[i]=0.25f;
-        }
-        sched_recalc=true;
+
         break;
         default:
         break;
@@ -77,7 +74,7 @@ void VPEffectPluginEQ::sb_recalc_table()
         bands_copy[i] *= sb_preamp;
     }
 
-    equ_makeTable (&sb_state, bands_copy, params, (owner->track_samplerate==0?44100:owner->track_samplerate));
+    equ_makeTable (&sb_state, bands_copy, params, owner->track_samplerate);
     if (sb_paramsroot)
         paramlist_free (sb_paramsroot);
     sb_paramsroot = params;
@@ -95,8 +92,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
     }
     for (unsigned i=0;i<BAR_COUNT;i++){
         mids[i] = 0.0f;
-
-        sb_bands[i] = 0.6f*target[i];
+        sb_bands[i] = target[i];
     }
     owner = v;
     equ_init (&sb_state, 10.0f, owner->track_channels);
@@ -107,7 +103,13 @@ int VPEffectPluginEQ::init(VPlayer *v)
 void VPEffectPluginEQ::applyKnowledge()
 {
     for (unsigned i=0;i<BAR_COUNT;i++){
-        sb_bands[i]=(knowledge[i]-mids[i]*0.0001f)*mids[i]*0.6f+sb_bands[i]*0.4f;
+        float next=(knowledge[i]-mids[i]*0.00004f)*mids[i]*0.1f+sb_bands[i]*0.9f;
+        if (next<target[i] && next>target[i]-3.0f){
+            sb_bands[i] = next;
+        } else {
+            knowledge[i]/=2.0f;
+        }
+
     }
     sched_recalc=true;
 }
@@ -123,7 +125,7 @@ void VPEffectPluginEQ::process(float *buffer)
     float mid,xre,xim,newb;
     unsigned step=0,chans=owner->track_channels,ichans;
     float *bar_array_w=bar_array;
-    unsigned mid_write=0;
+
     while (step<BAR_SETS){
         for (size_t b=0;b<BAR_COUNT;b++){
             xre=0.0;
@@ -136,13 +138,16 @@ void VPEffectPluginEQ::process(float *buffer)
             }
             newb = sqrtf((xre*xre + xim*xim)*(1.5f+ b*5.7f));
             bar_array_w[b] = (newb<limit)?newb:limit;
-            mids[b]=1.0f+mids[b]*0.79f+bar_array_w[b]*0.2f;
+            if (bar_array_w[b] > mids[b]){
+                mids[b]=mids[b]*0.8f+bar_array_w[b]*0.2f;
+            } else {
+                mids[b]=mids[b]*0.99f;
+            }
 
         }
         for (unsigned b=0;b<BAR_COUNT;b++){
             for (unsigned h=0;h<10;h++){
-                knowledge[b] -= 0.0002f*(mids[b]*knowledge[b]-target[b])*mids[b];
-
+                knowledge[b] -= 0.00002f*(mids[b]*knowledge[b]-target[b])*mids[b];
             }
         }
 
@@ -162,6 +167,7 @@ int VPEffectPluginEQ::finit()
     equ_quit(&sb_state);
     memset(&sb_state, 0, sizeof(SuperEqState));
     config_set_eq_bands(target);
+    config_set_eq_knowledge_bands(knowledge);
     config_set_eq_preamp(sb_preamp);
 
     if (bar_array)

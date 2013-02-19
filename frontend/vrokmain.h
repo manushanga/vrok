@@ -32,7 +32,7 @@ class VrokMain;
 class VrokMain : public QMainWindow
 {
     Q_OBJECT
-    
+
 public:
     Ui::VrokMain *ui;
 

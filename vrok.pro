@@ -34,6 +34,7 @@ HEADERS  += \
     include/decoder.h \
     include/effect.h \
     include/config_out.h \
+    include/config.h \
     frontend/vrokmain.h \
     frontend/eqwidget.h \
     effects/shibatch/paramlist.hpp \
