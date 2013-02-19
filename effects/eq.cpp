@@ -103,7 +103,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
 void VPEffectPluginEQ::applyKnowledge()
 {
     for (unsigned i=0;i<BAR_COUNT;i++){
-        float next=(knowledge[i]-mids[i]*0.00004f)*mids[i]*0.1f+sb_bands[i]*0.9f;
+        float next=(knowledge[i]-mids[i]*0.00008f)*mids[i]*0.1f+sb_bands[i]*0.9f;
         if (next<target[i] && next>target[i]-3.0f){
             sb_bands[i] = next;
         } else {
@@ -147,7 +147,7 @@ void VPEffectPluginEQ::process(float *buffer)
         }
         for (unsigned b=0;b<BAR_COUNT;b++){
             for (unsigned h=0;h<10;h++){
-                knowledge[b] -= 0.00002f*(mids[b]*knowledge[b]-target[b])*mids[b];
+                knowledge[b] -= 0.0002f*(mids[b]*knowledge[b]-target[b])*mids[b];
             }
         }
 
