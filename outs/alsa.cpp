@@ -93,15 +93,9 @@ static void worker_run(VPOutPluginAlsa *self)
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 {
     if (!paused){
-        owner->mutexes[3].unlock();
-        owner->mutexes[1].unlock();
-
         m_pause.lock();
         pause_check = true;
-        while (!paused) {
-            owner->mutexes[3].unlock();
-            owner->mutexes[1].unlock();
-        }
+
         snd_pcm_drop(handle);
         snd_pcm_reset(handle);
     }
@@ -189,7 +183,9 @@ unsigned VPOutPluginAlsa::get_channels()
 VPOutPluginAlsa::~VPOutPluginAlsa()
 {
     work=false;
+    owner->mutexes[1].try_lock();
     owner->mutexes[1].unlock();
+    owner->mutexes[3].try_lock();
     owner->mutexes[3].unlock();
 
     if (worker){

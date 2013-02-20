@@ -15,6 +15,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
     sb_preamp = config_get_eq_preamp();
     sb_paramsroot = NULL;
+    sched_recalc = false;
     owner=NULL;
     config_get_eq_bands(target);
     memset(&sb_state, 0, sizeof(SuperEqState));
@@ -42,6 +43,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     }
     config_get_eq_knowledge_bands(knowledge);
     limit= cap;
+
     period_count = 0;
 }
 
@@ -92,7 +94,7 @@ int VPEffectPluginEQ::init(VPlayer *v)
     }
     for (unsigned i=0;i<BAR_COUNT;i++){
         mids[i] = 0.0f;
-        sb_bands[i] = target[i];
+        sb_bands[i] = 0.6f*target[i];
     }
     owner = v;
     equ_init (&sb_state, 10.0f, owner->track_channels);

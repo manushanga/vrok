@@ -81,7 +81,7 @@ VrokMain::VrokMain(QWidget *parent) :
     tx->setInterval(50);
     tx->stop();
 
-
+    fileslist=NULL;
     play_list=ui->lvFiles;
     fileslist=NULL;
     dir=NULL;
@@ -103,6 +103,8 @@ VrokMain::VrokMain(QWidget *parent) :
         dir = new QDir(config_get_lastopen());
         dir->setFilter(QDir::Files|QDir::Hidden);
         dir->setNameFilters(QStringList()<<"*.flac"<<"*.mp3"<<"*.ogg");
+        if (fileslist)
+            delete fileslist;
         fileslist = new QStringListModel(dir->entryList());
         ui->lvFiles->setModel(fileslist);
     }

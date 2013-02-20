@@ -26,6 +26,10 @@
 void VPlayer::play_work(VPlayer *self)
 {
     self->vpdecode->reader();
+    self->mutexes[0].try_lock();
+    self->mutexes[0].unlock();
+    self->mutexes[2].try_lock();
+    self->mutexes[2].unlock();
 }
 
 void VPlayer::addEffect(VPEffectPlugin *eff)
@@ -77,7 +81,7 @@ void VPlayer::announce(VPStatus status)
 VPlayer::VPlayer(next_track_cb_t cb)
 {
     mutex_control.try_lock();
-
+    mutex_post_process.try_lock();
     mutex_post_process.unlock();
     track_channels = 0;
     track_samplerate = 0;
@@ -120,9 +124,10 @@ int VPlayer::open(const char *url)
         delete vpdecode;
         vpdecode = NULL;
     }
-
+    mutexes[0].try_lock();
     mutexes[0].unlock();
     mutexes[1].try_lock();
+    mutexes[2].try_lock();
     mutexes[2].unlock();
     mutexes[3].try_lock();
 
@@ -318,7 +323,9 @@ int VPlayer::vpout_close()
 
     if (!play_worker_done && play_worker) {
         work = false;
+        mutexes[0].try_lock();
         mutexes[0].unlock();
+        mutexes[2].try_lock();
         mutexes[2].unlock();
         play_worker->join();
         DBG("player thread joined");
