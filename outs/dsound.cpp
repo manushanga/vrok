@@ -151,20 +151,6 @@ static void worker_run(VPOutPluginDSound *self)
 
 void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
 {
-    if (!paused){
-        lpdsbuffer->SetCurrentPosition(0);
-        owner->mutexes[3].unlock();
-        owner->mutexes[1].unlock();
-
-        m_pause.lock();
-        pause_check = true;
-        while (!paused) {
-            SetEvent(NotifyEvent[1]);
-            owner->mutexes[3].unlock();
-            SetEvent(NotifyEvent[0]);
-            owner->mutexes[1].unlock();
-        }
-    }
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
 {

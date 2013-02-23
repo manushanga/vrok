@@ -52,11 +52,11 @@ void VrokMain::on_btnAbout_clicked()
              "<br>"
              "<b>Libraries</b><br>"
              "<br>"
-             "<a href=\"http://mega-nerd.com/SRC/\">libsamplerate</a>[static]: Used with ALSA output<br>"
+             "<a href=\"http://mega-nerd.com/SRC/\">libsamplerate</a>: Used with ALSA output<br>"
              "<a href=\"http://flac.sourceforge.net/\">libFLAC</a>: FLAC Decoder<br>"
              "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>: Ogg Vorbis Decorder<br>"
              "<a href=\"http://www.mpg123.de/\">libmpg123</a>: MPEG Layer 1,2,3 Decoder<br>"
-             "<a href=\"http://qt-project.org\">Qt</a>[static]: Frontend<br>"
+             "<a href=\"http://qt-project.org\">Qt</a>: Frontend<br>"
              "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br>"
              "<br>"
              "<span style=\"font-size: 8pt\">Bugs may exist. Built on " __DATE__ " at " __TIME__ ".</span>");
