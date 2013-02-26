@@ -109,13 +109,14 @@ VPlayer::VPlayer(next_track_cb_t cb)
 }
 int VPlayer::open(const char *url)
 {
-    play();
+
     this_track[0]='\0';
     if (vpdecode){
-
+        play();
         DBG("free decoder");
         delete vpdecode;
         vpdecode = NULL;
+        pause();
     }
 
     unsigned len = strlen(url);
@@ -141,7 +142,10 @@ int VPlayer::open(const char *url)
 
     if (!play_worker){
         play_worker = new std::thread((void(*)(void*))VPlayer::play_work, this);
+        play_worker_done = false;
         paused = false;
+        active = true;
+        play();
     }
     announce(VP_STATUS_OPEN);
 
@@ -151,7 +155,7 @@ int VPlayer::open(const char *url)
 int VPlayer::play()
 {
     mutex_control.lock();
-    if (vpdecode && paused) {
+    if (vpdecode && paused && active) {
         paused = false;
         vpout->resume();
         announce(VP_STATUS_PLAYING);
@@ -164,7 +168,7 @@ int VPlayer::play()
 void VPlayer::pause()
 {
     mutex_control.lock();
-    if (vpdecode && !paused) {
+    if (vpdecode && !paused && active) {
         vpout->pause();
         paused = true;
         announce(VP_STATUS_PAUSED);
@@ -174,10 +178,11 @@ void VPlayer::pause()
 }
 bool VPlayer::isPlaying()
 {
-    return !paused;
+    return !paused && active;
 }
 void VPlayer::ended()
 {
+    active = false;
     next_track[0]='\0';
 
     // better do this quick
@@ -188,6 +193,7 @@ void VPlayer::ended()
         play_worker_done=true;
         open(next_track);
         play_worker_done=false;
+        active = true;
 
         mutex_control.lock();
         vpout->resume();
@@ -198,6 +204,7 @@ void VPlayer::ended()
     } else {
         std::thread *p=play_worker;
         play_worker = NULL;
+
         p->detach();
         p->~thread();
     }

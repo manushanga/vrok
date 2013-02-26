@@ -55,14 +55,7 @@ QMAKE_CXXFLAGS += -Wall -O3
 
 linux-g++* {
 
-linux-g++-64 {
-LIBS    += /opt/libsamplerate/lib/libsamplerate.a
-}
-linux-g++-32 {
-LIBS    += /opt/libsamplerate32/lib/libsamplerate.a
-}
-
-LIBS += -lasound -pthread
+LIBS += -lasound -lpthread -lsamplerate
 #QMAKE_CXXFLAGS += -std=c++11
 HEADERS  += outs/alsa.h
 SOURCES += outs/alsa.cpp

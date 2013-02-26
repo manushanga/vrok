@@ -41,6 +41,7 @@ private:
     next_track_cb_t next_track_cb;
     std::vector<effect_entry_t> effects;
     bool play_worker_done;
+    bool active;
     std::mutex mutex_post_process;
     void announce(VPStatus status);
 public:
