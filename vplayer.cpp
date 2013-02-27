@@ -112,11 +112,11 @@ int VPlayer::open(const char *url)
 
     this_track[0]='\0';
     if (vpdecode){
-        play();
+        vpout->resume();
         DBG("free decoder");
         delete vpdecode;
         vpdecode = NULL;
-        pause();
+        vpout->rewind();
     }
 
     unsigned len = strlen(url);
@@ -145,7 +145,8 @@ int VPlayer::open(const char *url)
         play_worker_done = false;
         paused = false;
         active = true;
-        play();
+        DBG("make play worker");
+        vpout->resume();
     }
     announce(VP_STATUS_OPEN);
 

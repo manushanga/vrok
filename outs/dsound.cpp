@@ -151,6 +151,20 @@ static void worker_run(VPOutPluginDSound *self)
 
 void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
 {
+    owner->mutexes[0].lock();
+    owner->mutexes[1].unlock();
+    owner->mutexes[2].lock();
+    owner->mutexes[3].unlock();
+
+    m_pause.lock();
+    pause_check = true;
+    while (!paused) {}
+    owner->mutexes[0].try_lock();
+    owner->mutexes[0].unlock();
+
+    owner->mutexes[2].try_lock();
+    owner->mutexes[2].unlock();
+
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
 {

@@ -43,7 +43,7 @@ static void worker_run(VPOutPluginAlsa *self)
         self->rd.output_frames_gen = 1;
         out_frames=0;
         self->owner->mutexes[1].lock();
-
+        DBG("1");
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
 
@@ -66,7 +66,7 @@ static void worker_run(VPOutPluginAlsa *self)
         out_frames=0;
 
         self->owner->mutexes[3].lock();
-
+        DBG("2");
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
             self->rd.input_frames -= self->rd.input_frames_used;
@@ -92,6 +92,19 @@ static void worker_run(VPOutPluginAlsa *self)
 
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 {
+    owner->mutexes[0].lock();
+    owner->mutexes[1].unlock();
+    owner->mutexes[2].lock();
+    owner->mutexes[3].unlock();
+
+    m_pause.lock();
+    pause_check = true;
+    while (!paused) {}
+    owner->mutexes[0].try_lock();
+    owner->mutexes[0].unlock();
+
+    owner->mutexes[2].try_lock();
+    owner->mutexes[2].unlock();
 
 }
 
