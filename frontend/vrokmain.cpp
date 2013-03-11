@@ -72,9 +72,15 @@ VrokMain::VrokMain(QWidget *parent) :
     vp=NULL;
     ew=NULL;
 
+    this->setWindowIcon(QIcon(":icon/vrok.png"));
 
     vp = new VPlayer(callback_next);
     eq =new VPEffectPluginEQ(100);
+
+    if (config_get_eq()){
+        vp->addEffect((VPEffectPlugin *)eq);
+        ui->btnEQt->setChecked(true);
+    }
 
     tx = new QTimer(this);
     tx->setSingleShot(false);
@@ -194,13 +200,12 @@ void VrokMain::on_btnEQ_clicked()
 void VrokMain::on_btnEQt_clicked()
 {
     if (vp->isActiveEffect((VPEffectPlugin *)eq)){
-      //  tx->stop();
-       vp->removeEffect((VPEffectPlugin *)eq);
+        config_set_eq(false);
+        vp->removeEffect((VPEffectPlugin *)eq);
+    } else {
+        vp->addEffect((VPEffectPlugin *)eq);
+        config_set_eq(true);
     }
-    else{
-       vp->addEffect((VPEffectPlugin *)eq);
-      // tx->start();
-           }
 }
 void VrokMain::on_btnSpec_clicked()
 {

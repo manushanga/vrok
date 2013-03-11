@@ -14,7 +14,7 @@
 #include "effect.h"
 #include "shibatch/Equ.h"
 
-#include "config_out.h"
+#include "vrok.h"
 #define BACK_LOG 18
 #define BAR_COUNT 18
 #ifndef M_PI
@@ -41,14 +41,14 @@ private:
     unsigned log_write;
     float sb_preamp;
     void *sb_paramsroot;
-    float sb_bands[BAR_COUNT];
-    float target[BAR_COUNT];
+    float sb_bands[BAR_COUNT] __attribute__ ((aligned(16)));
+    float target[BAR_COUNT] __attribute__ ((aligned(16)));
     bool sched_recalc;
     float *bars[2];
-    float *trig[2][BAR_COUNT];
-    float mids[BAR_COUNT];
+    float *trig[2][BAR_COUNT] __attribute__ ((aligned(16)));
+    float mids[BAR_COUNT] __attribute__ ((aligned(16)));
     float limit;
-    float knowledge[BAR_COUNT];
+    float knowledge[BAR_COUNT] __attribute__ ((aligned(16)));
     float freq_p[BAR_COUNT];
     unsigned period_count;
     void sb_recalc_table();

@@ -160,7 +160,7 @@ void VPEffectPluginEQ::process(float *buffer)
     if (!period_count){
         applyKnowledge();
     }
-    period_count = (period_count + BAR_SETS) % 30;
+    period_count = (period_count + BAR_SETS) % 50;
 
 }
 

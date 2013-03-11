@@ -30,12 +30,14 @@ void config_set_eq_preamp(float pa);
 void config_set_eq_bands(float *bands);
 void config_set_eq_knowledge_bands(float *bands);
 void config_set_volume();
+void config_set_eq(bool on);
 
 QString config_get_lastopen();
 float config_get_eq_preamp();
 void config_get_eq_bands(float *bands);
 void config_get_eq_knowledge_bands(float *bands);
 float config_get_volume();
+bool config_get_eq();
 
 void config_finit();
 

@@ -6,7 +6,7 @@
   See LICENSE for details.
 */
 
-#include "config_out.h"
+#include "vrok.h"
 #include "alsa.h"
 
 static const snd_pcm_uframes_t PERIOD_SIZE = 256;
@@ -43,7 +43,6 @@ static void worker_run(VPOutPluginAlsa *self)
         self->rd.output_frames_gen = 1;
         out_frames=0;
         self->owner->mutexes[1].lock();
-        DBG("1");
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
 
@@ -66,7 +65,6 @@ static void worker_run(VPOutPluginAlsa *self)
         out_frames=0;
 
         self->owner->mutexes[3].lock();
-        DBG("2");
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
             self->rd.input_frames -= self->rd.input_frames_used;
@@ -93,8 +91,12 @@ static void worker_run(VPOutPluginAlsa *self)
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 {
     owner->mutexes[0].lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
+        owner->buffer1[i]=0.0f;
     owner->mutexes[1].unlock();
     owner->mutexes[2].lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
+        owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
 
     m_pause.lock();
@@ -191,10 +193,11 @@ unsigned VPOutPluginAlsa::get_channels()
 VPOutPluginAlsa::~VPOutPluginAlsa()
 {
     work=false;
-    owner->mutexes[3].try_lock();
-    owner->mutexes[3].unlock();
-    owner->mutexes[1].try_lock();
+
+    owner->mutexes[0].lock();
     owner->mutexes[1].unlock();
+    owner->mutexes[2].lock();
+    owner->mutexes[3].unlock();
 
 
     if (worker){

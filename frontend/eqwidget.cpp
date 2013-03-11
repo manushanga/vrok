@@ -45,7 +45,7 @@ EQWidget::EQWidget(VPEffectPluginEQ *eq, QWidget *parent) :
     }
     tx = new QTimer();
     tx->setSingleShot(false);
-    tx->setInterval(300);
+    tx->setInterval(600);
     connect(tx,SIGNAL(timeout()),this,SLOT(process()));
     tx->start();
 }
@@ -53,8 +53,6 @@ void EQWidget::process()
 {
     for (unsigned i=0;i<plugin->getBarCount();i++){
         levels[i]->setValue(plugin->getMids()[i]);
-    }
-    for (unsigned i=0;i<plugin->getBarCount();i++){
         sliders[i+1]->setValue((plugin->getBands()[i]-1.0f)*300.0f);
     }
 

@@ -6,7 +6,7 @@
   See LICENSE for details.
 */
 #include <dsound.h>
-#include "config_out.h"
+#include "vrok.h"
 
 LPDIRECTSOUND lpds;
 LPDIRECTSOUNDBUFFER lpdsbuffer;
@@ -152,8 +152,12 @@ static void worker_run(VPOutPluginDSound *self)
 void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
 {
     owner->mutexes[0].lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
+        owner->buffer1[i]=0.0f;
     owner->mutexes[1].unlock();
     owner->mutexes[2].lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
+        owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
 
     m_pause.lock();
@@ -236,7 +240,10 @@ unsigned VPOutPluginDSound::get_channels()
 VPOutPluginDSound::~VPOutPluginDSound()
 {
     work=false;
+
+    owner->mutexes[0].lock();
     owner->mutexes[1].unlock();
+    owner->mutexes[2].lock();
     owner->mutexes[3].unlock();
 
     if (worker){

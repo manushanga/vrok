@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <cstring>
 
-#include "config_out.h"
+#include "vrok.h"
 #include "ogg.h"
 
 VPDecoder *_VPDecoderOgg_new()

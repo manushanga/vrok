@@ -9,7 +9,7 @@
 
 #include <cstring>
 
-#include "config_out.h"
+#include "vrok.h"
 #include "flac.h"
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)

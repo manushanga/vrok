@@ -15,13 +15,12 @@
 */
 #include <cstring>
 
+#include "vrok.h"
 #include "vplayer.h"
-#include "config_out.h"
 #include "config.h"
 #include "out.h"
 #include "decoder.h"
 #include "effect.h"
-
 
 void VPlayer::play_work(VPlayer *self)
 {
@@ -77,8 +76,7 @@ void VPlayer::announce(VPStatus status)
 VPlayer::VPlayer(next_track_cb_t cb)
 {
     mutex_control.try_lock();
-    mutex_post_process.try_lock();
-    mutex_post_process.unlock();
+
     track_channels = 0;
     track_samplerate = 0;
 
@@ -109,6 +107,7 @@ VPlayer::VPlayer(next_track_cb_t cb)
 }
 int VPlayer::open(const char *url)
 {
+    mutex_control.lock();
 
     this_track[0]='\0';
     if (vpdecode){
@@ -131,9 +130,7 @@ int VPlayer::open(const char *url)
 
     if (vpdecode){
         vpdecode->init(this);
-        mutex_control.lock();
         ret += vpdecode->open(url);
-        mutex_control.unlock();
     } else {
         ret = -1;
     }
@@ -148,6 +145,8 @@ int VPlayer::open(const char *url)
         DBG("make play worker");
         vpout->resume();
     }
+
+    mutex_control.unlock();
     announce(VP_STATUS_OPEN);
 
     strcpy(this_track, url);

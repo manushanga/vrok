@@ -33,7 +33,6 @@ HEADERS  += \
     include/vplayer.h \
     include/decoder.h \
     include/effect.h \
-    include/config_out.h \
     include/config.h \
     frontend/vrokmain.h \
     frontend/eqwidget.h \
@@ -43,7 +42,8 @@ HEADERS  += \
     players/flac.h \
     players/mpeg.h \
     players/ogg.h \
-    include/threads.h
+    include/threads.h \
+    include/vrok.h
 FORMS    += frontend/vrokmain.ui \
             frontend/eqwidget.ui
 
@@ -51,7 +51,7 @@ OTHER_FILES += \
     README.md \
     LICENSE
 
-QMAKE_CXXFLAGS += -Wall -O3
+QMAKE_CXXFLAGS += -Wall -O4 -msse4.2
 
 linux-g++* {
 
@@ -66,5 +66,8 @@ LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound
 HEADERS  +=  outs/dsound.h
 SOURCES += outs/dsound.cpp
 }
+
+RESOURCES += \
+    vrok.qrc
 
 

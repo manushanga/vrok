@@ -7,7 +7,7 @@
 */
 #include <unistd.h>
 
-#include "config_out.h"
+#include "vrok.h"
 #include "mpeg.h"
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)

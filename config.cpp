@@ -15,6 +15,7 @@ void config_init()
         DBG("config: setting defaults");
         settings->setValue("general/volume", 1.0f);
         settings->setValue("user/lastopen", "");
+        settings->setValue("user/eq", false);
 
         settings->beginGroup("general");
         settings->beginWriteArray("eq",18);
@@ -33,7 +34,14 @@ void config_init()
         settings->setValue("general/eq/preamp",QVariant(1.0f));
     }
 }
-
+bool config_get_eq()
+{
+    return settings->value("user/eq").toBool();
+}
+void config_set_eq(bool on)
+{
+    return settings->setValue("user/eq", on);
+}
 QString config_get_lastopen()
 {
     return settings->value("user/lastopen").toString();
