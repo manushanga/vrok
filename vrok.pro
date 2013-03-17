@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    config.cpp
+    config.cpp \
+    utils.cpp
 HEADERS  += \
     include/vplayer.h \
     include/decoder.h \
@@ -43,7 +44,9 @@ HEADERS  += \
     players/mpeg.h \
     players/ogg.h \
     include/threads.h \
-    include/vrok.h
+    include/vrok.h \
+    vputils.h
+
 FORMS    += frontend/vrokmain.ui \
             frontend/eqwidget.ui
 
@@ -53,15 +56,18 @@ OTHER_FILES += \
 
 QMAKE_CXXFLAGS += -Wall -O4 -msse4.2
 
-linux-g++* {
-
+linux-g++-64 {
 LIBS += -lasound -lpthread -lsamplerate
-#QMAKE_CXXFLAGS += -std=c++11
 HEADERS  += outs/alsa.h
 SOURCES += outs/alsa.cpp
 }
 
+linux-g++-32 {
+QMAKE_CXXFLAGS += -march=i686
+}
+
 win32 {
+QMAKE_CXXFLAGS += -march=i686
 LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound
 HEADERS  +=  outs/dsound.h
 SOURCES += outs/dsound.cpp

@@ -68,7 +68,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
     //  write remaining to buffer
     //  return ok
 
-    if (!self->work)
+    if (ATOMIC_CAS(&self->work,false,false))
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
     if (selfp->buffer_write+frame->header.blocksize*self->track_channels + 1 < VPBUFFER_FRAMES*2*self->track_channels){
@@ -156,7 +156,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         self->post_process(self->buffer2);
         self->mutexes[3].unlock();
 
-        if (!self->work)
+        if (ATOMIC_CAS(&self->work,false,false))
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
         while (frame->header.blocksize-i > VPBUFFER_FRAMES*2 ){
@@ -187,7 +187,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             self->post_process(self->buffer2);
             self->mutexes[3].unlock();
 
-            if (!self->work)
+            if (ATOMIC_CAS(&self->work,false,false))
                 return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
         }
 
@@ -247,7 +247,7 @@ void FLACDecoder::reader()
         DBG("Error "<<FLAC__StreamDecoderInitStatusString[init_status]);
     }
 
-    if (owner->work)
+    if (ATOMIC_CAS(&owner->work,true,true))
         owner->ended();
 }
 

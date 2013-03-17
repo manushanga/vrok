@@ -80,17 +80,17 @@ static void worker_run(VPOutPluginDSound *self)
     } else {
         DBG("fail");
     }
-    while (self->work){
-        if (self->pause_check){
+    while (ATOMIC_CAS(&self->work,true,true)){
+        if (ATOMIC_CAS(&self->pause_check,true,true)){
             DBG("going to pause");
-            self->paused=true;
+            ATOMIC_CAS(&self->paused,false,true);
             lpdsbuffer->Stop();
             self->m_pause.lock();
             self->m_pause.unlock();
             lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
-            self->paused=false;
+            ATOMIC_CAS(&self->paused,true,false);
             DBG("out of pause");
-            self->pause_check = false;
+            ATOMIC_CAS(&self->pause_check,true,false);
         }
 
         self->owner->mutexes[1].lock();
@@ -161,29 +161,31 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
     owner->mutexes[3].unlock();
 
     m_pause.lock();
-    pause_check = true;
-    while (!paused) {}
+    ATOMIC_CAS(&pause_check,false,true);
+    while (!ATOMIC_CAS(&paused,false,false)) {}
     owner->mutexes[0].try_lock();
     owner->mutexes[0].unlock();
 
     owner->mutexes[2].try_lock();
     owner->mutexes[2].unlock();
-
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
 {
-    if (paused){
-        pause_check = false;
+    if (ATOMIC_CAS(&paused,true,true)){
+        ATOMIC_CAS(&pause_check,true,false);
+
+        m_pause.try_lock();
         m_pause.unlock();
-        while (paused) { }
+        while (ATOMIC_CAS(&paused,true,true)) {}
     }
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
 {
-    if (!paused){
+    if (!ATOMIC_CAS(&paused,false,false)){
+
         m_pause.lock();
-        pause_check = true;
-        while (!paused) { }
+        ATOMIC_CAS(&pause_check,false,true);
+        while (!ATOMIC_CAS(&paused,false,false)) {}
     }
 }
 
@@ -216,12 +218,9 @@ int VPOutPluginDSound::init(VPlayer *v, unsigned samplerate, unsigned channels)
         }
     }
 
-    m_pause.try_lock();
-    m_pause.unlock();
-
-    pause_check=false;
-    paused=false;
-    work=true;
+    ATOMIC_CAS(&work,false,true);
+    ATOMIC_CAS(&paused,true,false);
+    ATOMIC_CAS(&pause_check,true,false);
     worker = new std::thread( (void(*)(void*))worker_run, this);
     DBG("waveout thread made");
     return 0;
@@ -239,7 +238,7 @@ unsigned VPOutPluginDSound::get_channels()
 }
 VPOutPluginDSound::~VPOutPluginDSound()
 {
-    work=false;
+    ATOMIC_CAS(&work,true,false);
 
     owner->mutexes[0].lock();
     owner->mutexes[1].unlock();

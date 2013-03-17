@@ -37,7 +37,7 @@ void MPEGDecoder::reader()
     size_t done=0;
     size_t count = VPBUFFER_FRAMES*owner->track_channels*2;
 
-    while (owner->work) {
+    while (ATOMIC_CAS(&owner->work,true,true)) {
         while (done<count*sizeof(short) && err != MPG123_DONE){
             err = mpg123_read( mh, ((unsigned char *) buffer)+done, count*sizeof(short)-done, &done );
         }
@@ -67,7 +67,7 @@ void MPEGDecoder::reader()
         }
     }
 
-    if (owner->work && err == MPG123_DONE){
+    if (ATOMIC_CAS(&owner->work,true,true) && err == MPG123_DONE){
         owner->ended();
     }
 }

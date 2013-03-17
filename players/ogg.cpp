@@ -49,7 +49,7 @@ void OGGDecoder::reader()
     long ret=1;
     int bit;
     size_t j,done=0;
-    while (owner->work && ret > 0 ){
+    while (ATOMIC_CAS(&owner->work,true,true) && ret > 0 ){
         j=0;
         ret=1;
         done=0;
@@ -77,7 +77,7 @@ void OGGDecoder::reader()
         owner->mutexes[3].unlock();
 
     }
-    if (owner->work && ret > 0){
+    if (ATOMIC_CAS(&owner->work,true,true) && ret > 0){
         owner->ended();
     }
 }

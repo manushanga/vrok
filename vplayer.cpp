@@ -321,7 +321,8 @@ int VPlayer::vpout_close()
     // player_flac.cpp's worker function
 
     if (!play_worker_done && play_worker) {
-        work = false;
+        ATOMIC_CAS(&work,true,false);
+        vpout->resume();
         play_worker->join();
         DBG("player thread joined");
         delete play_worker;

@@ -10,9 +10,15 @@
 #define VPUTILS_H
 
 #define DEBUG
+
 #ifdef DEBUG
     #include <iostream>
-    #define DBG(...) std::cout<<__VA_ARGS__<<" at "<<__PRETTY_FUNCTION__<<std::endl
+    #include "threads.h"
+    extern std::mutex __m_dbgw;
+    #define DBG(...) \
+    __m_dbgw.lock(); \
+    std::cout<<__VA_ARGS__<<" at "<<__PRETTY_FUNCTION__<<std::endl; \
+    __m_dbgw.unlock();
 #else
     #define DBG(...)
 #endif

@@ -5,6 +5,8 @@
 #include <windows.h>
 #include <process.h>
 
+#define ATOMIC_CAS(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
+
 namespace std{
 class thread
 {
@@ -87,6 +89,9 @@ public:
 #elif defined(__linux__)
 
 #include <pthread.h>
+
+#define ATOMIC_CAS(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
+
 namespace std{
 class thread{
 private:

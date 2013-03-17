@@ -22,17 +22,17 @@ static void worker_run(VPOutPluginAlsa *self)
     unsigned out_frames;
     unsigned chans=self->owner->track_channels;
 
-    while (self->work){
-        if (self->pause_check) {
+    while (ATOMIC_CAS(&self->work,true,true)){
+        if (ATOMIC_CAS(&self->pause_check,true,true)) {
             snd_pcm_drain(self->handle);
             snd_pcm_reset(self->handle);
-            self->paused=true;
+            ATOMIC_CAS(&self->paused,false,true);
             self->m_pause.lock();
             self->m_pause.unlock();
-            self->paused = false;
+            ATOMIC_CAS(&self->paused,true,false);
             snd_pcm_prepare(self->handle);
             snd_pcm_start(self->handle);
-            self->pause_check = false;
+            ATOMIC_CAS(&self->pause_check,true,false);
         }
 
         self->rd.end_of_input = 0;
@@ -100,8 +100,8 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
     owner->mutexes[3].unlock();
 
     m_pause.lock();
-    pause_check = true;
-    while (!paused) {}
+    ATOMIC_CAS(&pause_check,false,true);
+    while (!ATOMIC_CAS(&paused,false,false)) {}
     owner->mutexes[0].try_lock();
     owner->mutexes[0].unlock();
 
@@ -112,20 +112,21 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::resume()
 {
-    if (paused){
-        pause_check = false;
+    if (ATOMIC_CAS(&paused,true,true)){
+        ATOMIC_CAS(&pause_check,true,false);
+
         m_pause.try_lock();
         m_pause.unlock();
-        while (paused) {}
+        while (ATOMIC_CAS(&paused,true,true)) {}
     }
 }
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::pause()
 {
-    if (!paused){
+    if (!ATOMIC_CAS(&paused,false,false)){
 
         m_pause.lock();
-        pause_check = true;
-        while (!paused) {}
+        ATOMIC_CAS(&pause_check,false,true);
+        while (!ATOMIC_CAS(&paused,false,false)) {}
     }
 }
 
@@ -172,10 +173,9 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     out_frames = (VPBUFFER_FRAMES*rd.src_ratio)+5;
     out_buf = (float *)malloc(out_frames*sizeof(float)*channels);
 
-    m_pause.unlock();
-    pause_check=false;
-    paused=false;
-    work=true;
+    ATOMIC_CAS(&work,false,true);
+    ATOMIC_CAS(&paused,true,false);
+    ATOMIC_CAS(&pause_check,true,false);
 
     worker = new std::thread((void(*)(void*))worker_run, this);
     DBG("alsa thread made");
@@ -192,7 +192,7 @@ unsigned VPOutPluginAlsa::get_channels()
 }
 VPOutPluginAlsa::~VPOutPluginAlsa()
 {
-    work=false;
+    ATOMIC_CAS(&work,true,false);
 
     owner->mutexes[0].lock();
     owner->mutexes[1].unlock();
