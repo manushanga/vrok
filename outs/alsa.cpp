@@ -42,6 +42,7 @@ static void worker_run(VPOutPluginAlsa *self)
         self->rd.output_frames = self->out_frames;
         self->rd.output_frames_gen = 1;
         out_frames=0;
+        //DBG("");
         self->owner->mutexes[1].lock();
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
@@ -50,6 +51,7 @@ static void worker_run(VPOutPluginAlsa *self)
             self->rd.data_in += self->rd.input_frames_used*chans;
             out_frames+=self->rd.output_frames_gen;
         }
+
         ret = snd_pcm_writei(self->handle,
                              self->out_buf,
                              out_frames);
@@ -169,6 +171,7 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     if (!rs){
         DBG("SRC error"<<rerr);
     }
+
     rd.src_ratio = (out_srate*1.0d)/(in_srate*1.0d);
     out_frames = (VPBUFFER_FRAMES*rd.src_ratio)+5;
     out_buf = (float *)malloc(out_frames*sizeof(float)*channels);
