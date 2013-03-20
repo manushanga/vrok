@@ -8,23 +8,23 @@
 */
 
 #include <cstring>
+#include <cmath>
 
 #include "vrok.h"
 #include "flac.h"
-
-#define SHORTTOFL (1.0f/__SHRT_MAX__)
 
 VPDecoder *_VPDecoderFLAC_new()
 {
     return (VPDecoder *)new FLACDecoder();
 }
-static void metadata_callback(const FLAC__StreamDecoder *decoder,
+void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
                               const FLAC__StreamMetadata *metadata,
                               void *client_data)
 {
     FLACDecoder *me = (FLACDecoder*) client_data;
 
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
+        me->to_fl = 1.0f/pow(2,metadata->data.stream_info.bits_per_sample);
         me->owner->set_metadata(  metadata->data.stream_info.sample_rate, metadata->data.stream_info.channels);
         DBG("meta ok");
         me->half_buffer_bytes = VPBUFFER_FRAMES*me->owner->track_channels*sizeof(float);
@@ -47,7 +47,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder,
     DBG(FLAC__StreamDecoderErrorStatusString[status]);
 }
 
-static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder,
+FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDecoder *decoder,
                                                      const FLAC__Frame *frame,
                                                      const FLAC__int32 * const buffer[],
                                                      void *client_data)
@@ -73,10 +73,10 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 
     if (selfp->buffer_write+frame->header.blocksize*self->track_channels + 1 < VPBUFFER_FRAMES*2*self->track_channels){
         size_t i=0,j=0;
-        DBG("s1");
+        //DBG("s1");
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[selfp->buffer_write+j]=SHORTTOFL*buffer[ch][i]*self->volume;
+                selfp->buffer[selfp->buffer_write+j]=selfp->to_fl*buffer[ch][i]*self->volume;
                 j++;
             }
             i++;
@@ -85,11 +85,11 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
     } else if (selfp->buffer_write+frame->header.blocksize*self->track_channels + 1 == VPBUFFER_FRAMES*2*self->track_channels) {
         size_t i=0,j=0;
-        DBG("s2");
+        //DBG("s2");
 
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[selfp->buffer_write+j]=SHORTTOFL*buffer[ch][i]*self->volume;
+                selfp->buffer[selfp->buffer_write+j]=selfp->to_fl*buffer[ch][i]*self->volume;
                 j++;
             }
             i++;
@@ -97,7 +97,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 
         self->mutexes[0].lock();
         j=0;
-        DBG("wb1");
+
         // write buffer1
         memcpy(self->buffer1,selfp->buffer,selfp->half_buffer_bytes );
         /*while(j<VPBUFFER_FRAMES*self->track_channels){
@@ -109,7 +109,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 
         self->mutexes[2].lock();
         j=0;
-        DBG("wb2");
+        //DBG("wb2");
         // write buffer2
         memcpy(self->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
 
@@ -128,7 +128,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 
         while (j<VPBUFFER_FRAMES*2*self->track_channels) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[j]=SHORTTOFL*buffer[ch][i]*self->volume;
+                selfp->buffer[j]=selfp->to_fl*buffer[ch][i]*self->volume;
                 j++;
             }
             i++;
@@ -166,7 +166,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             // write buffer1
             while(j<VPBUFFER_FRAMES*self->track_channels){
                 for (unsigned ch=0;ch<self->track_channels;ch++){
-                    self->buffer1[j]=SHORTTOFL*buffer[ch][i]*self->volume;
+                    self->buffer1[j]=selfp->to_fl*buffer[ch][i]*self->volume;
                     j++;
                 }
                 i++;
@@ -179,7 +179,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
             // write buffer2
             while(j<VPBUFFER_FRAMES*self->track_channels){
                 for (unsigned ch=0;ch<self->track_channels;ch++){
-                    selfp->owner->buffer2[j]=SHORTTOFL*buffer[ch][i]*self->volume;
+                    selfp->owner->buffer2[j]=selfp->to_fl*buffer[ch][i]*self->volume;
                     j++;
                 }
                 i++;
@@ -194,7 +194,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
         j=0;
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[j]=SHORTTOFL*buffer[ch][i]*self->volume;
+                selfp->buffer[j]=selfp->to_fl*buffer[ch][i]*self->volume;
                 j++;
             }
             i++;

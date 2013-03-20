@@ -37,8 +37,6 @@ public:
     virtual void rewind();
     virtual void resume();
     virtual void pause();
-    virtual unsigned get_samplerate();
-    virtual unsigned get_channels();
     virtual ~VPOutPluginAlsa();
 };
 

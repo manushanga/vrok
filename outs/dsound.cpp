@@ -226,16 +226,6 @@ int VPOutPluginDSound::init(VPlayer *v, unsigned samplerate, unsigned channels)
     return 0;
 }
 
-unsigned VPOutPluginDSound::get_samplerate()
-{
-    // problem?
-    return 192000;
-}
-unsigned VPOutPluginDSound::get_channels()
-{
-    // another problem?
-    return 9;
-}
 VPOutPluginDSound::~VPOutPluginDSound()
 {
     ATOMIC_CAS(&work,true,false);

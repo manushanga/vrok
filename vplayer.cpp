@@ -285,18 +285,9 @@ int VPlayer::vpout_open()
 
         DBG("track chs:"<<track_channels);
         DBG("track rate:"<<track_samplerate);
-        DBG("hw max chs:"<<vpout->get_channels());
-        DBG("hw max rate:"<<vpout->get_samplerate());
 
-        if (vpout->get_channels() >= track_channels && vpout->get_samplerate() >= track_samplerate) {
-            ret += vpout->init(this, track_samplerate, track_channels);
-        } else if (vpout->get_samplerate() < track_samplerate){
-            DBG("Can not initialize hardware for this samplerate");
-        } else {
-            DBG("Dropping channels because hardware is not capable");
-            track_channels = vpout->get_channels();
-            ret += vpout->init(this, track_samplerate, track_channels);
-        }
+        ret += vpout->init(this, track_samplerate, track_channels);
+
     }
     mutex_post_process.lock();
     for (std::vector<effect_entry_t>::iterator it=effects.begin();

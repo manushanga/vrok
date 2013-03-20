@@ -78,6 +78,9 @@ public:
     unsigned track_samplerate;
     unsigned track_channels;
 
+    unsigned out_samplerate;
+    unsigned out_channels;
+
     VPlayer(next_track_cb_t cb);
 
     // internal interface

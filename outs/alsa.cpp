@@ -185,14 +185,6 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     return 0;
 }
 
-unsigned VPOutPluginAlsa::get_samplerate()
-{
-    return 192000;
-}
-unsigned VPOutPluginAlsa::get_channels()
-{
-    return 9;
-}
 VPOutPluginAlsa::~VPOutPluginAlsa()
 {
     ATOMIC_CAS(&work,true,false);
