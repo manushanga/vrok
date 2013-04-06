@@ -217,8 +217,8 @@ void VPlayer::post_process(float *buffer)
     if (effects_active){
         for (std::vector<effect_entry_t>::iterator it=effects.begin();
              it!=effects.end();it++){
-            if ((*it).active)
-                (*it).eff->process( buffer);
+            if (it->active)
+                it->eff->process( buffer);
         }
     }
     mutex_post_process.unlock();
@@ -226,7 +226,17 @@ void VPlayer::post_process(float *buffer)
 
 VPlayer::~VPlayer()
 {
-    DBG("");
+    mutex_post_process.lock();
+    for (std::vector<effect_entry_t>::iterator it=effects.begin();
+         it!=effects.end();
+         it++){
+        if (!it->active){
+            it->active = false;
+            it->eff->finit();
+        }
+    }
+    mutex_post_process.unlock();
+
     if (vpdecode)
         delete vpdecode;
     if (vpout)
@@ -287,21 +297,22 @@ int VPlayer::vpout_open()
         DBG("track rate:"<<track_samplerate);
 
         ret += vpout->init(this, track_samplerate, track_channels);
+        mutex_post_process.lock();
+        for (std::vector<effect_entry_t>::iterator it=effects.begin();
+             it!=effects.end();
+             it++){
+            if (!it->active){
+                it->eff->init(this);
+                it->active=true;
+            } else {
+                it->eff->finit();
+                it->eff->init(this);
+            }
+        }
+        mutex_post_process.unlock();
 
     }
-    mutex_post_process.lock();
-    for (std::vector<effect_entry_t>::iterator it=effects.begin();
-         it!=effects.end();
-         it++){
-        if (!(*it).active){
-            (*it).eff->init(this);
-            (*it).active=true;
-        } else {
-            (*it).eff->finit();
-            (*it).eff->init(this);
-        }
-    }
-    mutex_post_process.unlock();
+
 
     return ret;
 }

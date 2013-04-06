@@ -104,11 +104,11 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
     m_pause.lock();
     ATOMIC_CAS(&pause_check,false,true);
     while (!ATOMIC_CAS(&paused,false,false)) {}
-    owner->mutexes[0].try_lock();
+/*    owner->mutexes[0].try_lock();
     owner->mutexes[0].unlock();
 
     owner->mutexes[2].try_lock();
-    owner->mutexes[2].unlock();
+    owner->mutexes[2].unlock();*/
 
 }
 
@@ -176,9 +176,9 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     out_frames = (VPBUFFER_FRAMES*rd.src_ratio)+5;
     out_buf = (float *)malloc(out_frames*sizeof(float)*channels);
 
-    ATOMIC_CAS(&work,false,true);
-    ATOMIC_CAS(&paused,true,false);
-    ATOMIC_CAS(&pause_check,true,false);
+    work = true;
+    paused = false;
+    pause_check = false;
 
     worker = new std::thread((void(*)(void*))worker_run, this);
     DBG("alsa thread made");
@@ -187,13 +187,20 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
 
 VPOutPluginAlsa::~VPOutPluginAlsa()
 {
+    // make sure decoders are finished before calling
     ATOMIC_CAS(&work,true,false);
 
     owner->mutexes[0].lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
+        owner->buffer1[i]=0.0f;
     owner->mutexes[1].unlock();
-    owner->mutexes[2].lock();
-    owner->mutexes[3].unlock();
 
+    owner->mutexes[2].lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
+        owner->buffer2[i]=0.0f;
+    owner->mutexes[3].unlock();
+    snd_pcm_drain(handle);
+    snd_pcm_close(handle);
 
     if (worker){
         worker->join();
@@ -202,6 +209,5 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     }
     delete out_buf;
     src_delete(rs);
-    snd_pcm_drain(handle);
-    snd_pcm_close(handle);
+
 }

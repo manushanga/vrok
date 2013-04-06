@@ -41,7 +41,7 @@ void callback_next(char *mem)
 void VrokMain::on_btnAbout_clicked()
 {
     QDialog d(this);
-    d.setWindowTitle("About Vrok");
+    d.setWindowTitle(tr("About Vrok"));
     d.setModal(true);
     QHBoxLayout h(&d);
     d.setLayout(&h);
@@ -217,7 +217,6 @@ void VrokMain::on_btnSpec_clicked()
 }
 VrokMain::~VrokMain()
 {
-
     if (vp)
         delete vp;
     if (eq)

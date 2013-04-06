@@ -63,8 +63,6 @@ VPEffectPluginEQ::~VPEffectPluginEQ()
         delete trig[0][i];
         delete trig[1][i];
     }
-    if (bar_array)
-        delete bar_array;
 }
 void VPEffectPluginEQ::sb_recalc_table()
 {

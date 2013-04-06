@@ -163,11 +163,11 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
     m_pause.lock();
     ATOMIC_CAS(&pause_check,false,true);
     while (!ATOMIC_CAS(&paused,false,false)) {}
-    owner->mutexes[0].try_lock();
+    /*owner->mutexes[0].try_lock();
     owner->mutexes[0].unlock();
 
     owner->mutexes[2].try_lock();
-    owner->mutexes[2].unlock();
+    owner->mutexes[2].unlock();*/
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
 {
@@ -230,11 +230,18 @@ VPOutPluginDSound::~VPOutPluginDSound()
 {
     ATOMIC_CAS(&work,true,false);
 
-    owner->mutexes[0].lock();
-    owner->mutexes[1].unlock();
-    owner->mutexes[2].lock();
-    owner->mutexes[3].unlock();
+    // make sure decoders are finished before calling
+    ATOMIC_CAS(&work,true,false);
 
+    owner->mutexes[0].lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
+        owner->buffer1[i]=0.0f;
+    owner->mutexes[1].unlock();
+
+    owner->mutexes[2].lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
+        owner->buffer2[i]=0.0f;
+    owner->mutexes[3].unlock();
     if (worker){
         worker->join();
         DBG("out thread joined");

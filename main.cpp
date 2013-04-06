@@ -7,12 +7,19 @@
 */
 
 #include <QApplication>
+#include <QTranslator>
 #include "frontend/vrokmain.h"
 #include "vplayer.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    QTranslator translator;
+
+    translator.load("./vrok_si");
+    a.installTranslator(&translator);
+
     VrokMain w;
     w.show();
     return a.exec();

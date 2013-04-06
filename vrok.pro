@@ -73,6 +73,8 @@ HEADERS  +=  outs/dsound.h
 SOURCES += outs/dsound.cpp
 }
 
+TRANSLATIONS += vrok_si.ts
+
 RESOURCES += \
     vrok.qrc
 

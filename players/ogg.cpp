@@ -77,7 +77,7 @@ void OGGDecoder::reader()
         owner->mutexes[3].unlock();
 
     }
-    if (ATOMIC_CAS(&owner->work,true,true) && ret > 0){
+    if (ATOMIC_CAS(&owner->work,true,true) ){
         owner->ended();
     }
 }
