@@ -170,6 +170,10 @@ int VPEffectPluginEQ::finit()
     config_set_eq_knowledge_bands(knowledge);
     config_set_eq_preamp(sb_preamp);
 
+    if (sb_paramsroot)
+        paramlist_free (sb_paramsroot);
+    sb_paramsroot = NULL;
+
     if (bar_array)
         delete bar_array;
     bar_array = NULL;

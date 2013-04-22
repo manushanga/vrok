@@ -18,8 +18,35 @@ DEFINES += USE_OOURA
 
 INCLUDEPATH += include
 
-SOURCES += main.cpp \
-        frontend/vrokmain.cpp \
+console {
+SOURCES +=cli/main.cpp \
+    vplayer.cpp \
+    effects/shibatch/Equ.cpp \
+    effects/shibatch/Fftsg_fl.c \
+    effects/eq.cpp \
+    players/flac.cpp \
+    players/mpeg.cpp \
+    players/ogg.cpp \
+    config.cpp \
+    utils.cpp
+HEADERS  += \
+    include/vplayer.h \
+    include/decoder.h \
+    include/effect.h \
+    include/config.h \
+    effects/shibatch/paramlist.hpp \
+    effects/shibatch/Equ.h \
+    effects/eq.h \
+    players/flac.h \
+    players/mpeg.h \
+    players/ogg.h \
+    include/threads.h \
+    include/vrok.h \
+    vputils.h
+} else {
+SOURCES += \
+    frontend/main.cpp \
+    frontend/vrokmain.cpp \
     frontend/eqwidget.cpp \
     vplayer.cpp \
     effects/shibatch/Equ.cpp \
@@ -49,6 +76,7 @@ HEADERS  += \
 
 FORMS    += frontend/vrokmain.ui \
             frontend/eqwidget.ui
+}
 
 OTHER_FILES += \
     README.md \

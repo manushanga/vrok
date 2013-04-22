@@ -9,7 +9,7 @@ static QSettings *settings;
 
 void config_init()
 {
-    settings = new QSettings(QString("MX Ent."),QString("Vrok"));
+    settings = new QSettings("MX Ent.","Vrok");
     DBG("config: up");
     if (!settings->contains("general/volume")) {
         DBG("config: setting defaults");

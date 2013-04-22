@@ -102,8 +102,8 @@ VPlayer::VPlayer(next_track_cb_t cb)
     track_channels = 0;
     track_samplerate = 0;
 
-    config_init();
     mutex_control.unlock();
+    config_init();
 }
 int VPlayer::open(const char *url)
 {
@@ -123,6 +123,7 @@ int VPlayer::open(const char *url)
         if (strcasecmp(url + len - strlen(vpdecoder_entries[i].ext),vpdecoder_entries[i].ext) == 0) {
             DBG("open decoder "<<vpdecoder_entries[i].name);
             vpdecode = (VPDecoder *)vpdecoder_entries[i].creator();
+            break;
         }
     }
 

@@ -8,7 +8,7 @@
 
 #include <QApplication>
 #include <QTranslator>
-#include "frontend/vrokmain.h"
+#include "./vrokmain.h"
 #include "vplayer.h"
 
 int main(int argc, char *argv[])

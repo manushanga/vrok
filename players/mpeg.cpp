@@ -95,7 +95,7 @@ int MPEGDecoder::open(const char *url)
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
     DBG(encoding);
-    if (encoding & MPG123_ENC_16 != MPG123_ENC_16) {
+    if (encoding && MPG123_ENC_16 != MPG123_ENC_16) {
         DBG("unsupported");
         return -1;
     }
