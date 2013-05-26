@@ -6,6 +6,8 @@
   See LICENSE for details.
 */
 
+#include <unistd.h>
+
 #include "vrok.h"
 #include "alsa.h"
 
@@ -55,7 +57,7 @@ static void worker_run(VPOutPluginAlsa *self)
         ret = snd_pcm_writei(self->handle,
                              self->out_buf,
                              out_frames);
-
+        //usleep((out_frames*1000000)/self->out_srate);
         self->owner->mutexes[0].unlock();
 
         self->rd.end_of_input = 0;
@@ -76,7 +78,7 @@ static void worker_run(VPOutPluginAlsa *self)
         ret = snd_pcm_writei(self->handle,
                              self->out_buf,
                              out_frames);
-
+        //usleep((out_frames*1000000)/self->out_srate);
         self->owner->mutexes[2].unlock();
         if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE){
             DBG("trying to recover");
@@ -104,11 +106,6 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
     m_pause.lock();
     ATOMIC_CAS(&pause_check,false,true);
     while (!ATOMIC_CAS(&paused,false,false)) {}
-/*    owner->mutexes[0].try_lock();
-    owner->mutexes[0].unlock();
-
-    owner->mutexes[2].try_lock();
-    owner->mutexes[2].unlock();*/
 
 }
 
@@ -178,7 +175,7 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     rd.src_ratio = (out_srate*1.0d)/(in_srate*1.0d);
     out_frames = (VPBUFFER_FRAMES*rd.src_ratio)+5;
     out_buf = (float *)malloc(out_frames*sizeof(float)*channels);
-
+    DBG("target rate"<<out_srate);
     work = true;
     paused = false;
     pause_check = false;

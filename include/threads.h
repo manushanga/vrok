@@ -88,8 +88,22 @@ public:
 }
 #elif defined(__linux__)
 #include <pthread.h>
+#include <iostream>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <linux/futex.h>
+#include <sys/syscall.h>
+#define SPIN_MAX 100
 
 #define ATOMIC_CAS(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
+#define ATOMIC_ADD(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
+#define ATOMIC_SUB(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
+#define ATOMIC_BOOL_CAS(ptr,oldv,newv) __sync_bool_compare_and_swap(ptr, oldv, newv)
 
 namespace std{
 class thread{
@@ -124,33 +138,79 @@ public:
 
     }
 };
+
+
 class mutex
 {
 private:
-    pthread_mutex_t m_mutex;
+    volatile int avail __attribute__((aligned(16))) ;
+    volatile int spin;
+    volatile int waiters;
+    volatile int cs;
 public:
+    enum State { UNLOCKED=0, LOCKED=1, CONTENDED=2 };
     inline mutex()
     {
-        pthread_mutex_init(&m_mutex, NULL);
+        cs=UNLOCKED;
+        avail = 1;
+        waiters = 0;
+        spin = 1;
     }
 
     inline ~mutex()
     {
-        pthread_mutex_destroy(&m_mutex);
+
     }
 
     inline void lock()
     {
-        pthread_mutex_lock(&m_mutex);
+        for (unsigned int i=0;i<SPIN_MAX;i++)
+        {
+            if (__sync_bool_compare_and_swap (&cs,UNLOCKED,LOCKED)) {
+                return;
+            }
+        }
+
+        __sync_bool_compare_and_swap(&cs,LOCKED,CONTENDED);
+
+        int val;
+        while (1) {
+            val = avail;
+            if( val > 0 && __sync_bool_compare_and_swap(&avail, val, val - 1) )
+                break;
+
+            __sync_fetch_and_add(&waiters, 1);
+            syscall(__NR_futex, &avail, FUTEX_WAIT_PRIVATE, val, NULL, 0, 0);
+            __sync_fetch_and_sub(&waiters, 1);
+
+        }
+        if ( waiters == 0 ){
+            __sync_bool_compare_and_swap(&cs,CONTENDED,LOCKED);
+        }
     }
 
     inline void unlock()
     {
-        pthread_mutex_unlock(&m_mutex);
+        if (__sync_bool_compare_and_swap(&cs,LOCKED,UNLOCKED)) {
+            return;
+        } else if (__sync_bool_compare_and_swap(&cs,CONTENDED,CONTENDED)) {
+            int nval = __sync_add_and_fetch(&avail, 1);
+
+            if( waiters > 0 ) {
+                syscall(__NR_futex, &avail, FUTEX_WAKE_PRIVATE, nval, NULL, 0, 0);
+            }
+        }
+
     }
     inline bool try_lock()
     {
-        return ( pthread_mutex_trylock(&m_mutex) != 0);
+        int val = avail;
+        if( val > 0 ) {
+            lock();
+            return true;
+        } else {
+            return false;
+        }
     }
 };
 }
