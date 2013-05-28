@@ -24,18 +24,15 @@
 #include "config.h"
 #include <cstring>
 
-QListView *play_list;
-QStringListModel *fileslist;
-QDir *dir;
-void callback_next(char *mem)
+void VrokMain::callback_next(char *mem, void *user)
 {
-    int i =play_list->selectionModel()->selectedRows().first().row();
+    VrokMain *mm =(VrokMain *) user;
+    int i =mm->ui->lvFiles->selectionModel()->selectedRows().first().row();
 
-    if (i+1<fileslist->rowCount()){
-
-        strcpy(mem,(char *)dir->absoluteFilePath(fileslist->index(i+1).data().toString()).toUtf8().data());
-        play_list->selectionModel()->select(fileslist->index(i),QItemSelectionModel::Deselect);
-        play_list->selectionModel()->select(fileslist->index(i+1),QItemSelectionModel::Select);
+    if (i+1<mm->fileslist.rowCount()){
+        strcpy(mem,(char *)mm->curdir.absoluteFilePath(mm->fileslist.index(i+1).data().toString()).toUtf8().data());
+        mm->ui->lvFiles->selectionModel()->select(mm->fileslist.index(i),QItemSelectionModel::Deselect);
+        mm->ui->lvFiles->selectionModel()->select(mm->fileslist.index(i+1),QItemSelectionModel::Select);
     }
 }
 void VrokMain::on_btnAbout_clicked()
@@ -74,7 +71,7 @@ VrokMain::VrokMain(QWidget *parent) :
 
     this->setWindowIcon(QIcon(":icon/vrok.png"));
 
-    vp = new VPlayer(callback_next);
+    vp = new VPlayer(callback_next, this);
     eq =new VPEffectPluginEQ(100);
 
     if (config_get_eq()){
@@ -87,10 +84,9 @@ VrokMain::VrokMain(QWidget *parent) :
     tx->setInterval(50);
     tx->stop();
 
-    fileslist=NULL;
-    play_list=ui->lvFiles;
-    fileslist=NULL;
-    dir=NULL;
+    curdir.setPath("");
+    cursweep.setFilter(QDir::Files);
+    cursweep.setNameFilters(getExtentionsList());
 
     gs = new QGraphicsScene();
     QBrush z(Qt::darkGreen);
@@ -106,13 +102,12 @@ VrokMain::VrokMain(QWidget *parent) :
     ui->gv->setScene(gs);
 
     if (config_get_lastopen().length()>0) {
-        dir = new QDir(config_get_lastopen());
-        dir->setFilter(QDir::Files|QDir::Hidden);
-        dir->setNameFilters(QStringList()<<"*.flac"<<"*.mp3"<<"*.ogg");
-        if (fileslist)
-            delete fileslist;
-        fileslist = new QStringListModel(dir->entryList());
-        ui->lvFiles->setModel(fileslist);
+        curdir.setPath(config_get_lastopen());
+
+        curdir.setFilter(QDir::Files|QDir::Hidden);
+        curdir.setNameFilters(getExtentionsList());
+
+        ui->lvFiles->setModel(&fileslist);
     }
     vis_counter = 0;
     connect(tx, SIGNAL(timeout()), this, SLOT(process()));
@@ -158,32 +153,51 @@ void VrokMain::on_btnPlay_clicked()
     if (ui->btnSpec->isChecked())
         tx->start();
 }
+void VrokMain::sweep(QDir root){
+
+    root.setFilter(QDir::Dirs|QDir::NoDot|QDir::NoDotDot);
+    cursweep.setPath(root.path());
+
+    QStringList list =root.entryList();
+    if (cursweep.count()>0)
+        dirs.append(root.path());
+    for (QStringList::Iterator it=list.begin(); it!=list.end();it++) {
+        //DBG((*it).toStdString());
+        //DBG(root.absoluteFilePath(*it).toStdString());
+
+        QDir ndir(root.absoluteFilePath(*it));
+        sweep(ndir);
+    }
+}
 void VrokMain::on_btnOpenDir_clicked()
 {
     QString d = QFileDialog::getExistingDirectory(this, tr("Open Dir"),
                                              config_get_lastopen(),
                                              0);
     config_set_lastopen(d);
-    if (dir)
-        delete dir;
-    dir = new QDir(d);
-    dir->setFilter(QDir::Files|QDir::Hidden);
-    dir->setNameFilters(QStringList()<<"*.flac"<<"*.mp3"<<"*.ogg");
-    QStringList list = dir->entryList();
-    if (fileslist)
-        delete fileslist;
-    fileslist = new QStringListModel(list);
-    ui->lvFiles->setModel(fileslist);
+    dirs.clear();
+    ui->lblDisplay->setText("Scanning...");
+    QDir rdir(d);
+    sweep(rdir);
+    fileslist.setStringList(dirs);
+    ui->lblDisplay->setText("Done.");
+
+    ui->sbFolderSeek->setMinimum(0);
+    ui->sbFolderSeek->setMaximum(dirs.size()-1);
+    curdir.setPath(d);
+    QStringList list = curdir.entryList();
+    fileslist.setStringList(list);
+    ui->lvFiles->setModel(&fileslist);
 
 }
 void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 {
-    QString n(dir->absoluteFilePath(i.data().toString()));
+    QString n(curdir.absoluteFilePath(i.data().toString()));
     DBG(n.toStdString());
 
     vp->open((char *) n.toUtf8().data());
 
-    if (i.row() < fileslist->rowCount()-1 ){
+    if (i.row() < fileslist.rowCount()-1 ){
       //  strcpy (vp->next_track,(char *) (dir->absoluteFilePath(fileslist->index(i.row()+1).data().toString())).toUtf8().data());
     }
 
@@ -224,4 +238,29 @@ VrokMain::~VrokMain()
     if (tx)
         delete tx;
     delete ui;
+}
+
+void VrokMain::on_sbFolderSeek_valueChanged(int value)
+{
+    if (!dirs.empty()) {
+        ui->lblDisplay->setText(dirs.at(value));
+        curdir.setPath(dirs.at(value));
+        QStringList list = curdir.entryList();
+        fileslist.setStringList(list);
+        ui->lvFiles->setModel(&fileslist);
+    }
+}
+
+QStringList VrokMain::getExtentionsList()
+{
+    int count=vp->getSupportedFileTypeCount();
+    char *exts[count];
+    QStringList list;
+    vp->getSupportedFileTypeExtensions(&exts[0]);
+
+
+    for (int i=0;i<count;i++) {
+        list.append(QString("*.").append(exts[i]));
+    }
+    return list;
 }

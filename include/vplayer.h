@@ -27,7 +27,7 @@ class VPOutPlugin;
 class VPEffectPlugin;
 class VPDecoder;
 
-typedef void(*next_track_cb_t)(char *mem);
+typedef void(*next_track_cb_t)(char *mem, void *user);
 
 struct effect_entry_t{
     VPEffectPlugin *eff;
@@ -44,6 +44,7 @@ private:
     bool active;
     std::mutex mutex_post_process;
     void announce(VPStatus status);
+    void *next_cb_user;
 public:
     char this_track[256];
     // take lock on mutex_control when writing to this
@@ -81,7 +82,7 @@ public:
     unsigned out_samplerate;
     unsigned out_channels;
 
-    VPlayer(next_track_cb_t cb);
+    VPlayer(next_track_cb_t cb, void *cb_user);
 
     // internal interface
     static void play_work(VPlayer *self);
@@ -101,6 +102,8 @@ public:
     bool isActiveEffect(VPEffectPlugin *eff);
     void removeEffect(VPEffectPlugin *eff);
     bool isPlaying();
+    int getSupportedFileTypeCount();
+    void getSupportedFileTypeExtensions(char **exts);
     ~VPlayer() ;
 };
 

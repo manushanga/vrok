@@ -19,7 +19,7 @@ typedef struct _vpout_entry{
 #elif defined(__linux__)
     #include "outs/alsa.h"
 
-    static const vpout_entry_t vpout_entries[] = { {"ALSA", (vpout_creator_t)_VPOutPluginAlsa_new, VPBUFFER_PERIOD } };
+    static const vpout_entry_t vpout_entries[] = { {"ALSA", (vpout_creator_t)_VPOutPluginAlsa_new, VPBUFFER_PERIOD*2 } };
 #else
     #error "Unsupported platform."
 #endif

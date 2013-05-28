@@ -1,11 +1,16 @@
 #ifndef THREADS_H
 #define THREADS_H
 
+#define ATOMIC_CAS(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
+#define ATOMIC_FADD(ptr,v) __sync_fetch_and_add(ptr, v)
+#define ATOMIC_FSUB(ptr,v) __sync_fetch_and_sub(ptr, v)
+#define ATOMIC_ADDF(ptr,v) __sync_add_and_fetch(ptr, v)
+#define ATOMIC_SUBF(ptr,v) __sync_sub_and_fetch(ptr, v)
+#define ATOMIC_BOOL_CAS(ptr,oldv,newv) __sync_bool_compare_and_swap(ptr, oldv, newv)
+
 #ifdef _WIN32
 #include <windows.h>
 #include <process.h>
-
-#define ATOMIC_CAS(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
 
 namespace std{
 class thread
@@ -88,22 +93,13 @@ public:
 }
 #elif defined(__linux__)
 #include <pthread.h>
-#include <iostream>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <netdb.h>
+#include <iostream>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <linux/futex.h>
 #include <sys/syscall.h>
 #define SPIN_MAX 100
-
-#define ATOMIC_CAS(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
-#define ATOMIC_ADD(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
-#define ATOMIC_SUB(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
-#define ATOMIC_BOOL_CAS(ptr,oldv,newv) __sync_bool_compare_and_swap(ptr, oldv, newv)
 
 namespace std{
 class thread{
@@ -144,7 +140,6 @@ class mutex
 {
 private:
     volatile int avail __attribute__((aligned(16))) ;
-    volatile int spin;
     volatile int waiters;
     volatile int cs;
 public:
@@ -152,9 +147,8 @@ public:
     inline mutex()
     {
         cs=UNLOCKED;
-        avail = 1;
+        avail = 0;
         waiters = 0;
-        spin = 1;
     }
 
     inline ~mutex()
@@ -204,8 +198,7 @@ public:
     }
     inline bool try_lock()
     {
-        int val = avail;
-        if( val > 0 ) {
+        if( cs == UNLOCKED ) {
             lock();
             return true;
         } else {

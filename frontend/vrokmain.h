@@ -18,6 +18,7 @@
 #include <QStringListModel>
 #include <QDir>
 #include <QFileDialog>
+#include <QStringList>
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
 #include <QTimer>
@@ -37,8 +38,9 @@ public:
     Ui::VrokMain *ui;
 
     explicit VrokMain(QWidget *parent = 0);
-
+    static void callback_next(char *next, void *user);
     ~VrokMain();
+
 
 public slots:
     void on_btnPlay_clicked();
@@ -50,18 +52,31 @@ public slots:
     void on_lvFiles_doubleClicked(QModelIndex i);
     void on_btnAbout_clicked();
     void process();
-private:
+private slots:
+    void on_sbFolderSeek_valueChanged(int value);
 
+private:
+    void sweep(QDir root);
+    // player funcs
     VPlayer *vp;
+    QStringList getExtentionsList();
+    // effects
+    EQWidget *ew;
     VPEffectPluginEQ *eq;
-    std::thread *th;
-    bool visuals;
-    QGraphicsScene *gs;
-    QGraphicsRectItem *gbars[BAR_COUNT];
+
+    // visuals
     QTimer *tx;
     unsigned vis_counter;
     float bar_vals[BAR_COUNT];
-    EQWidget *ew;
+    bool visuals;
+    QGraphicsScene *gs;
+    QGraphicsRectItem *gbars[BAR_COUNT];
+
+    // playlist
+    QDir curdir;
+    QDir cursweep;
+    QStringList dirs;
+    QStringListModel fileslist;
 };
 
 #endif // VROKMAIN_H

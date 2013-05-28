@@ -73,9 +73,10 @@ void VPlayer::announce(VPStatus status)
     mutex_post_process.unlock();
 }
 
-VPlayer::VPlayer(next_track_cb_t cb)
+VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 {
     mutex_control.try_lock();
+    next_cb_user = cb_user;
 
     track_channels = 0;
     track_samplerate = 0;
@@ -104,6 +105,18 @@ VPlayer::VPlayer(next_track_cb_t cb)
 
     mutex_control.unlock();
     config_init();
+}
+
+int VPlayer::getSupportedFileTypeCount()
+{
+    return (int)sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);
+}
+
+void VPlayer::getSupportedFileTypeExtensions(char **exts)
+{
+    for (unsigned i=0;i<sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);i++){
+        exts[i] = vpdecoder_entries[i].ext;
+    }
 }
 int VPlayer::open(const char *url)
 {
@@ -188,7 +201,7 @@ void VPlayer::ended()
 
     // better do this quick
     if (next_track_cb)
-        next_track_cb(next_track);
+        next_track_cb(next_track, next_cb_user);
 
     if (next_track[0]!='\0') {
         play_worker_done=true;
