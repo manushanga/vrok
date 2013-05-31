@@ -34,15 +34,17 @@ HEADERS  += \
     include/decoder.h \
     include/effect.h \
     include/config.h \
+    include/threads.h \
+    include/vrok.h \
+    include/out.h \
     effects/shibatch/paramlist.hpp \
     effects/shibatch/Equ.h \
     effects/eq.h \
     players/flac.h \
     players/mpeg.h \
     players/ogg.h \
-    include/threads.h \
-    include/vrok.h \
     vputils.h
+
 } else {
 SOURCES += \
     frontend/main.cpp \
