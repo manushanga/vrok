@@ -9,6 +9,6 @@ done;
 
 cp ./vrok ./dist/linux/bin
 
-echo -e "#! /bin/bash \n./lib/ld-linux-x86-64.so.2 --library-path ./lib ./bin/vrok" > ./dist/linux/vrok
+echo -e "#! /bin/bash \nexport QTDIR=\"\"\nexport QT_PLUGIN_PATH=\"\"\n./lib/ld-linux-x86-64.so.2 --library-path ./lib ./bin/vrok" > ./dist/linux/vrok
 
 chmod +x ./dist/linux/vrok

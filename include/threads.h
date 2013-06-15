@@ -99,7 +99,7 @@ public:
 #include <sys/time.h>
 #include <linux/futex.h>
 #include <sys/syscall.h>
-#define SPIN_MAX 100
+#define SPIN_MAX 10000
 
 namespace std{
 class thread{
@@ -142,12 +142,12 @@ private:
     volatile int avail __attribute__((aligned(16))) ;
     volatile int waiters;
     volatile int cs;
+    volatile int spin;
 public:
-    enum State { UNLOCKED=0, LOCKED=1, CONTENDED=2 };
     inline mutex()
     {
-        cs=UNLOCKED;
-        avail = 0;
+        cs=0;
+        avail = 1;
         waiters = 0;
     }
 
@@ -158,52 +158,71 @@ public:
 
     inline void lock()
     {
-        for (unsigned int i=0;i<SPIN_MAX;i++)
+
+        int i, c;
+
+        /* Spin and try to take lock */
+        for (i = 0; i < SPIN_MAX; i++)
         {
-            if (__sync_bool_compare_and_swap (&cs,UNLOCKED,LOCKED)) {
+            c = __sync_val_compare_and_swap(&cs, 0, 1);
+            if (!c)
                 return;
-            }
-        }
-
-        __sync_bool_compare_and_swap(&cs,LOCKED,CONTENDED);
-
-        int val;
-        while (1) {
-            val = avail;
-            if( val > 0 && __sync_bool_compare_and_swap(&avail, val, val - 1) )
-                break;
-
-            __sync_fetch_and_add(&waiters, 1);
-            syscall(__NR_futex, &avail, FUTEX_WAIT_PRIVATE, val, NULL, 0, 0);
-            __sync_fetch_and_sub(&waiters, 1);
 
         }
-        if ( waiters == 0 ){
-            __sync_bool_compare_and_swap(&cs,CONTENDED,LOCKED);
+
+        /* The lock is now contended */
+        if (c == 1) {
+            c = __sync_lock_test_and_set(&cs,2);
         }
+
+        while (c)
+        {
+            /* Wait in the kernel */
+            syscall(__NR_futex, &cs, FUTEX_WAIT_PRIVATE, 2, NULL, NULL, 0);
+            c = __sync_lock_test_and_set(&cs, 2);
+        }
+
+
+
+
+
     }
 
     inline void unlock()
     {
-        if (__sync_bool_compare_and_swap(&cs,LOCKED,UNLOCKED)) {
-            return;
-        } else if (__sync_bool_compare_and_swap(&cs,CONTENDED,CONTENDED)) {
-            int nval = __sync_add_and_fetch(&avail, 1);
+        int i;
 
-            if( waiters > 0 ) {
-                syscall(__NR_futex, &avail, FUTEX_WAKE_PRIVATE, nval, NULL, 0, 0);
+        /* Unlock, and if not contended then exit. */
+        if (cs == 2)
+        {
+            cs = 0;
+        }
+        else if (__sync_lock_test_and_set(&cs, 0) == 1)
+            return ;
+
+        /* Spin and hope someone takes the lock */
+        for (i = 0; i < SPIN_MAX; i++)
+        {
+            if (cs)
+            {
+                /* Need to set to state 2 because there may be waiters */
+                if (__sync_val_compare_and_swap(&cs, 1, 2))
+                    return ;
             }
         }
+
+        /* We need to wake someone up */
+        syscall(__NR_futex, &cs, FUTEX_WAKE_PRIVATE, 1, NULL, NULL, 0);
+
+
 
     }
     inline bool try_lock()
     {
-        if( cs == UNLOCKED ) {
-            lock();
+        int c = __sync_val_compare_and_swap(&cs, 0, 1);
+        if (!c)
             return true;
-        } else {
-            return false;
-        }
+        return false;
     }
 };
 }
