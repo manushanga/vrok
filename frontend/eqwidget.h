@@ -22,15 +22,10 @@ public:
 private:
     Ui::EQWidget *ui;
     VPEffectPluginEQ *plugin;
-    QSlider *sliders[19];
-    QSlider *target_sliders[18];
+    QSlider *target_sliders[19];
     QWidget *empty;
-    QProgressBar *levels[18];
-    QTimer *tx;
 
 public slots:
-    void process();
-    void changed(int);
     void target_changed(int);
 };
 

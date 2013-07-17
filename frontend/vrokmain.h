@@ -39,6 +39,7 @@ public:
 
     explicit VrokMain(QWidget *parent = 0);
     static void callback_next(char *next, void *user);
+    bool eventFilter(QObject *target, QEvent *event);
     ~VrokMain();
 
 
@@ -52,11 +53,10 @@ public slots:
     void on_lvFiles_doubleClicked(QModelIndex i);
     void on_btnAbout_clicked();
     void process();
-private slots:
     void on_sbFolderSeek_valueChanged(int value);
 
 private:
-    void sweep(QDir root);
+    void folderSeekSweep(QDir& root);
     // player funcs
     VPlayer *vp;
     QStringList getExtentionsList();
@@ -71,12 +71,14 @@ private:
     bool visuals;
     QGraphicsScene *gs;
     QGraphicsRectItem *gbars[BAR_COUNT];
+    QGraphicsRectItem *gmbars[BAR_COUNT];
+    QGraphicsRectItem *gbbars[BAR_COUNT];
 
     // playlist
-    QDir curdir;
-    QDir cursweep;
-    QStringList dirs;
-    QStringListModel fileslist;
+    QDir *curdir;
+    QDir *cursweep;
+    QStringList *dirs;
+    QStringListModel *fileslist;
 };
 
 #endif // VROKMAIN_H

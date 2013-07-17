@@ -43,6 +43,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     }
     config_get_eq_knowledge_bands(knowledge);
     limit= cap;
+    initd=false;
 
     period_count = 0;
 }
@@ -59,9 +60,16 @@ void VPEffectPluginEQ::status_change(VPStatus status){
 }
 VPEffectPluginEQ::~VPEffectPluginEQ()
 {
+    if (initd)
+        finit();
+
+    config_set_eq_bands(target);
+    config_set_eq_knowledge_bands(knowledge);
+    config_set_eq_preamp(sb_preamp);
+
     for (size_t i=0;i<BAR_COUNT;i++){
-        delete trig[0][i];
-        delete trig[1][i];
+        delete[] trig[0][i];
+        delete[] trig[1][i];
     }
 }
 void VPEffectPluginEQ::sb_recalc_table()
@@ -84,7 +92,7 @@ void VPEffectPluginEQ::sb_recalc_table()
 int VPEffectPluginEQ::init(VPlayer *v)
 {
     if (bar_array)
-        delete bar_array;
+        delete[] bar_array;
     bar_array = new float[BAR_COUNT*BAR_SETS];
 
     for (size_t i=0;i<BAR_COUNT*BAR_SETS;i++){
@@ -97,21 +105,25 @@ int VPEffectPluginEQ::init(VPlayer *v)
     owner = v;
     equ_init (&sb_state, 10.0f, owner->track_channels);
     sb_recalc_table();
+    initd = true;
     return 0;
 
 }
 void VPEffectPluginEQ::applyKnowledge()
 {
+    int count=0;
     for (unsigned i=0;i<BAR_COUNT;i++){
         float next=(knowledge[i]-mids[i]*0.00008f)*mids[i]*0.1f+sb_bands[i]*0.9f;
         if (next<target[i] && next>target[i]-3.0f){
             sb_bands[i] = next;
+            count++;
         } else {
             knowledge[i]/=2.0f;
         }
-
     }
-    sched_recalc=true;
+    if (count>15) {
+        sched_recalc=true;
+    }
 }
 void VPEffectPluginEQ::process(float *buffer)
 {
@@ -136,7 +148,7 @@ void VPEffectPluginEQ::process(float *buffer)
                 xre +=mid*trig[0][b][i];
                 xim +=mid*trig[1][b][i];
             }
-            newb = sqrtf((xre*xre + xim*xim)*(1.5f+ b*5.7f));
+            newb = (fabs(xre)+fabs(xim))*(0.6f+ b*1.7f);
             bar_array_w[b] = (newb<limit)?newb:limit;
             if (bar_array_w[b] > mids[b]){
                 mids[b]=mids[b]*0.8f+bar_array_w[b]*0.2f;
@@ -158,7 +170,7 @@ void VPEffectPluginEQ::process(float *buffer)
     if (!period_count){
         applyKnowledge();
     }
-    period_count = (period_count + BAR_SETS) % 50;
+    period_count = (period_count + BAR_SETS) % 100;
 
 }
 
@@ -166,17 +178,16 @@ int VPEffectPluginEQ::finit()
 {
     equ_quit(&sb_state);
     memset(&sb_state, 0, sizeof(SuperEqState));
-    config_set_eq_bands(target);
-    config_set_eq_knowledge_bands(knowledge);
-    config_set_eq_preamp(sb_preamp);
 
     if (sb_paramsroot)
         paramlist_free (sb_paramsroot);
     sb_paramsroot = NULL;
 
     if (bar_array)
-        delete bar_array;
+        delete[] bar_array;
     bar_array = NULL;
+
+    initd = false;
 
     return 0;
 }

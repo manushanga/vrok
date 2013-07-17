@@ -5,10 +5,12 @@
 
   See LICENSE for details.
 */
-
+#include <QDirIterator>
 #include <QDialog>
+#include <QLinearGradient>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QKeyEvent>
 
 #include <unistd.h>
 
@@ -29,10 +31,38 @@ void VrokMain::callback_next(char *mem, void *user)
     VrokMain *mm =(VrokMain *) user;
     int i =mm->ui->lvFiles->selectionModel()->selectedRows().first().row();
 
-    if (i+1<mm->fileslist.rowCount()){
-        strcpy(mem,(char *)mm->curdir.absoluteFilePath(mm->fileslist.index(i+1).data().toString()).toUtf8().data());
-        mm->ui->lvFiles->selectionModel()->select(mm->fileslist.index(i),QItemSelectionModel::Deselect);
-        mm->ui->lvFiles->selectionModel()->select(mm->fileslist.index(i+1),QItemSelectionModel::Select);
+    if (i+1<mm->fileslist->rowCount()){
+        strcpy(mem,(char *)mm->curdir->absoluteFilePath(mm->fileslist->index(i+1).data().toString()).toUtf8().data());
+        mm->ui->lvFiles->selectionModel()->select(mm->fileslist->index(i),QItemSelectionModel::Deselect);
+        mm->ui->lvFiles->selectionModel()->select(mm->fileslist->index(i+1),QItemSelectionModel::Select);
+    }
+}
+
+bool VrokMain::eventFilter(QObject *target, QEvent *event)
+{
+    if ((target == (QObject *)ui->lvFiles) && (event->type() == QEvent::KeyPress)) {
+        int val = ui->sbFolderSeek->value();
+        switch (((QKeyEvent*)event)->key()) {
+        case Qt::Key_Left:
+            if (val > 0)
+                ui->sbFolderSeek->setValue(val-1);
+            return true;
+        case Qt::Key_Right:
+            if (val < ui->sbFolderSeek->maximum())
+                ui->sbFolderSeek->setValue(val+1);
+            return true;
+        case Qt::Key_Enter:
+            on_lvFiles_doubleClicked(ui->lvFiles->currentIndex());
+            return true;
+        case Qt::Key_Return:
+            on_lvFiles_doubleClicked(ui->lvFiles->currentIndex());
+            return true;
+        default:
+            return false;
+        }
+
+    } else {
+        return false;
     }
 }
 void VrokMain::on_btnAbout_clicked()
@@ -66,13 +96,19 @@ VrokMain::VrokMain(QWidget *parent) :
 {
     ui->setupUi(this);
 
+
+    curdir = new QDir();
+    cursweep = new QDir();
+    dirs = new QStringList();
+    fileslist = new QStringListModel();
+
     vp=NULL;
     ew=NULL;
 
-    this->setWindowIcon(QIcon(":icon/vrok.png"));
+    setWindowIcon(QIcon(":icon/vrok.png"));
 
     vp = new VPlayer(callback_next, this);
-    eq =new VPEffectPluginEQ(100);
+    eq = new VPEffectPluginEQ(100);
 
     if (config_get_eq()){
         vp->addEffect((VPEffectPlugin *)eq);
@@ -81,44 +117,72 @@ VrokMain::VrokMain(QWidget *parent) :
 
     tx = new QTimer(this);
     tx->setSingleShot(false);
-    tx->setInterval(50);
+    tx->setInterval(40);
     tx->stop();
 
-    curdir.setFilter(QDir::Files|QDir::Hidden);
-    curdir.setNameFilters(getExtentionsList());
-    cursweep.setFilter(QDir::Files);
-    cursweep.setNameFilters(getExtentionsList());
+    curdir->setFilter(QDir::Files|QDir::Hidden);
+    curdir->setNameFilters(getExtentionsList());
+    cursweep->setFilter(QDir::Files);
+    cursweep->setNameFilters(getExtentionsList());
+
+
 
     gs = new QGraphicsScene();
-    QBrush z(Qt::darkGreen);
-    QPen x(Qt::darkGreen);
+    QLinearGradient gr(0,-100,0,100);
+    gr.setColorAt(0,QColor(255,0,0));
+    gr.setColorAt(0.15,QColor(200,190,5));
+    gr.setColorAt(0.5,QColor(0,150,0));
+    gr.setInterpolationMode(QGradient::ColorInterpolation);
+
+    QLinearGradient gr2(0,-100,0,100);
+    gr2.setColorAt(0,QColor(100,0,0));
+    gr2.setColorAt(0.15,QColor(50,95,2));
+    gr2.setColorAt(0.5,QColor(0,75,0));
+    gr2.setInterpolationMode(QGradient::ColorInterpolation);
+
+    QBrush z(gr);
+    QBrush y(gr2);
+    QPen x(Qt::transparent);
 
     for (unsigned i=0;i<BAR_COUNT;i++){
         gbars[i] = new QGraphicsRectItem(i*11,0,10,0);
         gbars[i]->setBrush(z);
         gbars[i]->setPen(x);
         gs->addItem(gbars[i]);
+
+        gmbars[i] = new QGraphicsRectItem(i*12,1,2,0);
+        gmbars[i]->setBrush(y);
+        gmbars[i]->setPen(x);
+        gs->addItem(gmbars[i]);
+
+        gbbars[i] = new QGraphicsRectItem(i*12,1,2,0);
+        gbbars[i]->setBrush(QBrush(QColor(255,0,50)));
+        gbbars[i]->setPen(x);
+
+        gs->addItem(gbbars[i]);
+
         bar_vals[i]=0.0f;
     }
-    ui->gv->setScene(gs);
+    ui->gvDisplay->setScene(gs);
 
-    if (config_get_lastopen().length()>0) {
-        ui->lvFiles->setModel(&fileslist);
+    if (config_get_lastopen().size()>0) {
+        ui->lvFiles->setModel(fileslist);
 
         ui->lblDisplay->setText("Scanning...");
-        QDir rdir(config_get_lastopen());
-        sweep(rdir);
-        fileslist.setStringList(dirs);
+        QDir rdir(QString(config_get_lastopen().c_str()));
+        folderSeekSweep(rdir);
+        fileslist->setStringList(*dirs);
         ui->lblDisplay->setText("Done.");
 
         ui->sbFolderSeek->setMinimum(0);
-        ui->sbFolderSeek->setMaximum(dirs.size()-1);
+        ui->sbFolderSeek->setMaximum(dirs->size()-1);
 
         on_sbFolderSeek_valueChanged(0);
     }
+    ui->lvFiles->installEventFilter(this);
     vis_counter = 0;
-    connect(tx, SIGNAL(timeout()), this, SLOT(process()));
     vp->effects_active = true;
+    connect(tx, SIGNAL(timeout()), this, SLOT(process()));
 
 }
 
@@ -134,17 +198,21 @@ void VrokMain::process()
 
     float *bars = eq->bar_array + eq->getBarCount()*vis_counter;
     for (unsigned b=0;b<eq->getBarCount();b++){
-        if (bar_vals[b] < 5.0f && bar_vals[b] > 0.0f)
-            bar_vals[b] = 0.0f;
+        if (bar_vals[b] > 100.0f)
+            bar_vals[b]= 100.0f;
         else if (bar_vals[b] < bars[b])
             bar_vals[b] = bars[b];
+        else if (bar_vals[b] < 10.0f)
+            bar_vals[b] = 0.0f;        
         else
-            bar_vals[b] -= 8.0f;//+0.1f*bar_vals[b];
+            bar_vals[b] -= 8.0f;
+        float gmhigh=eq->getMids()[b];
+        float gbhigh=(eq->getBands()[b]-1.0f)*20.f+50.f;
+        gmbars[b]->setRect(b*14,gmhigh*-1.0f,10, 1);
+        gbbars[b]->setRect(b*14,gbhigh*-1.0f,10, 1);
         gbars[b]->setRect(b*14,0,10,bar_vals[b] *-1.0f);
     }
-
-
-    ui->gv->viewport()->update();
+    gs->update();
 
     vis_counter++;
 }
@@ -160,51 +228,53 @@ void VrokMain::on_btnPlay_clicked()
     if (ui->btnSpec->isChecked())
         tx->start();
 }
-void VrokMain::sweep(QDir root){
+void VrokMain::folderSeekSweep(QDir& root){
 
-    root.setFilter(QDir::Dirs|QDir::NoDot|QDir::NoDotDot);
-    cursweep.setPath(root.path());
+   QDirIterator iterator(root.absolutePath(), QDirIterator::Subdirectories );
 
-    QStringList list =root.entryList();
-    if (cursweep.count()>0)
-        dirs.append(root.path());
-    for (QStringList::Iterator it=list.begin(); it!=list.end();it++) {
-        //DBG((*it).toStdString());
-        //DBG(root.absoluteFilePath(*it).toStdString());
+   QStringList exts=getExtentionsList();
 
-        QDir ndir(root.absoluteFilePath(*it));
-        sweep(ndir);
-    }
+   QDirIterator iteratorSubRoot(root.absolutePath(),exts,QDir::Files);
+   if (iteratorSubRoot.hasNext())
+       dirs->append(root.absolutePath());
+
+   while (iterator.hasNext()) {
+      iterator.next();
+      if (iterator.fileInfo().isDir() && (iterator.fileName()!="..") && (iterator.fileName() != ".")) {
+          QDirIterator iteratorSub(iterator.filePath(),exts,QDir::Files);
+          if (iteratorSub.hasNext())
+              dirs->append(iterator.filePath());
+      }
+   }
+   dirs->sort();
+
 }
 void VrokMain::on_btnOpenDir_clicked()
 {
     QString d = QFileDialog::getExistingDirectory(this, tr("Open Dir"),
-                                             config_get_lastopen(),
+                                             QString(config_get_lastopen().c_str()),
                                              0);
-    config_set_lastopen(d);
-    dirs.clear();
+    config_set_lastopen(d.toStdString());
+    dirs->clear();
     ui->lblDisplay->setText("Scanning...");
+    this->update();
     QDir rdir(d);
-    sweep(rdir);
-    fileslist.setStringList(dirs);
+    folderSeekSweep(rdir);
+    fileslist->setStringList(*dirs);
     ui->lblDisplay->setText("Done.");
 
     ui->sbFolderSeek->setMinimum(0);
-    ui->sbFolderSeek->setMaximum(dirs.size()-1);
+    ui->sbFolderSeek->setMaximum(dirs->size()-1);
 
     on_sbFolderSeek_valueChanged(0);
 
 }
 void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 {
-    QString n(curdir.absoluteFilePath(i.data().toString()));
-
+    QString n(curdir->absoluteFilePath(i.data().toString()));
     vp->open((char *) n.toUtf8().data());
-
-    if (i.row() < fileslist.rowCount()-1 ){
-      //  strcpy (vp->next_track,(char *) (dir->absoluteFilePath(fileslist->index(i.row()+1).data().toString())).toUtf8().data());
-    }
-
+    if (ui->btnSpec->isChecked())
+        tx->start();
 }
 void VrokMain::on_btnEQ_clicked()
 {
@@ -235,23 +305,34 @@ void VrokMain::on_btnSpec_clicked()
 }
 VrokMain::~VrokMain()
 {
+    // effect plugins are cleaned by VPlayer
     if (vp)
         delete vp;
-    if (eq)
-        delete eq;
+
     if (tx)
         delete tx;
+    if (gs)
+        delete gs;
+
     delete ui;
 }
 
 void VrokMain::on_sbFolderSeek_valueChanged(int value)
 {
-    if (!dirs.empty()) {
-        ui->lblDisplay->setText(dirs.at(value));
-        curdir.setPath(dirs.at(value));
-        QStringList list = curdir.entryList();
-        fileslist.setStringList(list);
-        ui->lvFiles->setModel(&fileslist);
+    if (!dirs->empty()) {
+        QString opendir = dirs->at(value);
+        ui->lblDisplay->setText(opendir.section(QDir::separator(),-1,-1));
+        QStringList exts=getExtentionsList();
+        QDirIterator iterator(opendir,exts,QDir::Files);
+        QStringList files;
+        curdir->setPath(opendir);
+        while (iterator.hasNext()){
+            iterator.next();
+            files.append(iterator.fileName());
+        }
+        files.sort();
+        fileslist->setStringList(files);
+        ui->lvFiles->setModel(fileslist);
     }
 }
 

@@ -8,6 +8,7 @@
 
 #ifndef VPUTILS_H
 #define VPUTILS_H
+#include <sstream>
 
 #define DEBUG
 
@@ -24,5 +25,9 @@
 #endif
 
 #define strtolower(p) for ( ; *p; ++p) *p = tolower(*p)
+
+
+#define TOSTR( x ) dynamic_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 
 #endif // VPUTILS_H

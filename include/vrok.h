@@ -15,11 +15,11 @@ typedef struct _vpout_entry{
 #ifdef _WIN32
     #include "outs/dsound.h"
 
-    static const vpout_entry_t vpout_entries[] = { {"DSound", (vpout_creator_t)_VPOutPluginDSound_new, VPBUFFER_PERIOD*6 } };
+    static const vpout_entry_t vpout_entries[] = { {"DSound", (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*6 } };
 #elif defined(__linux__)
     #include "outs/alsa.h"
 
-    static const vpout_entry_t vpout_entries[] = { {"ALSA", (vpout_creator_t)_VPOutPluginAlsa_new, VPBUFFER_PERIOD } };
+    static const vpout_entry_t vpout_entries[] = { {"ALSA", (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD } };
 #else
     #error "Unsupported platform."
 #endif

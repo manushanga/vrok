@@ -5,11 +5,10 @@
 
   See LICENSE for details.
 */
-
+#include "./vrokmain.h"
 #include <QApplication>
 #include <QTranslator>
-#include "./vrokmain.h"
-#include "vplayer.h"
+
 
 int main(int argc, char *argv[])
 {

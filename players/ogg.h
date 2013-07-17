@@ -8,6 +8,7 @@
 class OGGDecoder : public VPDecoder
 {
 public:
+    static VPDecoder* VPDecoderOGG_new();
     OggVorbis_File vf;
     OGGDecoder();
     float *buffer;
@@ -22,7 +23,5 @@ public:
     unsigned long getPosition();
     ~OGGDecoder();
 };
-
-VPDecoder* _VPDecoderOgg_new();
 
 #endif // PLAYER_AAC_H

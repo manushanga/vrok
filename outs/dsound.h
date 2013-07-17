@@ -13,6 +13,8 @@
 
 class VPOutPluginDSound : public VPOutPlugin {
 public:
+    static VPOutPlugin* VPOutPluginDSound_new();
+    static void worker_run(VPOutPluginDSound *self);
     VPlayer *owner;
     std::thread *worker;
     std::mutex m_pause;
@@ -28,7 +30,5 @@ public:
     virtual void pause();
     virtual ~VPOutPluginDSound();
 };
-
-VPOutPlugin* _VPOutPluginDSound_new();
 
 #endif // WAVEOUT_H

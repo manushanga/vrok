@@ -13,7 +13,7 @@
 #include "vrok.h"
 #include "flac.h"
 
-VPDecoder *_VPDecoderFLAC_new()
+VPDecoder* FLACDecoder::VPDecoderFLAC_new()
 {
     return (VPDecoder *)new FLACDecoder();
 }
@@ -25,14 +25,14 @@ void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
 
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
         me->to_fl = 1.0f/pow(2,metadata->data.stream_info.bits_per_sample);
-        me->owner->set_metadata(  metadata->data.stream_info.sample_rate, metadata->data.stream_info.channels);
         DBG("meta ok");
-        me->half_buffer_bytes = VPBUFFER_FRAMES*me->owner->track_channels*sizeof(float);
+        me->half_buffer_bytes = VPBUFFER_FRAMES*metadata->data.stream_info.channels*sizeof(float);
         if (me->buffer)
-            delete me->buffer;
+            delete[] me->buffer;
 
-        me->buffer = new float[VPBUFFER_FRAMES*me->owner->track_channels*2];
-        me->ret_vpout_open = me->owner->vpout_open();
+        me->buffer = new float[VPBUFFER_FRAMES*metadata->data.stream_info.channels*2];
+
+        me->owner->set_metadata(  metadata->data.stream_info.sample_rate, metadata->data.stream_info.channels);
     }
 
     DBG("meta done");
@@ -76,7 +76,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
         //DBG("s1");
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[selfp->buffer_write+j]=selfp->to_fl*buffer[ch][i]*self->volume;
+                selfp->buffer[selfp->buffer_write+j]=selfp->to_fl*buffer[ch][i];
                 j++;
             }
             i++;
@@ -89,7 +89,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[selfp->buffer_write+j]=selfp->to_fl*buffer[ch][i]*self->volume;
+                selfp->buffer[selfp->buffer_write+j]=selfp->to_fl*buffer[ch][i];
                 j++;
             }
             i++;
@@ -128,7 +128,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 
         while (j<VPBUFFER_FRAMES*2*self->track_channels) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[j]=selfp->to_fl*buffer[ch][i]*self->volume;
+                selfp->buffer[j]=selfp->to_fl*buffer[ch][i];
                 j++;
             }
             i++;
@@ -166,7 +166,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
             // write buffer1
             while(j<VPBUFFER_FRAMES*self->track_channels){
                 for (unsigned ch=0;ch<self->track_channels;ch++){
-                    self->buffer1[j]=selfp->to_fl*buffer[ch][i]*self->volume;
+                    self->buffer1[j]=selfp->to_fl*buffer[ch][i];
                     j++;
                 }
                 i++;
@@ -179,7 +179,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
             // write buffer2
             while(j<VPBUFFER_FRAMES*self->track_channels){
                 for (unsigned ch=0;ch<self->track_channels;ch++){
-                    selfp->owner->buffer2[j]=selfp->to_fl*buffer[ch][i]*self->volume;
+                    selfp->owner->buffer2[j]=selfp->to_fl*buffer[ch][i];
                     j++;
                 }
                 i++;
@@ -194,7 +194,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
         j=0;
         while (i<frame->header.blocksize) {
             for (unsigned ch=0;ch<self->track_channels;ch++){
-                selfp->buffer[j]=selfp->to_fl*buffer[ch][i]*self->volume;
+                selfp->buffer[j]=selfp->to_fl*buffer[ch][i];
                 j++;
             }
             i++;
@@ -221,11 +221,11 @@ void FLACDecoder::init(VPlayer *v)
 }
 FLACDecoder::~FLACDecoder()
 {
-    owner->vpout_close();
+   // owner->vpout_close();
     FLAC__stream_decoder_finish(decoder);
     FLAC__stream_decoder_delete(decoder);
     if (buffer)
-        delete buffer;
+        delete[] buffer;
 }
 
 int FLACDecoder::open(const char *url)

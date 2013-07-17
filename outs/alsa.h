@@ -19,6 +19,8 @@
 
 class VPOutPluginAlsa : public VPOutPlugin {
 public:
+    static VPOutPlugin* VPOutPluginAlsa_new();
+    static void worker_run(VPOutPluginAlsa *self);
     VPlayer *owner;
     snd_pcm_t *handle;
     snd_pcm_hw_params_t *params;
@@ -40,6 +42,5 @@ public:
     virtual ~VPOutPluginAlsa();
 };
 
-VPOutPlugin* _VPOutPluginAlsa_new();
 
 #endif // OUT_ALSA_H

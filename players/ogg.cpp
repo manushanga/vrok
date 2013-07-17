@@ -12,7 +12,7 @@
 #include "vrok.h"
 #include "ogg.h"
 
-VPDecoder *_VPDecoderOgg_new()
+VPDecoder* OGGDecoder::VPDecoderOGG_new()
 {
     return (VPDecoder *)new OGGDecoder();
 }
@@ -34,12 +34,13 @@ int OGGDecoder::open(const char *url)
         return -1;
     }
 
-    owner->set_metadata(ov_info(&vf,0)->rate, ov_info(&vf,0)->channels);
-    buffer = new float[VPBUFFER_FRAMES*owner->track_channels*2];
-    half_buffer_size = VPBUFFER_FRAMES*owner->track_channels*sizeof(float);
 
+    buffer = new float[VPBUFFER_FRAMES*ov_info(&vf,0)->channels*2];
+    half_buffer_size = VPBUFFER_FRAMES*ov_info(&vf,0)->channels*sizeof(float);
+
+    owner->set_metadata(ov_info(&vf,0)->rate, ov_info(&vf,0)->channels);
     DBG("meta done");
-    owner->vpout_open();
+
     return 0;
 }
 
@@ -57,7 +58,7 @@ void OGGDecoder::reader()
             ret = ov_read_float( &vf, &pcm, VPBUFFER_FRAMES*2 - done,&bit );
             for (long i=0;i<ret;i++){
                 for (size_t ch=0;ch<owner->track_channels;ch++){
-                    buffer[j]=pcm[ch][i]*owner->volume;
+                    buffer[j]=pcm[ch][i];
                     j++;
                 }
             }
@@ -98,8 +99,7 @@ unsigned long OGGDecoder::getPosition()
 }
 OGGDecoder::~OGGDecoder()
 {
-    owner->vpout_close();
     ov_clear(&vf);
     if (buffer)
-        delete buffer;
+        delete[] buffer;
 }

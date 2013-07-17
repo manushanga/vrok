@@ -55,12 +55,12 @@ HRESULT createSecondarySoundBuffer(void){
 }
 
 
-VPOutPlugin* _VPOutPluginDSound_new()
+VPOutPlugin* VPOutPluginDSound::VPOutPluginDSound_new()
 {
     return (VPOutPlugin *) new VPOutPluginDSound();
 }
 
-static void worker_run(VPOutPluginDSound *self)
+void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 {
     LPVOID lpvWrite;
     DWORD play_at;
@@ -163,11 +163,7 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
     m_pause.lock();
     ATOMIC_CAS(&pause_check,false,true);
     while (!ATOMIC_CAS(&paused,false,false)) {}
-    /*owner->mutexes[0].try_lock();
-    owner->mutexes[0].unlock();
 
-    owner->mutexes[2].try_lock();
-    owner->mutexes[2].unlock();*/
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
 {
@@ -228,10 +224,9 @@ int VPOutPluginDSound::init(VPlayer *v, unsigned samplerate, unsigned channels)
 
 VPOutPluginDSound::~VPOutPluginDSound()
 {
-    ATOMIC_CAS(&work,true,false);
-
     // make sure decoders are finished before calling
     ATOMIC_CAS(&work,true,false);
+    resume();
 
     owner->mutexes[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
@@ -247,7 +242,7 @@ VPOutPluginDSound::~VPOutPluginDSound()
         DBG("out thread joined");
         delete worker;
     }
-    delete wbuffer;
+    delete[] wbuffer;
     lpdsbuffer->Stop();
 
     lpdsbuffer->Release();

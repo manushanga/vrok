@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>656</width>
-    <height>454</height>
+    <width>660</width>
+    <height>452</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -165,9 +165,19 @@
      </layout>
     </item>
     <item>
-     <widget class="QGraphicsView" name="gv">
+     <widget class="QLabel" name="lblDisplay">
+      <property name="contextMenuPolicy">
+       <enum>Qt::NoContextMenu</enum>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGraphicsView" name="gvDisplay">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -187,35 +197,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="lblDisplay">
-      <property name="inputMethodHints">
-       <set>Qt::ImhDialableCharactersOnly</set>
-      </property>
-      <property name="text">
-       <string notr="true"/>
-      </property>
-      <property name="textFormat">
-       <enum>Qt::PlainText</enum>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QScrollBar" name="sbFolderSeek">
-      <property name="minimum">
-       <number>0</number>
-      </property>
-      <property name="maximum">
-       <number>0</number>
-      </property>
-      <property name="pageStep">
-       <number>1</number>
-      </property>
-      <property name="sliderPosition">
-       <number>0</number>
-      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>

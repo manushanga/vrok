@@ -13,12 +13,12 @@
 
 static const snd_pcm_uframes_t PERIOD_SIZE = 256;
 
-VPOutPlugin* _VPOutPluginAlsa_new()
+VPOutPlugin* VPOutPluginAlsa::VPOutPluginAlsa_new()
 {
     return (VPOutPlugin *) new VPOutPluginAlsa();
 }
 
-static void worker_run(VPOutPluginAlsa *self)
+void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
 {
     int ret;
     unsigned out_frames;
@@ -44,7 +44,7 @@ static void worker_run(VPOutPluginAlsa *self)
         self->rd.output_frames = self->out_frames;
         self->rd.output_frames_gen = 1;
         out_frames=0;
-        //DBG("");
+
         self->owner->mutexes[1].lock();
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
@@ -57,7 +57,7 @@ static void worker_run(VPOutPluginAlsa *self)
         ret = snd_pcm_writei(self->handle,
                              self->out_buf,
                              out_frames);
-        //usleep((out_frames*1000000)/self->out_srate);
+
         self->owner->mutexes[0].unlock();
 
         self->rd.end_of_input = 0;
@@ -78,7 +78,7 @@ static void worker_run(VPOutPluginAlsa *self)
         ret = snd_pcm_writei(self->handle,
                              self->out_buf,
                              out_frames);
-        //usleep((out_frames*1000000)/self->out_srate);
+
         self->owner->mutexes[2].unlock();
         if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE){
             DBG("trying to recover");
@@ -127,8 +127,6 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::pause()
 
         ATOMIC_CAS(&pause_check,false,true);
         while (!ATOMIC_CAS(&paused,false,false)) {}
-
-        //m_pause.unlock();
     }
 }
 
@@ -189,6 +187,7 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
 {
     // make sure decoders are finished before calling
     ATOMIC_CAS(&work,true,false);
+    resume();
 
     owner->mutexes[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
@@ -199,6 +198,7 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
         owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
+
     snd_pcm_drain(handle);
     snd_pcm_close(handle);
 
@@ -207,7 +207,7 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
         DBG("out thread joined");
         delete worker;
     }
-    delete out_buf;
+    free(out_buf);
     src_delete(rs);
 
 }

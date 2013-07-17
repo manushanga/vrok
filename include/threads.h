@@ -139,16 +139,13 @@ public:
 class mutex
 {
 private:
-    volatile int avail __attribute__((aligned(16))) ;
-    volatile int waiters;
     volatile int cs;
-    volatile int spin;
+    pthread_mutex_t mu;
 public:
     inline mutex()
     {
+        pthread_mutex_init(&mu,NULL);
         cs=0;
-        avail = 1;
-        waiters = 0;
     }
 
     inline ~mutex()
@@ -158,10 +155,10 @@ public:
 
     inline void lock()
     {
-
+        pthread_mutex_lock(&mu);
+/*
         int i, c;
 
-        /* Spin and try to take lock */
         for (i = 0; i < SPIN_MAX; i++)
         {
             c = __sync_val_compare_and_swap(&cs, 0, 1);
@@ -170,18 +167,17 @@ public:
 
         }
 
-        /* The lock is now contended */
         if (c == 1) {
             c = __sync_lock_test_and_set(&cs,2);
         }
 
         while (c)
         {
-            /* Wait in the kernel */
+
             syscall(__NR_futex, &cs, FUTEX_WAIT_PRIVATE, 2, NULL, NULL, 0);
             c = __sync_lock_test_and_set(&cs, 2);
         }
-
+*/
 
 
 
@@ -190,39 +186,41 @@ public:
 
     inline void unlock()
     {
-        int i;
+        pthread_mutex_unlock(&mu);
+     /*   int i;
 
-        /* Unlock, and if not contended then exit. */
+
         if (cs == 2)
         {
-            cs = 0;
+            __sync_lock_test_and_set(&cs, 0) ;
         }
         else if (__sync_lock_test_and_set(&cs, 0) == 1)
             return ;
 
-        /* Spin and hope someone takes the lock */
         for (i = 0; i < SPIN_MAX; i++)
         {
             if (cs)
             {
-                /* Need to set to state 2 because there may be waiters */
+
                 if (__sync_val_compare_and_swap(&cs, 1, 2))
                     return ;
             }
         }
 
-        /* We need to wake someone up */
         syscall(__NR_futex, &cs, FUTEX_WAKE_PRIVATE, 1, NULL, NULL, 0);
-
+*/
 
 
     }
     inline bool try_lock()
     {
+        return (bool)pthread_mutex_trylock(&mu);
+        /*
         int c = __sync_val_compare_and_swap(&cs, 0, 1);
         if (!c)
             return true;
         return false;
+        */
     }
 };
 }

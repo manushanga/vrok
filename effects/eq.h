@@ -15,6 +15,8 @@
 #include "shibatch/Equ.h"
 
 #include "vrok.h"
+#include "config.h"
+
 #define BACK_LOG 18
 #define BAR_COUNT 18
 #ifndef M_PI
@@ -51,6 +53,7 @@ private:
     float knowledge[BAR_COUNT] __attribute__ ((aligned(16)));
     float freq_p[BAR_COUNT];
     unsigned period_count;
+    bool initd;
     void sb_recalc_table();
 public:
     float *bar_array;

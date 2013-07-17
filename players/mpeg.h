@@ -17,6 +17,7 @@
 class MPEGDecoder : public VPDecoder
 {
 public:
+    static VPDecoder* VPDecoderMPEG_new();
     mpg123_handle *mh;
     short *buffer;
     VPlayer *owner;
@@ -31,6 +32,5 @@ public:
     ~MPEGDecoder();
 };
 
-VPDecoder* _VPDecoderMPEG_new();
 
 #endif // PLAYER_MPEG_H

@@ -11,7 +11,7 @@
 
 int main(int argc, char *argv[])
 {
-    VPlayer pl(NULL);
+    VPlayer pl(NULL, NULL);
     VPEffectPluginEQ eq(100.0);
 
     pl.addEffect((VPEffectPlugin*)&eq);

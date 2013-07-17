@@ -4,9 +4,8 @@
 #
 #-------------------------------------------------
 
-CONFIG   += qt thread
 QT       += core gui
-LIBS     += -lsupc++ -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
+LIBS     += -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -84,12 +83,17 @@ OTHER_FILES += \
     README.md \
     LICENSE
 
-QMAKE_CXXFLAGS += -Wall -O4 -msse4.2
+QMAKE_CXXFLAGS += -Wall -O4 -msse4.2 -ffast-math
+QMAKE_CXXFLAGS_DEBUG += -pg
+QMAKE_LFLAGS_DEBUG += -pg
 
-linux-g++-64 {
+linux-g++* {
 LIBS += -lasound -lpthread -lsamplerate
 HEADERS  += outs/alsa.h
 SOURCES += outs/alsa.cpp
+}
+
+linux-g++-64 {
 }
 
 linux-g++-32 {

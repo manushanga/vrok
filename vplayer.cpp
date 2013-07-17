@@ -14,10 +14,9 @@
   Only play_worker is managed here.
 */
 #include <cstring>
-
 #include "vrok.h"
-#include "vplayer.h"
 #include "config.h"
+#include "vplayer.h"
 #include "out.h"
 #include "decoder.h"
 #include "effect.h"
@@ -126,6 +125,7 @@ int VPlayer::open(const char *url)
     if (vpdecode){
         vpout->resume();
         DBG("free decoder");
+        vpout_close();
         delete vpdecode;
         vpdecode = NULL;
         vpout->rewind();
@@ -216,50 +216,41 @@ void VPlayer::ended()
 
         VPlayer::play_work(this);
     } else {
-        std::thread *p=play_worker;
+        mutex_control.lock();
         play_worker = NULL;
-
-        p->detach();
-        p->~thread();
+        mutex_control.unlock();
     }
     announce(VP_STATUS_STOPPED);
 }
 
-void VPlayer::post_process(float *buffer)
-{
-    mutex_post_process.lock();
-    if (effects_active){
-        for (std::vector<effect_entry_t>::iterator it=effects.begin();
-             it!=effects.end();it++){
-            if (it->active)
-                it->eff->process( buffer);
-        }
-    }
-    mutex_post_process.unlock();
-}
-
 VPlayer::~VPlayer()
 {
-    mutex_post_process.lock();
+    if (vpdecode){
+        vpout->resume();
+        vpout_close();
+        delete vpdecode;
+        vpdecode = NULL;
+        vpout->rewind();
+    }
+
     for (std::vector<effect_entry_t>::iterator it=effects.begin();
          it!=effects.end();
          it++){
-        if (!it->active){
+        if (it->active){
             it->active = false;
             it->eff->finit();
+            delete it->eff;
         }
     }
-    mutex_post_process.unlock();
 
-    if (vpdecode)
-        delete vpdecode;
     if (vpout)
         delete vpout;
     if (buffer1)
-        delete buffer1;
+        delete[] buffer1;
     if (buffer2)
-        delete buffer2;
+        delete[] buffer2;
     config_finit();
+
 }
 
 void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
@@ -270,6 +261,7 @@ void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
         gapless_compatible = false;
     track_samplerate = samplerate;
     track_channels = channels;
+    vpout_open();
 }
 
 void VPlayer::setVolume(float vol)
@@ -284,12 +276,11 @@ float VPlayer::getVolume()
 int VPlayer::vpout_open()
 {
     int ret=0;
-    DBG(gapless_compatible);
     if (!gapless_compatible) {
         if (buffer1)
-            delete buffer1;
+            delete[] buffer1;
         if (buffer2)
-            delete buffer2;
+            delete[] buffer2;
 
         buffer1 = new float[VPBUFFER_FRAMES*track_channels];
         buffer2 = new float[VPBUFFER_FRAMES*track_channels];
@@ -310,8 +301,6 @@ int VPlayer::vpout_open()
         DBG("track chs:"<<track_channels);
         DBG("track rate:"<<track_samplerate);
 
-        ret += vpout->init(this, track_samplerate, track_channels);
-        mutex_post_process.lock();
         for (std::vector<effect_entry_t>::iterator it=effects.begin();
              it!=effects.end();
              it++){
@@ -323,18 +312,32 @@ int VPlayer::vpout_open()
                 it->eff->init(this);
             }
         }
-        mutex_post_process.unlock();
+
+        mutexes[1].lock();
+        mutexes[3].lock();
+
+        mutexes[0].try_lock();
+        mutexes[2].try_lock();
+        mutexes[0].unlock();
+        mutexes[2].unlock();
+
+        ret += vpout->init(this, track_samplerate, track_channels);
 
     }
 
 
     return ret;
 }
+
 int VPlayer::vpout_close()
 {
     // let play_worker roll, make sure that only these mutexes are locked once,
     // if its done multiple times include the work check in between them. see
     // player_flac.cpp's worker function
+
+    // always run this in the locked context of mutex_control, this is done already
+    // by the call from open() where the decoder is being destroyed future calls
+    // to this function should encure mutex_control is locked before this is called
 
     if (!play_worker_done && play_worker) {
         ATOMIC_CAS(&work,true,false);
@@ -346,3 +349,17 @@ int VPlayer::vpout_close()
     }
     return 0;
 }
+
+void VPlayer::post_process(float *buffer)
+{
+    mutex_post_process.lock();
+    if (effects_active){
+        for (std::vector<effect_entry_t>::iterator it=effects.begin();
+             it!=effects.end();it++){
+            if (it->active)
+                it->eff->process( buffer);
+        }
+    }
+    mutex_post_process.unlock();
+}
+

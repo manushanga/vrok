@@ -26,7 +26,7 @@ private:
                                                          const FLAC__int32 * const buffer[],
                                                          void *client_data);
 public:
-
+    static VPDecoder* VPDecoderFLAC_new();
     FLAC__StreamDecoder *decoder;
     FLAC__StreamDecoderInitStatus init_status;
     float *buffer;
@@ -44,7 +44,5 @@ public:
     unsigned long getPosition();
     ~FLACDecoder();
 };
-
-VPDecoder* _VPDecoderFLAC_new();
 
 #endif // PLAYER_FLAC_H
