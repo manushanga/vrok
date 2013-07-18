@@ -17,7 +17,7 @@
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
 
-class VPOutPluginAlsa : public VPOutPlugin {
+class VPOutPluginAlsa: public VPOutPlugin {
 public:
     static VPOutPlugin* VPOutPluginAlsa_new();
     static void worker_run(VPOutPluginAlsa *self);

@@ -11,7 +11,6 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QKeyEvent>
-
 #include <unistd.h>
 
 #include "vrokmain.h"
@@ -31,15 +30,19 @@ void VrokMain::callback_next(char *mem, void *user)
     VrokMain *mm =(VrokMain *) user;
     int i =mm->ui->lvFiles->selectionModel()->selectedRows().first().row();
 
-    if (i+1<mm->fileslist->rowCount()){
-        strcpy(mem,(char *)mm->curdir->absoluteFilePath(mm->fileslist->index(i+1).data().toString()).toUtf8().data());
-        mm->ui->lvFiles->selectionModel()->select(mm->fileslist->index(i),QItemSelectionModel::Deselect);
-        mm->ui->lvFiles->selectionModel()->select(mm->fileslist->index(i+1),QItemSelectionModel::Select);
+    if (i+1<mm->dirFilesModel.rowCount()){
+        strcpy(mem,(char *)mm->curdir.absoluteFilePath(mm->dirFilesModel.index(i+1,0).data().toString()).toUtf8().data());
+        mm->ui->lvFiles->selectionModel()->select(mm->dirFilesModel.index(i,0),QItemSelectionModel::Deselect);
+        mm->ui->lvFiles->selectionModel()->select(mm->dirFilesModel.index(i+1,0),QItemSelectionModel::Select);
     }
 }
 
 bool VrokMain::eventFilter(QObject *target, QEvent *event)
 {
+    if ( event->type() == QEvent::MouseButtonPress ){
+        DBG("ss");
+        return true;
+    }
     if ((target == (QObject *)ui->lvFiles) && (event->type() == QEvent::KeyPress)) {
         int val = ui->sbFolderSeek->value();
         switch (((QKeyEvent*)event)->key()) {
@@ -73,19 +76,25 @@ void VrokMain::on_btnAbout_clicked()
     QHBoxLayout h(&d);
     d.setLayout(&h);
     QLabel a("<center>"
-             "<span style=\"font-size: 12pt\"><b>Vrok</b> smokin' audio<br></span>"
+             "<span style=\"font-size: 12pt\"><b>Vrok</b> smokin' audio<br/></span>"
              "</center>"
-             "Copyright (C) 2012-2013 Madura A. <madura.x86@gmail.com><br>"
-             "<br>"
-             "<b>Libraries</b><br>"
-             "<br>"
-             "<a href=\"http://mega-nerd.com/SRC/\">libsamplerate</a>: Samplerate convertor(ALSA only)<br>"
-             "<a href=\"http://flac.sourceforge.net/\">libFLAC</a>: FLAC Decoder<br>"
-             "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>: Ogg Vorbis Decoder<br>"
-             "<a href=\"http://www.mpg123.de/\">libmpg123</a>: MPEG Layer 1,2,3 Decoder<br>"
-             "<a href=\"http://qt-project.org\">Qt</a>: Frontend<br>"
-             "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br>"
-             "<br>"
+             "Copyright (C) 2012-2013 Madura A. <madura.x86@gmail.com><br/>"
+             "<br/>"
+             "<b>Libraries</b><br/>"
+             "<br/>Sound Ouput<br/>"
+             "<a href=\"http://www.alsa-project.org\">libasound</a>: Advanced Linux Sound Architecture<br/>"
+             "<a href=\"http://mega-nerd.com/SRC/\">libsamplerate</a>: Samplerate convertor(ALSA only)<br/>"
+             "<a href=\"http://pulseaudio.org\">libpulse-simple</a>: PulseAudio Synchronous API<br/>"
+             "<a href=\"http://msdn.microsoft.com/en-us/library/windows/desktop/ee416960%28v=vs.85%29.aspx\">DSound</a>: Windows sound output<br/>"
+             "<br/>Decoders<br/>"
+             "<a href=\"http://flac.sourceforge.net/\">libFLAC</a>: FLAC Decoder<br/>"
+             "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>: OGG Vorbis Decoder<br/>"
+             "<a href=\"http://www.mpg123.de/\">libmpg123</a>: MPEG Layer 1,2,3 Decoder<br/>"
+             "<br/>DSP<br/>"
+             "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br/>"
+             "<br/>GUI<br/>"
+             "<a href=\"http://qt-project.org\">Qt</a>: Frontend<br/>"
+             "<br/>"
              "<span style=\"font-size: 8pt\">Bugs may exist. Built on " __DATE__ " at " __TIME__ ".</span>");
     h.addWidget(&a);
     d.exec();
@@ -95,12 +104,6 @@ VrokMain::VrokMain(QWidget *parent) :
     ui(new Ui::VrokMain)
 {
     ui->setupUi(this);
-
-
-    curdir = new QDir();
-    cursweep = new QDir();
-    dirs = new QStringList();
-    fileslist = new QStringListModel();
 
     vp=NULL;
     ew=NULL;
@@ -120,10 +123,10 @@ VrokMain::VrokMain(QWidget *parent) :
     tx->setInterval(40);
     tx->stop();
 
-    curdir->setFilter(QDir::Files|QDir::Hidden);
-    curdir->setNameFilters(getExtentionsList());
-    cursweep->setFilter(QDir::Files);
-    cursweep->setNameFilters(getExtentionsList());
+    curdir.setFilter(QDir::Files|QDir::Hidden);
+    curdir.setNameFilters(getExtentionsList());
+    cursweep.setFilter(QDir::Files);
+    cursweep.setNameFilters(getExtentionsList());
 
 
 
@@ -166,22 +169,32 @@ VrokMain::VrokMain(QWidget *parent) :
     ui->gvDisplay->setScene(gs);
 
     if (config_get_lastopen().size()>0) {
-        ui->lvFiles->setModel(fileslist);
+        ui->lvFiles->setModel(&dirFilesModel);
 
         ui->lblDisplay->setText("Scanning...");
         QDir rdir(QString(config_get_lastopen().c_str()));
         folderSeekSweep(rdir);
-        fileslist->setStringList(*dirs);
         ui->lblDisplay->setText("Done.");
 
         ui->sbFolderSeek->setMinimum(0);
-        ui->sbFolderSeek->setMaximum(dirs->size()-1);
+        ui->sbFolderSeek->setMaximum(dirs.size()-1);
 
         on_sbFolderSeek_valueChanged(0);
     }
     ui->lvFiles->installEventFilter(this);
     vis_counter = 0;
     vp->effects_active = true;
+
+    contextMenuFiles.push_back(new QAction("Queue",this));
+    contextMenuFiles.push_back(new QAction("Previous",this));
+    contextMenuFiles.push_back(new QAction("Next",this));
+
+    ui->lvFiles->addActions(contextMenuFiles);
+
+    ui->lvFiles->setContextMenuPolicy(Qt::ActionsContextMenu);
+
+    connect(contextMenuFiles[0],SIGNAL(triggered()),this,SLOT(actionQueueTriggered()));
+
     connect(tx, SIGNAL(timeout()), this, SLOT(process()));
 
 }
@@ -236,17 +249,17 @@ void VrokMain::folderSeekSweep(QDir& root){
 
    QDirIterator iteratorSubRoot(root.absolutePath(),exts,QDir::Files);
    if (iteratorSubRoot.hasNext())
-       dirs->append(root.absolutePath());
+       dirs.append(root.absolutePath());
 
    while (iterator.hasNext()) {
       iterator.next();
       if (iterator.fileInfo().isDir() && (iterator.fileName()!="..") && (iterator.fileName() != ".")) {
           QDirIterator iteratorSub(iterator.filePath(),exts,QDir::Files);
           if (iteratorSub.hasNext())
-              dirs->append(iterator.filePath());
+              dirs.append(iterator.filePath());
       }
    }
-   dirs->sort();
+   dirs.sort();
 
 }
 void VrokMain::on_btnOpenDir_clicked()
@@ -255,23 +268,22 @@ void VrokMain::on_btnOpenDir_clicked()
                                              QString(config_get_lastopen().c_str()),
                                              0);
     config_set_lastopen(d.toStdString());
-    dirs->clear();
+    dirs.clear();
     ui->lblDisplay->setText("Scanning...");
     this->update();
     QDir rdir(d);
     folderSeekSweep(rdir);
-    fileslist->setStringList(*dirs);
     ui->lblDisplay->setText("Done.");
 
     ui->sbFolderSeek->setMinimum(0);
-    ui->sbFolderSeek->setMaximum(dirs->size()-1);
+    ui->sbFolderSeek->setMaximum(dirs.size()-1);
 
     on_sbFolderSeek_valueChanged(0);
 
 }
 void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 {
-    QString n(curdir->absoluteFilePath(i.data().toString()));
+    QString n(curdir.absoluteFilePath(i.data().toString()));
     vp->open((char *) n.toUtf8().data());
     if (ui->btnSpec->isChecked())
         tx->start();
@@ -319,21 +331,37 @@ VrokMain::~VrokMain()
 
 void VrokMain::on_sbFolderSeek_valueChanged(int value)
 {
-    if (!dirs->empty()) {
-        QString opendir = dirs->at(value);
+    if (!dirs.empty()) {
+        QString opendir = dirs.at(value);
         ui->lblDisplay->setText(opendir.section(QDir::separator(),-1,-1));
         QStringList exts=getExtentionsList();
         QDirIterator iterator(opendir,exts,QDir::Files);
-        QStringList files;
-        curdir->setPath(opendir);
+        curdir.setPath(opendir);
+        int i=0;
+        dirFilesModel.removeRows(0,dirFilesModel.rowCount());
         while (iterator.hasNext()){
             iterator.next();
-            files.append(iterator.fileName());
+            dirFilesModel.setItem(i,0, new QStandardItem(iterator.fileName()));
+            dirFilesModel.setItem(i,1, new QStandardItem(iterator.filePath()));
+            i++;
         }
-        files.sort();
-        fileslist->setStringList(files);
-        ui->lvFiles->setModel(fileslist);
+        ui->lvFiles->setModel(&dirFilesModel);
     }
+}
+
+void VrokMain::actionQueueTriggered()
+{
+
+    QModelIndexList selected=ui->lvFiles->selectionModel()->selectedIndexes();
+    for (int i=0;i<selected.size();i++) {
+        DBG(selected[i].row());
+
+        int r = queueModel.rowCount();
+        queueModel.setItem(r,0,dirFilesModel.item(selected[i].row(),0)->clone() );
+        queueModel.setItem(r,1,dirFilesModel.item(selected[i].row(),1)->clone() );
+
+    }
+    ui->lvQueue->setModel(&queueModel);
 }
 
 QStringList VrokMain::getExtentionsList()

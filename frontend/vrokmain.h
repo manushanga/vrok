@@ -16,6 +16,7 @@
 
 #include <QGraphicsScene>
 #include <QStringListModel>
+#include <QStandardItemModel>
 #include <QDir>
 #include <QFileDialog>
 #include <QStringList>
@@ -23,6 +24,9 @@
 #include <QGraphicsRectItem>
 #include <QTimer>
 #include <QListView>
+#include <QMenu>
+#include <QList>
+#include <QAction>
 
 #include "eqwidget.h"
 
@@ -54,7 +58,7 @@ public slots:
     void on_btnAbout_clicked();
     void process();
     void on_sbFolderSeek_valueChanged(int value);
-
+    void actionQueueTriggered();
 private:
     void folderSeekSweep(QDir& root);
     // player funcs
@@ -75,10 +79,14 @@ private:
     QGraphicsRectItem *gbbars[BAR_COUNT];
 
     // playlist
-    QDir *curdir;
-    QDir *cursweep;
-    QStringList *dirs;
-    QStringListModel *fileslist;
+    QDir curdir;
+    QDir cursweep;
+    QStringList dirs;
+    QStandardItemModel dirFilesModel;
+
+    QStandardItemModel queueModel;
+    QList< QAction * > contextMenuFiles;
+
 };
 
 #endif // VROKMAIN_H

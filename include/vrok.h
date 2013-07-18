@@ -12,14 +12,25 @@ typedef struct _vpout_entry{
 }vpout_entry_t;
 
 #define DEFAULT_VPOUT_PLUGIN 0
+
 #ifdef _WIN32
     #include "outs/dsound.h"
 
     static const vpout_entry_t vpout_entries[] = { {"DSound", (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*6 } };
 #elif defined(__linux__)
-    #include "outs/alsa.h"
+    #ifdef VPOUT_ALSA
+        #include "outs/alsa.h"
+    #elif defined(VPOUT_PULSE)
+        #include "outs/pulse.h"
+    #endif
+    static const vpout_entry_t vpout_entries[] = {
+    #ifdef VPOUT_ALSA
+          {"ALSA", (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD }
+    #elif defined(VPOUT_PULSE)
+          {"PULSE", (vpout_creator_t)VPOutPluginPulse::VPOutPluginPulse_new, VPBUFFER_PERIOD }
+    #endif
+    };
 
-    static const vpout_entry_t vpout_entries[] = { {"ALSA", (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD } };
 #else
     #error "Unsupported platform."
 #endif

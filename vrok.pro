@@ -18,7 +18,8 @@ DEFINES += USE_OOURA
 INCLUDEPATH += include
 
 console {
-SOURCES +=cli/main.cpp \
+SOURCES += \
+    cli/main.cpp \
     vplayer.cpp \
     effects/shibatch/Equ.cpp \
     effects/shibatch/Fftsg_fl.c \
@@ -79,8 +80,7 @@ FORMS    += frontend/vrokmain.ui \
             frontend/eqwidget.ui
 }
 
-OTHER_FILES += \
-    README.md \
+OTHER_FILES += README.md \
     LICENSE
 
 QMAKE_CXXFLAGS += -Wall -O4 -msse4.2 -ffast-math
@@ -88,16 +88,20 @@ QMAKE_CXXFLAGS_DEBUG += -pg
 QMAKE_LFLAGS_DEBUG += -pg
 
 linux-g++* {
-LIBS += -lasound -lpthread -lsamplerate
-HEADERS  += outs/alsa.h
-SOURCES += outs/alsa.cpp
+LIBS += -lpthread
+
+PulseAudio {
+    LIBS += -lpulse-simple
+    DEFINES += VPOUT_PULSE
+    HEADERS += outs/pulse.h
+    SOURCES += outs/pulse.cpp
+} else {
+    LIBS += -lsamplerate -lasound
+    DEFINES += VPOUT_ALSA
+    HEADERS += outs/alsa.h
+    SOURCES += outs/alsa.cpp
 }
 
-linux-g++-64 {
-}
-
-linux-g++-32 {
-QMAKE_CXXFLAGS += -march=i686
 }
 
 win32 {
@@ -109,7 +113,7 @@ SOURCES += outs/dsound.cpp
 
 TRANSLATIONS += vrok_si.ts
 
-RESOURCES += \
-    vrok.qrc
+RESOURCES += vrok.qrc
+
 
 

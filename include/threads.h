@@ -140,11 +140,9 @@ class mutex
 {
 private:
     volatile int cs;
-    pthread_mutex_t mu;
 public:
     inline mutex()
     {
-        pthread_mutex_init(&mu,NULL);
         cs=0;
     }
 
@@ -155,8 +153,7 @@ public:
 
     inline void lock()
     {
-        pthread_mutex_lock(&mu);
-/*
+
         int i, c;
 
         for (i = 0; i < SPIN_MAX; i++)
@@ -173,21 +170,16 @@ public:
 
         while (c)
         {
-
             syscall(__NR_futex, &cs, FUTEX_WAIT_PRIVATE, 2, NULL, NULL, 0);
             c = __sync_lock_test_and_set(&cs, 2);
         }
-*/
-
-
-
 
     }
 
     inline void unlock()
     {
-        pthread_mutex_unlock(&mu);
-     /*   int i;
+
+        int i;
 
 
         if (cs == 2)
@@ -208,19 +200,14 @@ public:
         }
 
         syscall(__NR_futex, &cs, FUTEX_WAKE_PRIVATE, 1, NULL, NULL, 0);
-*/
-
 
     }
     inline bool try_lock()
     {
-        return (bool)pthread_mutex_trylock(&mu);
-        /*
         int c = __sync_val_compare_and_swap(&cs, 0, 1);
         if (!c)
             return true;
         return false;
-        */
     }
 };
 }

@@ -94,6 +94,10 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
 
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 {
+
+    m_pause.lock();
+    ATOMIC_CAS(&pause_check,false,true);
+
     owner->mutexes[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
         owner->buffer1[i]=0.0f;
@@ -103,8 +107,6 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
         owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
 
-    m_pause.lock();
-    ATOMIC_CAS(&pause_check,false,true);
     while (!ATOMIC_CAS(&paused,false,false)) {}
 
 }

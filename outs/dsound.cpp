@@ -149,8 +149,12 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
     lpdsbuffer->Stop();
 }
 
-void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
+void __attribute__((optimize("O0"))) VPOutPluginPulse::rewind()
 {
+
+    m_pause.lock();
+    ATOMIC_CAS(&pause_check,false,true);
+
     owner->mutexes[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
         owner->buffer1[i]=0.0f;
@@ -160,11 +164,10 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
         owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
 
-    m_pause.lock();
-    ATOMIC_CAS(&pause_check,false,true);
     while (!ATOMIC_CAS(&paused,false,false)) {}
 
 }
+
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
 {
     if (ATOMIC_CAS(&paused,true,true)){
