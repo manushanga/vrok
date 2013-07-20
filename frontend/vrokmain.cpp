@@ -199,8 +199,6 @@ VrokMain::VrokMain(QWidget *parent) :
     vp->effects_active = true;
 
     contextMenuFiles.push_back(new QAction("Queue",this));
-    contextMenuFiles.push_back(new QAction("Previous",this));
-    contextMenuFiles.push_back(new QAction("Next",this));
 
     ui->lvFiles->addActions(contextMenuFiles);
 
@@ -248,7 +246,7 @@ void VrokMain::fillQueue()
             int r = rand() % fileModel.rowCount();
             for (int i=0;i<r;i++) {
                 int rc = queueModel.rowCount();
-                int tr = (rand()+i) % (fileModel.rowCount()-1);
+                int tr = (rand()+i*i) % (fileModel.rowCount()-1);
                 queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
                 queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
 

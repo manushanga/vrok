@@ -1,26 +1,27 @@
 Vrok - smokin' audio
 ======================
 
-Plays FLAC, MPEG and Ogg Vorbis<br>
-Shibatch SuperEQ<br>
-Windows support and JACK support is planned<br>
-Gapless, not implemented yet<br>
+* Plays FLAC, MPEG and Ogg Vorbis
+* Shibatch SuperEQ with Self Learning
+* Windows and Linux(PulseAudio and ALSA)
+* Gapless
 
 Compiling
 ---------
 
-Make sure you have these dependencies,<br>
-<br>
-ALSA development headers<br>
-libFLAC and headers<br>
-libmpg123 and headers<br>
-libogg and headers<br>
-libvorbis and headers<br>
+Make sure you have these dependencies,
+
+* ALSA development headers
+* libFLAC and headers
+* libmpg123 and headers
+* libogg and headers
+* libvorbis and headers
+* libpulse-simple for PulseAudio support
 
 Run these commands in the project directory
 
 <pre>
-qmake
+qmake [ CONFIG+=PulseAudio || CONFIG+=DEBUG || CONFIG+=console ]
 make
 </pre>
 
