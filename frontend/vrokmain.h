@@ -27,6 +27,7 @@
 #include <QMenu>
 #include <QList>
 #include <QAction>
+#include <QActionGroup>
 
 #include "eqwidget.h"
 
@@ -57,11 +58,18 @@ public slots:
     void on_lvFiles_doubleClicked(QModelIndex i);
     void on_btnAbout_clicked();
     void process();
+    void fillQueue();
     void on_sbFolderSeek_valueChanged(int value);
     void actionQueueTriggered();
+    void actionQueueRemove();
+    void startFillTimer();
+private slots:
+    void on_lvQueue_doubleClicked(const QModelIndex &index);
+
 private:
     void folderSeekSweep(QDir& root);
     // player funcs
+    QTimer tcb;
     VPlayer *vp;
     QStringList getExtentionsList();
     // effects
@@ -69,7 +77,7 @@ private:
     VPEffectPluginEQ *eq;
 
     // visuals
-    QTimer *tx;
+    QTimer tx;
     unsigned vis_counter;
     float bar_vals[BAR_COUNT];
     bool visuals;
@@ -79,6 +87,7 @@ private:
     QGraphicsRectItem *gbbars[BAR_COUNT];
 
     // playlist
+    void loadDirFilesModel(QString opendir, QStandardItemModel *model);
     QDir curdir;
     QDir cursweep;
     QStringList dirs;
@@ -86,7 +95,8 @@ private:
 
     QStandardItemModel queueModel;
     QList< QAction * > contextMenuFiles;
-
+    QList< QAction * > contextMenuQueue;
+    QActionGroup *queueToggleFillType;
 };
 
 #endif // VROKMAIN_H

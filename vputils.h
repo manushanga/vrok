@@ -26,6 +26,27 @@
 
 #define strtolower(p) for ( ; *p; ++p) *p = tolower(*p)
 
+#include <cstdio>
+#if defined(_WIN32) && defined(UNICODE)
+#include <winnls.h>
+inline FILE *fopenu(const char *path,const char *opt){
+    DBG(path);
+    wchar_t wpath[1024];
+    wchar_t wopt[4];
+    MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, 1024);
+    MultiByteToWideChar(CP_UTF8, 0, opt, -1, wopt, 4);
+
+    return _wfopen(wpath, wopt);
+}
+#define FOPEN_RB "rb"
+#define FOPEN_WB "wb"
+#define FOPEN_AB "wb+"
+#else
+#define fopenu fopen
+#define FOPEN_RB "r"
+#define FOPEN_WB "w"
+#define FOPEN_AB "w+"
+#endif
 
 #define TOSTR( x ) dynamic_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()

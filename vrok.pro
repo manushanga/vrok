@@ -106,7 +106,7 @@ PulseAudio {
 
 win32 {
 QMAKE_CXXFLAGS += -march=i686
-LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound
+LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound -lshlwapi
 HEADERS  +=  outs/dsound.h
 SOURCES += outs/dsound.cpp
 }

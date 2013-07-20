@@ -86,9 +86,6 @@ public:
 
     // internal interface
     static void play_work(VPlayer *self);
-    int vpout_open();
-    int vpout_close();
-    void ended();
     void post_process(float *buffer);
     void set_metadata(unsigned samplerate, unsigned channels);
 

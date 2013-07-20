@@ -23,7 +23,37 @@
 
 void VPlayer::play_work(VPlayer *self)
 {
-    self->vpdecode->reader();
+    while (1) {
+        self->vpdecode->reader();
+        self->active = false;
+        self->next_track[0]='\0';
+
+
+        if (self->next_track_cb && self->work) {
+            self->next_track_cb(self->next_track, self->next_cb_user);
+
+            if (self->next_track[0]!='\0') {
+                self->open(self->next_track);
+                self->active = true;
+                DBG("new track");
+                self->vpout->resume();
+            } else {
+                self->mutex_control.lock();
+                self->play_worker = NULL;
+                self->mutex_control.unlock();
+                break;
+            }
+        } else {
+            DBG("no new track");
+            self->mutex_control.lock();
+            self->play_worker = NULL;
+            self->mutex_control.unlock();
+            break;
+        }
+    }
+    DBG("play worker dying");
+    self->announce(VP_STATUS_STOPPED);
+
 }
 
 void VPlayer::addEffect(VPEffectPlugin *eff)
@@ -119,17 +149,19 @@ void VPlayer::getSupportedFileTypeExtensions(char **exts)
 }
 int VPlayer::open(const char *url)
 {
-    mutex_control.lock();
 
-    this_track[0]='\0';
     if (vpdecode){
         vpout->resume();
+        paused=false;
         DBG("free decoder");
-        vpout_close();
+        ATOMIC_CAS(&work,true,false);
         delete vpdecode;
         vpdecode = NULL;
         vpout->rewind();
     }
+    mutex_control.lock();
+    this_track[0]='\0';
+
 
     unsigned len = strlen(url);
     for (unsigned i=0;i<sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);i++){
@@ -194,40 +226,12 @@ bool VPlayer::isPlaying()
 {
     return !paused && active;
 }
-void VPlayer::ended()
-{
-    active = false;
-    next_track[0]='\0';
-
-    // better do this quick
-    if (next_track_cb)
-        next_track_cb(next_track, next_cb_user);
-
-    if (next_track[0]!='\0') {
-        play_worker_done=true;
-        open(next_track);
-        play_worker_done=false;
-        active = true;
-
-        mutex_control.lock();
-        vpout->resume();
-        paused = false;
-        mutex_control.unlock();
-
-        VPlayer::play_work(this);
-    } else {
-        mutex_control.lock();
-        play_worker = NULL;
-        mutex_control.unlock();
-    }
-    announce(VP_STATUS_STOPPED);
-}
 
 VPlayer::~VPlayer()
 {
     if (vpdecode){
         vpout->resume();
-        vpout_close();
+        ATOMIC_CAS(&work,true,false);
         delete vpdecode;
         vpdecode = NULL;
         vpout->rewind();
@@ -261,21 +265,7 @@ void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
         gapless_compatible = false;
     track_samplerate = samplerate;
     track_channels = channels;
-    vpout_open();
-}
 
-void VPlayer::setVolume(float vol)
-{
-    volume = vol;
-}
-
-float VPlayer::getVolume()
-{
-    return volume;
-}
-int VPlayer::vpout_open()
-{
-    int ret=0;
     if (!gapless_compatible) {
         if (buffer1)
             delete[] buffer1;
@@ -313,42 +303,22 @@ int VPlayer::vpout_open()
             }
         }
 
-        mutexes[1].lock();
-        mutexes[3].lock();
-
-        mutexes[0].try_lock();
-        mutexes[2].try_lock();
-        mutexes[0].unlock();
-        mutexes[2].unlock();
-
-        ret += vpout->init(this, track_samplerate, track_channels);
+        vpout->init(this, track_samplerate, track_channels);
 
     }
 
-
-    return ret;
 }
 
-int VPlayer::vpout_close()
+void VPlayer::setVolume(float vol)
 {
-    // let play_worker roll, make sure that only these mutexes are locked once,
-    // if its done multiple times include the work check in between them. see
-    // player_flac.cpp's worker function
-
-    // always run this in the locked context of mutex_control, this is done already
-    // by the call from open() where the decoder is being destroyed future calls
-    // to this function should encure mutex_control is locked before this is called
-
-    if (!play_worker_done && play_worker) {
-        ATOMIC_CAS(&work,true,false);
-        vpout->resume();
-        play_worker->join();
-        DBG("player thread joined");
-        delete play_worker;
-        play_worker = NULL;
-    }
-    return 0;
+    volume = vol;
 }
+
+float VPlayer::getVolume()
+{
+    return volume;
+}
+
 
 void VPlayer::post_process(float *buffer)
 {

@@ -37,5 +37,6 @@ typedef struct _vpout_entry{
 
 #define VPBUFFER_FRAMES vpout_entries[DEFAULT_VPOUT_PLUGIN].frames
 
+#include "vputils.h"
 #endif // CONFIG_OUT_H
 

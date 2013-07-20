@@ -230,7 +230,8 @@ FLACDecoder::~FLACDecoder()
 
 int FLACDecoder::open(const char *url)
 {
-    init_status = FLAC__stream_decoder_init_file(decoder, url, write_callback, metadata_callback, error_callback, (void *) this);
+    fcurrent = fopenu(url,FOPEN_RB);
+    init_status = FLAC__stream_decoder_init_FILE(decoder, fcurrent, write_callback, metadata_callback, error_callback, (void *) this);
     if (init_status != FLAC__STREAM_DECODER_INIT_STATUS_OK){
         DBG("decoder init fail");
         return -1;
@@ -248,8 +249,6 @@ void FLACDecoder::reader()
         DBG("Error "<<FLAC__StreamDecoderInitStatusString[init_status]);
     }
 
-    if (ATOMIC_CAS(&owner->work,true,true))
-        owner->ended();
 }
 
 unsigned long FLACDecoder::getLength()

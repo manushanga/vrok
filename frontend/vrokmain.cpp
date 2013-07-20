@@ -23,17 +23,27 @@
 #include "players/ogg.h"
 #include "effects/eq.h"
 #include "config.h"
+
 #include <cstring>
+#include <ctime>
+
+#define QA_REMOVE 0
+#define QA_FILLRAN 1
+#define QA_FILLSEQ 2
+#define QA_FILLNON 3
+
+#define QA_QUEUE 0
 
 void VrokMain::callback_next(char *mem, void *user)
 {
     VrokMain *mm =(VrokMain *) user;
-    int i =mm->ui->lvFiles->selectionModel()->selectedRows().first().row();
-
-    if (i+1<mm->dirFilesModel.rowCount()){
-        strcpy(mem,(char *)mm->curdir.absoluteFilePath(mm->dirFilesModel.index(i+1,0).data().toString()).toUtf8().data());
-        mm->ui->lvFiles->selectionModel()->select(mm->dirFilesModel.index(i,0),QItemSelectionModel::Deselect);
-        mm->ui->lvFiles->selectionModel()->select(mm->dirFilesModel.index(i+1,0),QItemSelectionModel::Select);
+    if (mm->queueModel.rowCount() < 3) {
+        mm->metaObject()->invokeMethod(mm,"startFillTimer");
+    }
+    if (mm->queueModel.rowCount() > 0){
+        QString path = mm->queueModel.item(0,1)->text();
+        mm->queueModel.removeRow(0);
+        strcpy(mem,path.toUtf8().data());
     }
 }
 
@@ -118,10 +128,13 @@ VrokMain::VrokMain(QWidget *parent) :
         ui->btnEQt->setChecked(true);
     }
 
-    tx = new QTimer(this);
-    tx->setSingleShot(false);
-    tx->setInterval(40);
-    tx->stop();
+    tx.setSingleShot(false);
+    tx.setInterval(40);
+    tx.stop();
+
+    tcb.setSingleShot(true);
+    tcb.setInterval(0);
+    tcb.stop();
 
     curdir.setFilter(QDir::Files|QDir::Hidden);
     curdir.setNameFilters(getExtentionsList());
@@ -191,14 +204,71 @@ VrokMain::VrokMain(QWidget *parent) :
 
     ui->lvFiles->addActions(contextMenuFiles);
 
+    contextMenuQueue.push_back(new QAction("Remove",this));
+    contextMenuQueue.push_back(new QAction("Fill Random",this));
+    contextMenuQueue.push_back(new QAction("Fill Sequential",this));
+    contextMenuQueue.push_back(new QAction("Fill None",this));
+
+    queueToggleFillType = new QActionGroup(this);
+    contextMenuQueue[QA_FILLRAN]->setActionGroup(queueToggleFillType);
+    contextMenuQueue[QA_FILLRAN]->setCheckable(true);
+    contextMenuQueue[QA_FILLSEQ]->setActionGroup(queueToggleFillType);
+    contextMenuQueue[QA_FILLSEQ]->setCheckable(true);
+    contextMenuQueue[QA_FILLNON]->setActionGroup(queueToggleFillType);
+    contextMenuQueue[QA_FILLNON]->setCheckable(true);
+    ui->lvQueue->addActions(contextMenuQueue);
+
     ui->lvFiles->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ui->lvQueue->setContextMenuPolicy(Qt::ActionsContextMenu);
 
-    connect(contextMenuFiles[0],SIGNAL(triggered()),this,SLOT(actionQueueTriggered()));
+    ui->lvQueue->setModel(&queueModel);
+    ui->lvFiles->setModel(&dirFilesModel);
 
-    connect(tx, SIGNAL(timeout()), this, SLOT(process()));
+    connect(contextMenuFiles[QA_QUEUE],SIGNAL(triggered()),this,SLOT(actionQueueTriggered()));
+    connect(contextMenuQueue[QA_REMOVE],SIGNAL(triggered()),this,SLOT(actionQueueRemove()));
+
+    connect(&tx, SIGNAL(timeout()), this, SLOT(process()));
+    connect(&tcb,SIGNAL(timeout()), this, SLOT(fillQueue()));
+
+    // temp stuff until settings are written
+    contextMenuQueue[QA_FILLNON]->setChecked(true);
 
 }
+void VrokMain::startFillTimer()
+{
+    tcb.start();
+}
+void VrokMain::fillQueue()
+{
+    srand(time(NULL));
+    if (contextMenuQueue[QA_FILLRAN]->isChecked()) {
+        QStandardItemModel fileModel;
+        while (queueModel.rowCount()<10){
+            loadDirFilesModel(dirs[rand() % (dirs.count()-1)], &fileModel);
+            int r = rand() % fileModel.rowCount();
+            for (int i=0;i<r;i++) {
+                int rc = queueModel.rowCount();
+                int tr = (rand()+i) % (fileModel.rowCount()-1);
+                queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
+                queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
 
+            }
+        }
+        ui->lvQueue->setModel(&queueModel);
+    } else if (contextMenuQueue[QA_FILLSEQ]->isChecked()) {
+        QStandardItemModel fileModel;
+        while (queueModel.rowCount()<10){
+            loadDirFilesModel(dirs[rand() % (dirs.count()-1)], &fileModel);
+
+            for (int i=0;i<fileModel.rowCount();i++) {
+                int rc = queueModel.rowCount();
+                queueModel.setItem(rc,0, fileModel.item(i,0)->clone());
+                queueModel.setItem(rc,1, fileModel.item(i,1)->clone());
+
+            }
+        }
+    }
+}
 
 void VrokMain::process()
 {
@@ -232,14 +302,14 @@ void VrokMain::process()
 void VrokMain::on_btnPause_clicked()
 {
     if (ui->btnSpec->isChecked())
-        tx->stop();
+        tx.stop();
     vp->pause();
 }
 void VrokMain::on_btnPlay_clicked()
 {
     vp->play();
     if (ui->btnSpec->isChecked())
-        tx->start();
+        tx.start();
 }
 void VrokMain::folderSeekSweep(QDir& root){
 
@@ -281,13 +351,15 @@ void VrokMain::on_btnOpenDir_clicked()
     on_sbFolderSeek_valueChanged(0);
 
 }
+
 void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 {
-    QString n(curdir.absoluteFilePath(i.data().toString()));
-    vp->open((char *) n.toUtf8().data());
-    if (ui->btnSpec->isChecked())
-        tx->start();
+    vp->open(dirFilesModel.item(i.row(),1)->text().toUtf8().data());
+    if (ui->btnSpec->isChecked()) {
+        tx.start();
+    }
 }
+
 void VrokMain::on_btnEQ_clicked()
 {
     if (ew)
@@ -309,9 +381,9 @@ void VrokMain::on_btnSpec_clicked()
 {
     if (vp->isActiveEffect((VPEffectPlugin *)eq)){
         if (ui->btnSpec->isChecked())
-            tx->start();
+            tx.start();
         else
-            tx->stop();
+            tx.stop();
     }
 
 }
@@ -321,8 +393,6 @@ VrokMain::~VrokMain()
     if (vp)
         delete vp;
 
-    if (tx)
-        delete tx;
     if (gs)
         delete gs;
 
@@ -331,22 +401,7 @@ VrokMain::~VrokMain()
 
 void VrokMain::on_sbFolderSeek_valueChanged(int value)
 {
-    if (!dirs.empty()) {
-        QString opendir = dirs.at(value);
-        ui->lblDisplay->setText(opendir.section(QDir::separator(),-1,-1));
-        QStringList exts=getExtentionsList();
-        QDirIterator iterator(opendir,exts,QDir::Files);
-        curdir.setPath(opendir);
-        int i=0;
-        dirFilesModel.removeRows(0,dirFilesModel.rowCount());
-        while (iterator.hasNext()){
-            iterator.next();
-            dirFilesModel.setItem(i,0, new QStandardItem(iterator.fileName()));
-            dirFilesModel.setItem(i,1, new QStandardItem(iterator.filePath()));
-            i++;
-        }
-        ui->lvFiles->setModel(&dirFilesModel);
-    }
+    loadDirFilesModel(dirs.at(value),&dirFilesModel);
 }
 
 void VrokMain::actionQueueTriggered()
@@ -354,15 +409,23 @@ void VrokMain::actionQueueTriggered()
 
     QModelIndexList selected=ui->lvFiles->selectionModel()->selectedIndexes();
     for (int i=0;i<selected.size();i++) {
-        DBG(selected[i].row());
 
         int r = queueModel.rowCount();
         queueModel.setItem(r,0,dirFilesModel.item(selected[i].row(),0)->clone() );
         queueModel.setItem(r,1,dirFilesModel.item(selected[i].row(),1)->clone() );
 
     }
-    ui->lvQueue->setModel(&queueModel);
 }
+
+void VrokMain::actionQueueRemove()
+{
+    QModelIndexList selected=ui->lvQueue->selectionModel()->selectedIndexes();
+    for (int i=0;i<selected.size();i++) {
+        queueModel.removeRow(selected[i].row());
+
+    }
+}
+
 
 QStringList VrokMain::getExtentionsList()
 {
@@ -376,4 +439,29 @@ QStringList VrokMain::getExtentionsList()
         list.append(QString("*.").append(exts[i]));
     }
     return list;
+}
+
+void VrokMain::loadDirFilesModel(QString opendir, QStandardItemModel *model)
+{
+    if (!dirs.empty()) {
+        ui->lblDisplay->setText(opendir.section(QDir::separator(),-1,-1));
+        QStringList exts=getExtentionsList();
+        QDirIterator iterator(opendir,exts,QDir::Files);
+        curdir.setPath(opendir);
+        int i=0;
+        model->removeRows(0,model->rowCount());
+        while (iterator.hasNext()){
+            iterator.next();
+            model->setItem(i,0, new QStandardItem(iterator.fileName()));
+            model->setItem(i,1, new QStandardItem(iterator.filePath()));
+            i++;
+        }
+    }
+}
+
+void VrokMain::on_lvQueue_doubleClicked(const QModelIndex &index)
+{
+    QString path = queueModel.item(index.row(),1)->text();
+    queueModel.removeRow(index.row());
+    vp->open(path.toUtf8().data());
 }

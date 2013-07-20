@@ -16,6 +16,8 @@
 
 class MPEGDecoder : public VPDecoder
 {
+private:
+    FILE *fcurrent;
 public:
     static VPDecoder* VPDecoderMPEG_new();
     mpg123_handle *mh;

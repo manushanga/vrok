@@ -65,16 +65,12 @@ void MPEGDecoder::reader()
             break;
         }
     }
-
-    if (ATOMIC_CAS(&owner->work,true,true) && err == MPG123_DONE){
-        owner->ended();
-    }
 }
 
 int MPEGDecoder::open(const char *url)
 {
-
-    if (mpg123_open(mh, url) != MPG123_OK) {
+    fcurrent=fopenu(url,FOPEN_RB);
+    if (mpg123_open_fd(mh, fileno(fcurrent)) != MPG123_OK) {
         DBG("open file fail");
         return -1;
     }
@@ -122,6 +118,7 @@ MPEGDecoder::~MPEGDecoder()
    // owner->vpout_close();
     mpg123_close(mh);
     mpg123_delete(mh);
+    fclose(fcurrent);
     mpg123_exit();
     if (buffer)
         delete[] buffer;

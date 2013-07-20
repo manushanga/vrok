@@ -17,6 +17,7 @@
 class FLACDecoder : public VPDecoder
 {
 private:
+    FILE *fcurrent;
     float to_fl;
     static void metadata_callback(const FLAC__StreamDecoder *decoder,
                              const FLAC__StreamMetadata *metadata,

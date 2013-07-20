@@ -7,9 +7,37 @@
 std::map<std::string, std::vector<int> > __vrok_settings;
 
 #ifdef _WIN32
-static std::string settings_path(bool &firsttime)
+#include <shlobj.h>
+#include <shlwapi.h>
+static std::string settings_path(bool *firsttime)
 {
+    TCHAR szPath[MAX_PATH];
 
+    if(SUCCEEDED(SHGetFolderPath(NULL,
+                                 CSIDL_APPDATA,
+                                 NULL,
+                                 0,
+                                 szPath)))
+    {
+        FILE *f;
+        PathAppend(szPath,TEXT("vrok"));
+        CreateDirectory(szPath,NULL);
+        PathAppend(szPath,TEXT("vrok.conf"));
+        f=_wfopen(szPath,TEXT("r"));
+        DBG(szPath);
+        if (!f) {
+            *firsttime = true;
+        } else {
+            *firsttime = false;
+            fclose(f);
+        }
+        char upath[1024];
+        WideCharToMultiByte(CP_UTF8,0,szPath,-1,upath,1024,0,NULL);
+        return std::string(upath);
+    } else {
+        DBG("Can't get settings path, exiting");
+        exit(-1);
+    }
 }
 #elif defined(__linux__)
 #include <unistd.h>
@@ -29,7 +57,7 @@ static std::string settings_path(bool *firsttime)
         mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
     path.append("/vrok.conf");
-    FILE *f=fopen(path.c_str(),"r");
+    FILE *f=fopenu(path.c_str(),"r");
     if (!f) {
         *firsttime = true;
     } else {
@@ -127,7 +155,7 @@ static void config_write()
 {
     bool first;
     std::string path = settings_path(&first);
-    FILE *f = fopen(path.c_str(),"w");
+    FILE *f = fopenu(path.c_str(),"w");
     for (std::map< std::string, std::vector<int> >::iterator it=__vrok_settings.begin();
          it!=__vrok_settings.end();
          it++) {
@@ -159,7 +187,7 @@ static void config_read()
         write_string("lastopen","");
         config_write();
     } else {
-        FILE *f = fopen(path.c_str(),"r");
+        FILE *f = fopenu(path.c_str(),"r");
 
         while (!feof(f)){
             char name[32];

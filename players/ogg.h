@@ -7,6 +7,8 @@
 #include "decoder.h"
 class OGGDecoder : public VPDecoder
 {
+private:
+    FILE *fcurrent;
 public:
     static VPDecoder* VPDecoderOGG_new();
     OggVorbis_File vf;
