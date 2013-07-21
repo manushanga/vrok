@@ -127,12 +127,13 @@ VPOutPluginPulse::~VPOutPluginPulse()
         owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
 
-    pa_simple_free(handle);
 
     if (worker){
         worker->join();
         DBG("out thread joined");
         delete worker;
     }
+
+    pa_simple_free(handle);
 
 }
