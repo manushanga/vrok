@@ -158,13 +158,14 @@ int VPlayer::open(const char *url)
         vpdecode = NULL;
         vpout->rewind();
 
-        mutexes[1].try_lock();
-        mutexes[3].try_lock();
-        mutexes[0].try_lock();
-        mutexes[0].unlock();
-        mutexes[2].try_lock();
-        mutexes[2].unlock();
     }
+
+    mutexes[1].try_lock();
+    mutexes[3].try_lock();
+    mutexes[0].try_lock();
+    mutexes[0].unlock();
+    mutexes[2].try_lock();
+    mutexes[2].unlock();
 
     this_track[0]='\0';
 
@@ -273,10 +274,8 @@ void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
         gapless_compatible = true;
     else
         gapless_compatible = false;
-    track_samplerate = samplerate;
-    track_channels = channels;
 
-    if (!gapless_compatible) {
+    //if (!gapless_compatible) {
         if (vpout){
             delete vpout;
             vpout=NULL;
@@ -287,19 +286,23 @@ void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
         if (buffer2)
             delete[] buffer2;
 
-        buffer1 = new float[VPBUFFER_FRAMES*track_channels];
-        buffer2 = new float[VPBUFFER_FRAMES*track_channels];
+        buffer1 = new float[VPBUFFER_FRAMES*channels];
+        buffer2 = new float[VPBUFFER_FRAMES*channels];
 
-        for (unsigned i=0;i<VPBUFFER_FRAMES*track_channels;i++){
+        for (unsigned i=0;i<VPBUFFER_FRAMES*channels;i++){
             buffer1[i]=0.0f;
             buffer2[i]=0.0f;
         }
 
+        track_samplerate = samplerate;
+        track_channels = channels;
+
+
         DBG("Init sound output on "<< vpout_entries[DEFAULT_VPOUT_PLUGIN].name);
         vpout = (VPOutPlugin *) vpout_entries[DEFAULT_VPOUT_PLUGIN].creator();
 
-        DBG("track chs:"<<track_channels);
-        DBG("track rate:"<<track_samplerate);
+        DBG("track chs:"<<channels);
+        DBG("track rate:"<<samplerate);
 
         for (std::vector<effect_entry_t>::iterator it=effects.begin();
              it!=effects.end();
@@ -313,16 +316,9 @@ void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
             }
         }
 
-        mutexes[1].try_lock();
-        mutexes[3].try_lock();
-        mutexes[0].try_lock();
-        mutexes[0].unlock();
-        mutexes[2].try_lock();
-        mutexes[2].unlock();
+        vpout->init(this, samplerate, channels);
 
-        vpout->init(this, track_samplerate, track_channels);
-
-    }
+    //}
 
 }
 
