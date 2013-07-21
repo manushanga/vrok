@@ -152,6 +152,9 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
 {
 
+    m_pause.lock();
+    ATOMIC_CAS(&pause_check,false,true);
+
     owner->mutexes[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
         owner->buffer1[i]=0.0f;
@@ -161,11 +164,8 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
         owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
 
-    m_pause.lock();
-    ATOMIC_CAS(&pause_check,false,true);
-
     while (!ATOMIC_CAS(&paused,false,false)) {}
-
+    lpdsbuffer->Stop();
 }
 
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
@@ -176,6 +176,7 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
         m_pause.try_lock();
         m_pause.unlock();
         while (ATOMIC_CAS(&paused,true,true)) {}
+        lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
     }
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
@@ -185,6 +186,7 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
         m_pause.lock();
         ATOMIC_CAS(&pause_check,false,true);
         while (!ATOMIC_CAS(&paused,false,false)) {}
+        lpdsbuffer->Stop();
     }
 }
 

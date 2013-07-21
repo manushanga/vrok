@@ -305,6 +305,13 @@ void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
             }
         }
 
+        mutexes[1].lock();
+        mutexes[3].lock();
+        mutexes[0].try_lock();
+        mutexes[0].unlock();
+        mutexes[2].try_lock();
+        mutexes[2].unlock();
+
         vpout->init(this, track_samplerate, track_channels);
 
     }
