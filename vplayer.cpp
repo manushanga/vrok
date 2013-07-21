@@ -38,16 +38,14 @@ void VPlayer::play_work(VPlayer *self)
                 DBG("new track");
                 self->vpout->resume();
             } else {
-                self->mutex_control.lock();
+                delete self->play_worker;
                 self->play_worker = NULL;
-                self->mutex_control.unlock();
                 break;
             }
         } else {
             DBG("no new track");
-            self->mutex_control.lock();
+            delete self->play_worker;
             self->play_worker = NULL;
-            self->mutex_control.unlock();
             break;
         }
     }
@@ -149,6 +147,7 @@ void VPlayer::getSupportedFileTypeExtensions(char **exts)
 }
 int VPlayer::open(const char *url)
 {
+    mutex_control.lock();
 
     if (vpdecode){
         vpout->resume();
@@ -160,7 +159,7 @@ int VPlayer::open(const char *url)
         vpdecode = NULL;
         vpout->rewind();
     }
-    mutex_control.lock();
+
     this_track[0]='\0';
 
 
@@ -230,6 +229,7 @@ bool VPlayer::isPlaying()
 
 VPlayer::~VPlayer()
 {
+    mutex_control.lock();
     if (vpdecode){
         vpout->resume();
         ATOMIC_CAS(&work,true,false);
@@ -248,13 +248,14 @@ VPlayer::~VPlayer()
             delete it->eff;
         }
     }
-
+    mutex_control.unlock();
     if (vpout)
         delete vpout;
     if (buffer1)
         delete[] buffer1;
     if (buffer2)
         delete[] buffer2;
+
     config_finit();
 
 }

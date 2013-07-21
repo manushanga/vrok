@@ -155,11 +155,11 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
     m_pause.lock();
     ATOMIC_CAS(&pause_check,false,true);
 
-    owner->mutexes[0].lock();
+    owner->mutexes[0].try_lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
         owner->buffer1[i]=0.0f;
     owner->mutexes[1].unlock();
-    owner->mutexes[2].lock();
+    owner->mutexes[2].try_lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
         owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
@@ -233,12 +233,12 @@ VPOutPluginDSound::~VPOutPluginDSound()
     ATOMIC_CAS(&work,true,false);
     resume();
 
-    owner->mutexes[0].lock();
+    owner->mutexes[0].try_lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
         owner->buffer1[i]=0.0f;
     owner->mutexes[1].unlock();
 
-    owner->mutexes[2].lock();
+    owner->mutexes[2].try_lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
         owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
@@ -247,11 +247,13 @@ VPOutPluginDSound::~VPOutPluginDSound()
         DBG("out thread joined");
         delete worker;
     }
-    delete[] wbuffer;
     lpdsbuffer->Stop();
 
     lpdsbuffer->Release();
 
     lpds->Release();
+
+
+    delete[] wbuffer;
 }
 
