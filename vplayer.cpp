@@ -36,7 +36,6 @@ void VPlayer::play_work(VPlayer *self)
                 self->open(self->next_track);
                 self->active = true;
                 DBG("new track");
-                self->vpout->resume();
             } else {
                 delete self->play_worker;
                 self->play_worker = NULL;
@@ -158,6 +157,13 @@ int VPlayer::open(const char *url)
         delete vpdecode;
         vpdecode = NULL;
         vpout->rewind();
+
+        mutexes[1].try_lock();
+        mutexes[3].try_lock();
+        mutexes[0].try_lock();
+        mutexes[0].unlock();
+        mutexes[2].try_lock();
+        mutexes[2].unlock();
     }
 
     this_track[0]='\0';
@@ -188,9 +194,10 @@ int VPlayer::open(const char *url)
         play_worker = new std::thread((void(*)(void*))VPlayer::play_work, this);
         play_worker_done = false;
         paused = false;
-        DBG("make play worker");
-        vpout->resume();
+        DBG("make play worker");    
     }
+
+    vpout->resume();
 
     mutex_control.unlock();
     announce(VP_STATUS_OPEN);
