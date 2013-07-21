@@ -32,9 +32,9 @@
 inline FILE *fopenu(const char *path,const char *opt){
     DBG(path);
     wchar_t wpath[1024];
-    wchar_t wopt[4];
+    wchar_t wopt[8];
     MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, 1024);
-    MultiByteToWideChar(CP_UTF8, 0, opt, -1, wopt, 4);
+    MultiByteToWideChar(CP_UTF8, 0, opt, -1, wopt, 8);
 
     return _wfopen(wpath, wopt);
 }

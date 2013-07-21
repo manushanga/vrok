@@ -21,7 +21,7 @@ VPOutPlugin* VPOutPluginAlsa::VPOutPluginAlsa_new()
 void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
 {
     int ret;
-    unsigned out_frames;
+    unsigned out_frames=0;
     unsigned chans=self->owner->track_channels;
 
     while (ATOMIC_CAS(&self->work,true,true)){
@@ -202,7 +202,6 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
         owner->buffer2[i]=0.0f;
     owner->mutexes[3].unlock();
 
-    snd_pcm_drain(handle);
     snd_pcm_close(handle);
 
     if (worker){

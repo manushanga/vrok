@@ -84,8 +84,8 @@ OTHER_FILES += README.md \
     LICENSE
 
 QMAKE_CXXFLAGS += -Wall -O4 -msse4.2 -ffast-math
-QMAKE_CXXFLAGS_DEBUG += -pg
-QMAKE_LFLAGS_DEBUG += -pg
+#QMAKE_CXXFLAGS_DEBUG += -pg
+#QMAKE_LFLAGS_DEBUG += -pg
 
 linux-g++* {
 LIBS += -lpthread

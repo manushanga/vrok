@@ -241,9 +241,10 @@ void VrokMain::fillQueue()
     srand(time(NULL));
     if (contextMenuQueue[QA_FILLRAN]->isChecked()) {
         QStandardItemModel fileModel;
+        int j=0;
         while (queueModel.rowCount()<10){
             loadDirFilesModel(dirs[rand() % (dirs.count()-1)], &fileModel);
-            int r = rand() % fileModel.rowCount();
+            int r = (rand() + j) % fileModel.rowCount();
             for (int i=0;i<r;i++) {
                 int rc = queueModel.rowCount();
                 int tr = (rand()+i*i) % (fileModel.rowCount()-1);
@@ -251,8 +252,11 @@ void VrokMain::fillQueue()
                 queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
 
             }
+            j++;
         }
-        ui->lvQueue->setModel(&queueModel);
+        QString path = queueModel.item(0,1)->text();
+        queueModel.removeRow(0);
+        vp->open(path.toUtf8().data());
     } else if (contextMenuQueue[QA_FILLSEQ]->isChecked()) {
         QStandardItemModel fileModel;
         while (queueModel.rowCount()<10){
@@ -265,6 +269,9 @@ void VrokMain::fillQueue()
 
             }
         }
+        QString path = queueModel.item(0,1)->text();
+        queueModel.removeRow(0);
+        vp->open(path.toUtf8().data());
     }
 }
 
@@ -399,6 +406,8 @@ VrokMain::~VrokMain()
 
 void VrokMain::on_sbFolderSeek_valueChanged(int value)
 {
+
+    ui->lblDisplay->setText(dirs.at(value).section('/',-1,-1));
     loadDirFilesModel(dirs.at(value),&dirFilesModel);
 }
 
@@ -442,7 +451,6 @@ QStringList VrokMain::getExtentionsList()
 void VrokMain::loadDirFilesModel(QString opendir, QStandardItemModel *model)
 {
     if (!dirs.empty()) {
-        ui->lblDisplay->setText(opendir.section(QDir::separator(),-1,-1));
         QStringList exts=getExtentionsList();
         QDirIterator iterator(opendir,exts,QDir::Files);
         curdir.setPath(opendir);

@@ -25,7 +25,7 @@ void VPlayer::play_work(VPlayer *self)
 {
     while (1) {
         self->vpdecode->reader();
-        self->active = false;
+        ATOMIC_CAS(&self->active,true,false);
         self->next_track[0]='\0';
 
 
@@ -155,6 +155,7 @@ int VPlayer::open(const char *url)
         paused=false;
         DBG("free decoder");
         ATOMIC_CAS(&work,true,false);
+        while (ATOMIC_CAS(&active,true,true)) {}
         delete vpdecode;
         vpdecode = NULL;
         vpout->rewind();
@@ -181,13 +182,13 @@ int VPlayer::open(const char *url)
         ret = -1;
     }
 
-    work=true;
+    work = true;
+    active = true;
 
     if (!play_worker){
         play_worker = new std::thread((void(*)(void*))VPlayer::play_work, this);
         play_worker_done = false;
         paused = false;
-        active = true;
         DBG("make play worker");
         vpout->resume();
     }
@@ -232,6 +233,7 @@ VPlayer::~VPlayer()
     if (vpdecode){
         vpout->resume();
         ATOMIC_CAS(&work,true,false);
+        while (ATOMIC_CAS(&active,true,true)) {}
         delete vpdecode;
         vpdecode = NULL;
         vpout->rewind();
@@ -267,6 +269,11 @@ void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
     track_channels = channels;
 
     if (!gapless_compatible) {
+        if (vpout){
+            delete vpout;
+            vpout=NULL;
+        }
+
         if (buffer1)
             delete[] buffer1;
         if (buffer2)
@@ -280,11 +287,6 @@ void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
             buffer2[i]=0.0f;
         }
 
-        if (vpout){
-            vpout->resume();
-            delete vpout;
-            vpout=NULL;
-        }
         DBG("Init sound output on "<< vpout_entries[DEFAULT_VPOUT_PLUGIN].name);
         vpout = (VPOutPlugin *) vpout_entries[DEFAULT_VPOUT_PLUGIN].creator();
 
