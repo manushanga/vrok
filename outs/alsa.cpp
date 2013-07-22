@@ -105,7 +105,6 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
     owner->mutex[3].unlock();
 
     while (!ATOMIC_CAS(&paused,false,false)) {}
-
 }
 
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::resume()

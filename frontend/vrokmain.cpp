@@ -244,10 +244,9 @@ void VrokMain::fillQueue()
         int j=0;
         while (queueModel.rowCount()<10){
             loadDirFilesModel(dirs[rand() % (dirs.count()-1)], &fileModel);
-            int r = (rand()*(j+1) +7) % fileModel.rowCount();
-            for (int i=0;i<r;i++) {
+            for (int i=0;i<4;i++) {
                 int rc = queueModel.rowCount();
-                int tr = (rand()+i*i) % (fileModel.rowCount()-1);
+                int tr = (rand()*5+rand()+i) % (fileModel.rowCount());
                 queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
                 queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
 

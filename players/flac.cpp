@@ -50,8 +50,9 @@ static void error_callback(const FLAC__StreamDecoder *decoder,
                            FLAC__StreamDecoderErrorStatus status,
                            void *client_data)
 {
-
+    FLACDecoder *me = (FLACDecoder*) client_data;
     DBG(FLAC__StreamDecoderErrorStatusString[status]);
+    ATOMIC_CAS(&me->owner->work,true,false);
 }
 
 FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDecoder *decoder,
