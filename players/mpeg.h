@@ -19,13 +19,12 @@ class MPEGDecoder : public VPDecoder
 private:
     FILE *fcurrent;
 public:
-    static VPDecoder* VPDecoderMPEG_new();
+    static VPDecoder* VPDecoderMPEG_new(VPlayer *v);
     mpg123_handle *mh;
     short *buffer;
     VPlayer *owner;
 
-    MPEGDecoder();
-    void init(VPlayer *v);
+    MPEGDecoder(VPlayer *v);
     int open(const char *url);
     void reader();
     unsigned long getLength();

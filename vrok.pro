@@ -37,13 +37,13 @@ HEADERS  += \
     include/threads.h \
     include/vrok.h \
     include/out.h \
+    include/vputils.h \
     effects/shibatch/paramlist.hpp \
     effects/shibatch/Equ.h \
     effects/eq.h \
     players/flac.h \
     players/mpeg.h \
-    players/ogg.h \
-    vputils.h
+    players/ogg.h
 
 } else {
 SOURCES += \
@@ -64,6 +64,9 @@ HEADERS  += \
     include/decoder.h \
     include/effect.h \
     include/config.h \
+    include/vputils.h \
+    include/threads.h \
+    include/vrok.h \
     frontend/vrokmain.h \
     frontend/eqwidget.h \
     effects/shibatch/paramlist.hpp \
@@ -71,10 +74,8 @@ HEADERS  += \
     effects/eq.h \
     players/flac.h \
     players/mpeg.h \
-    players/ogg.h \
-    include/threads.h \
-    include/vrok.h \
-    vputils.h
+    players/ogg.h
+
 
 FORMS    += frontend/vrokmain.ui \
             frontend/eqwidget.ui

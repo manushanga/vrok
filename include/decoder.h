@@ -5,8 +5,10 @@
 
 class VPDecoder
 {
+protected:
+    VPlayer *owner;
+    VPBuffer *bout;
 public:
-    virtual void init(VPlayer *v) = 0;
     virtual void reader() = 0;
     virtual int open(const char *url) = 0;
     virtual unsigned long getLength() = 0;

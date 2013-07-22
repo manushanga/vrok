@@ -1,6 +1,8 @@
 #ifndef CONFIG_OUT_H
 #define CONFIG_OUT_H
 
+#include <cassert>
+
 typedef void *(*vpout_creator_t)(void);
 
 #define VPBUFFER_PERIOD 512

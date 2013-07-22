@@ -20,8 +20,8 @@ class VPlayer;
 class VPOutPlugin{
 public:
     bool work;
-
-    virtual int init(VPlayer *v, unsigned samplerate, unsigned channels) = 0;
+    VPBuffer *bin;
+    virtual int init(VPlayer *v, VPBuffer *in) = 0;
     virtual void rewind() = 0;
     virtual void resume() = 0;
     virtual void pause() = 0;

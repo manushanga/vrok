@@ -10,14 +10,13 @@ class OGGDecoder : public VPDecoder
 private:
     FILE *fcurrent;
 public:
-    static VPDecoder* VPDecoderOGG_new();
+    static VPDecoder* VPDecoderOGG_new(VPlayer *v);
     OggVorbis_File vf;
-    OGGDecoder();
     float *buffer;
     unsigned half_buffer_size;
     VPlayer *owner;
 
-    void init(VPlayer *v);
+    OGGDecoder(VPlayer *v);
     int open(const char *url);
     void reader();
     unsigned long getLength();

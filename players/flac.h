@@ -27,17 +27,15 @@ private:
                                                          const FLAC__int32 * const buffer[],
                                                          void *client_data);
 public:
-    static VPDecoder* VPDecoderFLAC_new();
+    static VPDecoder* VPDecoderFLAC_new(VPlayer *v);
     FLAC__StreamDecoder *decoder;
     FLAC__StreamDecoderInitStatus init_status;
     float *buffer;
     unsigned buffer_write;
     unsigned half_buffer_bytes;
     int ret_vpout_open;
-    VPlayer *owner;
 
-    FLACDecoder();
-    void init(VPlayer *v);
+    FLACDecoder(VPlayer *v);
     int open(const char *url);
     void reader();
     unsigned long getLength();

@@ -1,4 +1,3 @@
-
 /*
   Vrok - smokin' audio
   (C) 2012 Madura A. released under GPL 2.0. All following copyrights
@@ -13,9 +12,9 @@
 #include "vrok.h"
 #include "flac.h"
 
-VPDecoder* FLACDecoder::VPDecoderFLAC_new()
+VPDecoder* FLACDecoder::VPDecoderFLAC_new(VPlayer *v)
 {
-    return (VPDecoder *)new FLACDecoder();
+    return (VPDecoder *)new FLACDecoder(v);
 }
 void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
                               const FLAC__StreamMetadata *metadata,
@@ -25,14 +24,22 @@ void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
 
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
         me->to_fl = 1.0f/pow(2,metadata->data.stream_info.bits_per_sample);
-        DBG("meta ok");
         me->half_buffer_bytes = VPBUFFER_FRAMES*metadata->data.stream_info.channels*sizeof(float);
-        if (me->buffer)
-            delete[] me->buffer;
-
         me->buffer = new float[VPBUFFER_FRAMES*metadata->data.stream_info.channels*2];
 
-        me->owner->set_metadata(  metadata->data.stream_info.sample_rate, metadata->data.stream_info.channels);
+        VPBuffer bin;
+        bin.srate = metadata->data.stream_info.sample_rate;
+        bin.chans = metadata->data.stream_info.channels;
+        bin.buffer1 = NULL;
+        bin.buffer2 = NULL;
+
+        me->owner->setOutBuffers(&bin,&me->bout);
+
+
+        for (unsigned i=0;i<VPBUFFER_FRAMES*me->bout->chans;i++){
+            me->bout->buffer1[i]=0.0f;
+            me->bout->buffer2[i]=0.0f;
+        }
     }
 
     DBG("meta done");
@@ -54,6 +61,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 {
     VPlayer *self = ((FLACDecoder*) client_data)->owner;
     FLACDecoder *selfp = (FLACDecoder*) client_data;
+
     // general overview
     // fill buffer if not full
     // return ok
@@ -71,11 +79,11 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
     if (!ATOMIC_CAS(&self->work,false,false))
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
-    if (selfp->buffer_write+frame->header.blocksize*self->track_channels + 1 < VPBUFFER_FRAMES*2*self->track_channels){
+    if (selfp->buffer_write+frame->header.blocksize*selfp->bout->chans + 1 < VPBUFFER_FRAMES*2*selfp->bout->chans){
         size_t i=0,j=0;
         //DBG("s1");
         while (i<frame->header.blocksize) {
-            for (unsigned ch=0;ch<self->track_channels;ch++){
+            for (unsigned ch=0;ch<selfp->bout->chans;ch++){
                 selfp->buffer[selfp->buffer_write+j]=selfp->to_fl*buffer[ch][i];
                 j++;
             }
@@ -83,42 +91,33 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
         }
         selfp->buffer_write+=j;
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
-    } else if (selfp->buffer_write+frame->header.blocksize*self->track_channels + 1 == VPBUFFER_FRAMES*2*self->track_channels) {
+    } else if (selfp->buffer_write+frame->header.blocksize*selfp->bout->chans + 1 == VPBUFFER_FRAMES*2*selfp->bout->chans) {
         size_t i=0,j=0;
-        //DBG("s2");
 
         while (i<frame->header.blocksize) {
-            for (unsigned ch=0;ch<self->track_channels;ch++){
+            for (unsigned ch=0;ch<selfp->bout->chans;ch++){
                 selfp->buffer[selfp->buffer_write+j]=selfp->to_fl*buffer[ch][i];
                 j++;
             }
             i++;
         }
 
-        self->mutexes[0].lock();
+        self->mutex[0].lock();
         j=0;
 
         // write buffer1
-        memcpy(self->buffer1,selfp->buffer,selfp->half_buffer_bytes );
-        /*while(j<VPBUFFER_FRAMES*self->track_channels){
-            self->buffer1[j] = selfp->buffer[j];
-            j++;
-        }*/
-        self->post_process(self->buffer1);
-        self->mutexes[1].unlock();
+        memcpy(selfp->bout->buffer1,selfp->buffer,selfp->half_buffer_bytes );
+        self->postProcess(selfp->bout->buffer1);
 
-        self->mutexes[2].lock();
+        self->mutex[1].unlock();
+
+        self->mutex[2].lock();
         j=0;
-        //DBG("wb2");
-        // write buffer2
-        memcpy(self->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
 
-        /*while(j<VPBUFFER_FRAMES*self->track_channels){
-            self->buffer2[j] = selfp->buffer[VPBUFFER_FRAMES*self->track_channels+j];
-            j++;
-        }*/
-        self->post_process(self->buffer2);
-        self->mutexes[3].unlock();
+        memcpy(selfp->bout->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
+        self->postProcess(selfp->bout->buffer2);
+
+        self->mutex[3].unlock();
 
         selfp->buffer_write=0;
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
@@ -126,66 +125,60 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 
         size_t i=0,j=selfp->buffer_write;
 
-        while (j<VPBUFFER_FRAMES*2*self->track_channels) {
-            for (unsigned ch=0;ch<self->track_channels;ch++){
+        while (j<VPBUFFER_FRAMES*2*selfp->bout->chans) {
+            for (unsigned ch=0;ch<selfp->bout->chans;ch++){
                 selfp->buffer[j]=selfp->to_fl*buffer[ch][i];
                 j++;
             }
             i++;
         }
 
-        self->mutexes[0].lock();
+        self->mutex[0].lock();
         j=0;
         // write buffer1
-        memcpy(self->buffer1,selfp->buffer,selfp->half_buffer_bytes);
-        /*while(j<VPBUFFER_FRAMES*self->track_channels){
-            self->buffer1[j] = selfp->buffer[j];
-            j++;
-        }*/
-        self->post_process(self->buffer1);
-        self->mutexes[1].unlock();
-       // DBG("s3");
-        self->mutexes[2].lock();
+        memcpy(selfp->bout->buffer1,selfp->buffer,selfp->half_buffer_bytes);
+        self->postProcess(selfp->bout->buffer1);
+
+        self->mutex[1].unlock();
+
+        self->mutex[2].lock();
         j=0;
         // write buffer2
-        memcpy(self->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
-        /*while(j<VPBUFFER_FRAMES*self->track_channels){
-            self->buffer2[j] = selfp->buffer[VPBUFFER_FRAMES*self->track_channels+j];
-            j++;
-        }*/
-        self->post_process(self->buffer2);
-        self->mutexes[3].unlock();
+        memcpy(selfp->bout->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
+        self->postProcess(selfp->bout->buffer2);
+
+        self->mutex[3].unlock();
 
         if (!ATOMIC_CAS(&self->work,false,false))
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
         while (frame->header.blocksize-i > VPBUFFER_FRAMES*2 ){
 
-            self->mutexes[0].lock();
+            self->mutex[0].lock();
             j=0;
             // write buffer1
-            while(j<VPBUFFER_FRAMES*self->track_channels){
-                for (unsigned ch=0;ch<self->track_channels;ch++){
-                    self->buffer1[j]=selfp->to_fl*buffer[ch][i];
+            while(j<VPBUFFER_FRAMES*selfp->bout->chans){
+                for (unsigned ch=0;ch<selfp->bout->chans;ch++){
+                    selfp->bout->buffer1[j]=selfp->to_fl*buffer[ch][i];
                     j++;
                 }
                 i++;
             }
-            self->post_process(self->buffer1);
-            self->mutexes[1].unlock();
+            self->postProcess(selfp->bout->buffer1);
+            self->mutex[1].unlock();
 
-            self->mutexes[2].lock();
+            self->mutex[2].lock();
             j=0;
             // write buffer2
-            while(j<VPBUFFER_FRAMES*self->track_channels){
-                for (unsigned ch=0;ch<self->track_channels;ch++){
-                    selfp->owner->buffer2[j]=selfp->to_fl*buffer[ch][i];
+            while(j<VPBUFFER_FRAMES*selfp->bout->chans){
+                for (unsigned ch=0;ch<selfp->bout->chans;ch++){
+                    selfp->bout->buffer2[j]=selfp->to_fl*buffer[ch][i];
                     j++;
                 }
                 i++;
             }
-            self->post_process(self->buffer2);
-            self->mutexes[3].unlock();
+            self->postProcess(selfp->bout->buffer2);
+            self->mutex[3].unlock();
 
             if (!ATOMIC_CAS(&self->work,false,false))
                 return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
@@ -193,7 +186,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 
         j=0;
         while (i<frame->header.blocksize) {
-            for (unsigned ch=0;ch<self->track_channels;ch++){
+            for (unsigned ch=0;ch<selfp->bout->chans;ch++){
                 selfp->buffer[j]=selfp->to_fl*buffer[ch][i];
                 j++;
             }
@@ -204,28 +197,23 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
     }
 }
 
-FLACDecoder::FLACDecoder()
+FLACDecoder::FLACDecoder(VPlayer *v)
 {
     buffer = NULL;
     decoder = NULL;
-
+    owner = v;
     if ((decoder = FLAC__stream_decoder_new()) == NULL) {
         DBG("FLACPlayer:open: decoder create fail");
     }
     buffer_write = 0;
     init_status = FLAC__STREAM_DECODER_INIT_STATUS_ERROR_OPENING_FILE;
 }
-void FLACDecoder::init(VPlayer *v)
-{
-    owner = v;
-}
+
 FLACDecoder::~FLACDecoder()
 {
-   // owner->vpout_close();
     FLAC__stream_decoder_finish(decoder);
     FLAC__stream_decoder_delete(decoder);
-    if (buffer)
-        delete[] buffer;
+    delete[] buffer;
 }
 
 int FLACDecoder::open(const char *url)
@@ -241,6 +229,7 @@ int FLACDecoder::open(const char *url)
 
     return ret_vpout_open;
 }
+
 void FLACDecoder::reader()
 {
     if (init_status==FLAC__STREAM_DECODER_INIT_STATUS_OK) {
@@ -255,6 +244,7 @@ unsigned long FLACDecoder::getLength()
 {
     return (unsigned long)FLAC__stream_decoder_get_total_samples(decoder);
 }
+
 void FLACDecoder::setPosition(unsigned long t)
 {
     // worst seeking evaar!

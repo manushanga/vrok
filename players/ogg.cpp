@@ -12,19 +12,16 @@
 #include "vrok.h"
 #include "ogg.h"
 
-VPDecoder* OGGDecoder::VPDecoderOGG_new()
+VPDecoder* OGGDecoder::VPDecoderOGG_new(VPlayer *v)
 {
-    return (VPDecoder *)new OGGDecoder();
+    return (VPDecoder *)new OGGDecoder(v);
 }
 
-OGGDecoder::OGGDecoder()
-{
-
-}
-void OGGDecoder::init(VPlayer *v)
+OGGDecoder::OGGDecoder(VPlayer *v)
 {
     owner = v;
 }
+
 int OGGDecoder::open(const char *url)
 {
 
@@ -34,12 +31,20 @@ int OGGDecoder::open(const char *url)
         return -1;
     }
 
-
     buffer = new float[VPBUFFER_FRAMES*ov_info(&vf,0)->channels*2];
     half_buffer_size = VPBUFFER_FRAMES*ov_info(&vf,0)->channels*sizeof(float);
 
-    owner->set_metadata(ov_info(&vf,0)->rate, ov_info(&vf,0)->channels);
-    DBG("meta done");
+    VPBuffer bin;
+    bin.srate = ov_info(&vf,0)->rate;
+    bin.chans = ov_info(&vf,0)->channels;
+    bin.buffer1 = NULL;
+    bin.buffer2 = NULL;
+
+    owner->setOutBuffers(&bin,&bout);
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bout->chans;i++){
+        bout->buffer1[i]=0.0f;
+        bout->buffer2[i]=0.0f;
+    }
 
     return 0;
 }
@@ -50,6 +55,7 @@ void OGGDecoder::reader()
     long ret=1;
     int bit;
     size_t j,done=0;
+
     while (ATOMIC_CAS(&owner->work,true,true) && ret > 0 ){
         j=0;
         ret=1;
@@ -57,7 +63,7 @@ void OGGDecoder::reader()
         while (done<VPBUFFER_FRAMES*2 && ret > 0){
             ret = ov_read_float( &vf, &pcm, VPBUFFER_FRAMES*2 - done,&bit );
             for (long i=0;i<ret;i++){
-                for (size_t ch=0;ch<owner->track_channels;ch++){
+                for (size_t ch=0;ch<bout->chans;ch++){
                     buffer[j]=pcm[ch][i];
                     j++;
                 }
@@ -67,15 +73,15 @@ void OGGDecoder::reader()
 
         if (ret == 0)
             break;
-        owner->mutexes[0].lock();
-        memcpy(owner->buffer1,buffer,VPBUFFER_FRAMES*owner->track_channels*sizeof(float) );
-        owner->post_process(owner->buffer1);
-        owner->mutexes[1].unlock();
+        owner->mutex[0].lock();
+        memcpy(bout->buffer1, buffer, VPBUFFER_FRAMES*bout->chans*sizeof(float) );
+        owner->postProcess(bout->buffer1);
+        owner->mutex[1].unlock();
 
-        owner->mutexes[2].lock();
-        memcpy(owner->buffer2,buffer+VPBUFFER_FRAMES*owner->track_channels ,VPBUFFER_FRAMES*owner->track_channels*sizeof(float) );
-        owner->post_process(owner->buffer2);
-        owner->mutexes[3].unlock();
+        owner->mutex[2].lock();
+        memcpy(bout->buffer2, buffer + VPBUFFER_FRAMES*bout->chans , VPBUFFER_FRAMES*bout->chans*sizeof(float) );
+        owner->postProcess(bout->buffer2);
+        owner->mutex[3].unlock();
 
     }
 
@@ -98,6 +104,5 @@ unsigned long OGGDecoder::getPosition()
 OGGDecoder::~OGGDecoder()
 {
     ov_clear(&vf);
-    if (buffer)
-        delete[] buffer;
+    delete[] buffer;
 }

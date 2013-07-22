@@ -13,10 +13,12 @@
 
 class VPEffectPlugin
 {
+protected:
+    VPBuffer *bin,*bout;
 public:
-    virtual int init(VPlayer *v) = 0;
+    virtual int init(VPlayer *v, VPBuffer *in, VPBuffer **out) = 0;
     virtual void process(float *buffer) = 0;
-    virtual void status_change(VPStatus status) {}
+    virtual void statusChange(VPStatus status) { status; }
     virtual int finit() = 0;
     virtual ~VPEffectPlugin() {}
 };

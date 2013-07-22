@@ -18,8 +18,8 @@ VPOutPlugin* VPOutPluginPulse::VPOutPluginPulse_new()
 
 void VPOutPluginPulse::worker_run(VPOutPluginPulse *self)
 {
-    int ret,error;
-    unsigned chans=self->owner->track_channels;
+    int error;
+    unsigned chans=self->bin->chans;
 
     while (ATOMIC_CAS(&self->work,true,true)){
         if (ATOMIC_CAS(&self->pause_check,true,true)) {
@@ -30,17 +30,17 @@ void VPOutPluginPulse::worker_run(VPOutPluginPulse *self)
             ATOMIC_CAS(&self->pause_check,true,false);
         }
 
-        self->owner->mutexes[1].lock();
+        self->owner->mutex[1].lock();
 
-        pa_simple_write(self->handle,self->owner->buffer1,VPBUFFER_FRAMES*sizeof(float)*chans,&error);
+        pa_simple_write(self->handle,self->bin->buffer1,VPBUFFER_FRAMES*sizeof(float)*chans,&error);
 
-        self->owner->mutexes[0].unlock();
+        self->owner->mutex[0].unlock();
 
-        self->owner->mutexes[3].lock();
+        self->owner->mutex[3].lock();
 
-        pa_simple_write(self->handle,self->owner->buffer2,VPBUFFER_FRAMES*sizeof(float)*chans,&error);
+        pa_simple_write(self->handle,self->bin->buffer2,VPBUFFER_FRAMES*sizeof(float)*chans,&error);
 
-        self->owner->mutexes[2].unlock();
+        self->owner->mutex[2].unlock();
     }
 
 }
@@ -51,14 +51,14 @@ void __attribute__((optimize("O0"))) VPOutPluginPulse::rewind()
     m_pause.lock();
     ATOMIC_CAS(&pause_check,false,true);
 
-    owner->mutexes[0].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
-        owner->buffer1[i]=0.0f;
-    owner->mutexes[1].unlock();
-    owner->mutexes[2].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
-        owner->buffer2[i]=0.0f;
-    owner->mutexes[3].unlock();
+    owner->mutex[0].try_lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+        bin->buffer1[i]=0.0f;
+    owner->mutex[1].unlock();
+    owner->mutex[2].try_lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+        bin->buffer2[i]=0.0f;
+    owner->mutex[3].unlock();
 
     while (!ATOMIC_CAS(&paused,false,false)) {}
 
@@ -85,14 +85,15 @@ void __attribute__((optimize("O0"))) VPOutPluginPulse::pause()
     }
 }
 
-int VPOutPluginPulse::init(VPlayer *v, unsigned samplerate, unsigned channels)
+int VPOutPluginPulse::init(VPlayer *v, VPBuffer *in)
 {
     DBG("Pulse:init");
     owner = v;
+
     int error;
     pa_sample_spec ss;
-    ss.channels = channels;
-    ss.rate = samplerate;
+    ss.channels = in->chans;
+    ss.rate = in->srate;
     ss.format = PA_SAMPLE_FLOAT32LE;
     handle = pa_simple_new(NULL,"Vrok",PA_STREAM_PLAYBACK,NULL,"Music",(const pa_sample_spec *)&ss,NULL,NULL,&error);
     if (!handle){
@@ -115,15 +116,15 @@ VPOutPluginPulse::~VPOutPluginPulse()
     ATOMIC_CAS(&work,true,false);
     resume();
 
-    owner->mutexes[0].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
-        owner->buffer1[i]=0.0f;
-    owner->mutexes[1].unlock();
+    owner->mutex[0].try_lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+        bin->buffer1[i]=0.0f;
+    owner->mutex[1].unlock();
 
-    owner->mutexes[2].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
-        owner->buffer2[i]=0.0f;
-    owner->mutexes[3].unlock();
+    owner->mutex[2].try_lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+        bin->buffer2[i]=0.0f;
+    owner->mutex[3].unlock();
 
 
     if (worker){

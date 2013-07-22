@@ -35,7 +35,7 @@ public:
     float *out_buf;
     unsigned out_frames;
 
-    virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);
+    virtual int init(VPlayer *v, VPBuffer *in);
     virtual void rewind();
     virtual void resume();
     virtual void pause();

@@ -141,8 +141,6 @@ VrokMain::VrokMain(QWidget *parent) :
     cursweep.setFilter(QDir::Files);
     cursweep.setNameFilters(getExtentionsList());
 
-
-
     gs = new QGraphicsScene();
     QLinearGradient gr(0,-100,0,100);
     gr.setColorAt(0,QColor(255,0,0));
@@ -185,10 +183,11 @@ VrokMain::VrokMain(QWidget *parent) :
         ui->lvFiles->setModel(&dirFilesModel);
 
         ui->lblDisplay->setText("Scanning...");
+        qApp->processEvents();
         QDir rdir(QString(config_get_lastopen().c_str()));
         folderSeekSweep(rdir);
         ui->lblDisplay->setText("Done.");
-
+        qApp->processEvents();
         ui->sbFolderSeek->setMinimum(0);
         ui->sbFolderSeek->setMaximum(dirs.size()-1);
 
@@ -196,7 +195,7 @@ VrokMain::VrokMain(QWidget *parent) :
     }
     ui->lvFiles->installEventFilter(this);
     vis_counter = 0;
-    vp->effects_active = true;
+    vp->effectsActive = true;
 
     contextMenuFiles.push_back(new QAction("Queue",this));
 
@@ -228,6 +227,7 @@ VrokMain::VrokMain(QWidget *parent) :
     connect(&tx, SIGNAL(timeout()), this, SLOT(process()));
     connect(&tcb,SIGNAL(timeout()), this, SLOT(fillQueue()));
 
+    ui->lblDisplay->setText("<center><b>-- Vrok</b> --</center>");
     // temp stuff until settings are written
     contextMenuQueue[QA_FILLNON]->setChecked(true);
 
@@ -345,11 +345,11 @@ void VrokMain::on_btnOpenDir_clicked()
     config_set_lastopen(d.toStdString());
     dirs.clear();
     ui->lblDisplay->setText("Scanning...");
-    this->update();
+    qApp->processEvents();
     QDir rdir(d);
     folderSeekSweep(rdir);
     ui->lblDisplay->setText("Done.");
-
+    qApp->processEvents();
     ui->sbFolderSeek->setMinimum(0);
     ui->sbFolderSeek->setMaximum(dirs.size()-1);
 
@@ -374,7 +374,7 @@ void VrokMain::on_btnEQ_clicked()
 }
 void VrokMain::on_btnEQt_clicked()
 {
-    if (vp->isActiveEffect((VPEffectPlugin *)eq)){
+    if (vp->isEffectActive((VPEffectPlugin *)eq)){
         config_set_eq(false);
         vp->removeEffect((VPEffectPlugin *)eq);
     } else {
@@ -384,7 +384,7 @@ void VrokMain::on_btnEQt_clicked()
 }
 void VrokMain::on_btnSpec_clicked()
 {
-    if (vp->isActiveEffect((VPEffectPlugin *)eq)){
+    if (vp->isEffectActive((VPEffectPlugin *)eq)){
         if (ui->btnSpec->isChecked())
             tx.start();
         else
@@ -397,7 +397,8 @@ VrokMain::~VrokMain()
     // effect plugins are cleaned by VPlayer
     if (vp)
         delete vp;
-
+    if (eq)
+        delete eq;
     if (gs)
         delete gs;
 

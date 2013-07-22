@@ -12,14 +12,16 @@
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)
 
-VPDecoder* MPEGDecoder::VPDecoderMPEG_new()
+VPDecoder* MPEGDecoder::VPDecoderMPEG_new(VPlayer *v)
 {
-    return (VPDecoder *)new MPEGDecoder();
+    return (VPDecoder *)new MPEGDecoder(v);
 }
 
-MPEGDecoder::MPEGDecoder()
+MPEGDecoder::MPEGDecoder(VPlayer *v)
 {
     int err;
+
+    owner = v;
     mpg123_init();
     if ((mh = mpg123_new(NULL, &err)) == NULL){
         DBG("init fail");
@@ -27,15 +29,12 @@ MPEGDecoder::MPEGDecoder()
     buffer = NULL;
 
 }
-void MPEGDecoder::init(VPlayer *v)
-{
-    owner = v;
-}
+
 void MPEGDecoder::reader()
 {
     int err = MPG123_OK;
     size_t done=0;
-    size_t count = VPBUFFER_FRAMES*owner->track_channels*2;
+    size_t count = VPBUFFER_FRAMES*bout->chans*2;
 
     while (ATOMIC_CAS(&owner->work,true,true)) {
         while (done<count*sizeof(short) && err != MPG123_DONE){
@@ -46,19 +45,19 @@ void MPEGDecoder::reader()
         if (err != MPG123_OK && err != MPG123_DONE) {
             break;
         } else {
-            owner->mutexes[0].lock();
+            owner->mutex[0].lock();
             for (size_t i=0;i<count/2;i++){
-                owner->buffer1[i]=SHORTTOFL*buffer[i];
+                bout->buffer1[i]=SHORTTOFL*buffer[i];
             }
-            owner->post_process(owner->buffer1);
-            owner->mutexes[1].unlock();
+            owner->postProcess(bout->buffer1);
+            owner->mutex[1].unlock();
 
-            owner->mutexes[2].lock();
+            owner->mutex[2].lock();
             for (size_t i=0;i<count/2;i++){
-                owner->buffer2[i]=SHORTTOFL*buffer[count/2+i];
+                bout->buffer2[i]=SHORTTOFL*buffer[count/2+i];
             }
-            owner->post_process(owner->buffer2);
-            owner->mutexes[3].unlock();
+            owner->postProcess(bout->buffer2);
+            owner->mutex[3].unlock();
         }
 
         if (err == MPG123_DONE){
@@ -81,21 +80,28 @@ int MPEGDecoder::open(const char *url)
         return -1;
     }
 
-    if (buffer!=NULL)
-        delete[] buffer;
     buffer = new short[VPBUFFER_FRAMES*channels*2];
 
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
-    DBG(encoding);
+
     if (encoding && MPG123_ENC_16 != MPG123_ENC_16) {
         DBG("unsupported");
         return -1;
     }
 
     DBG("meta done");
+    VPBuffer bin;
+    bin.srate = rate;
+    bin.chans = channels;
+    bin.buffer1 = NULL;
+    bin.buffer2 = NULL;
 
-    owner->set_metadata( rate,  channels);
+    owner->setOutBuffers(&bin,&bout);
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bout->chans;i++){
+        bout->buffer1[i]=0.0f;
+        bout->buffer2[i]=0.0f;
+    }
     return 0;
 }
 
@@ -115,12 +121,12 @@ unsigned long MPEGDecoder::getPosition()
 }
 MPEGDecoder::~MPEGDecoder()
 {
-   // owner->vpout_close();
     mpg123_close(mh);
     mpg123_delete(mh);
-    fclose(fcurrent);
     mpg123_exit();
-    if (buffer)
-        delete[] buffer;
+
+    fclose(fcurrent);
+
+    delete[] buffer;
 }
 

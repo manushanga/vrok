@@ -24,7 +24,7 @@ public:
     volatile bool pause_check;
     volatile unsigned half_buffer_size;
     short *wbuffer;
-    virtual int init(VPlayer *v, unsigned samplerate, unsigned channels);
+    virtual int init(VPlayer *v, VPBuffer *in);
     virtual void rewind();
     virtual void resume();
     virtual void pause();

@@ -26,21 +26,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
         trig[1][i]=(float *)new float[VPBUFFER_PERIOD*sizeof(float)];
     }
 
-    float fn, fi;
-    for (size_t b=0;b<BAR_COUNT;b++){
-        // lets just ASSUME that our buffer frame count is 44100
-        fn = freqs[b]/22050.0f;
-        freq_p[b]=fn;
-        fi = PI*fn;
-        for (size_t i=0;i<VPBUFFER_PERIOD;i++){
-            trig[0][b][i]=cosf(fi*i);
-            trig[1][b][i]=sinf(fi*i);
-        }
-    }
 
-    for (unsigned i=0;i<BAR_COUNT;i++){
-        mids[i]=0.0f;
-    }
     config_get_eq_knowledge_bands(knowledge);
     limit= cap;
     initd=false;
@@ -48,7 +34,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     period_count = 0;
 }
 
-void VPEffectPluginEQ::status_change(VPStatus status){
+void VPEffectPluginEQ::statusChange(VPStatus status){
     switch (status) {
         case VP_STATUS_OPEN:
         DBG("got status");
@@ -82,15 +68,16 @@ void VPEffectPluginEQ::sb_recalc_table()
         bands_copy[i] *= sb_preamp;
     }
 
-    equ_makeTable (&sb_state, bands_copy, params, owner->track_samplerate);
+    equ_makeTable (&sb_state, bands_copy, params, bin->srate);
     if (sb_paramsroot)
         paramlist_free (sb_paramsroot);
     sb_paramsroot = params;
 
 }
 
-int VPEffectPluginEQ::init(VPlayer *v)
+int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 {
+
     if (bar_array)
         delete[] bar_array;
     bar_array = new float[BAR_COUNT*BAR_SETS];
@@ -102,10 +89,35 @@ int VPEffectPluginEQ::init(VPlayer *v)
         mids[i] = 0.0f;
         sb_bands[i] = 0.6f*target[i];
     }
+
     owner = v;
-    equ_init (&sb_state, 10.0f, owner->track_channels);
+    bin = in;
+    bout = in;
+    *out = in;
+
+    float fn=0.0f, fi;
+    for (size_t b=0;b<BAR_COUNT;b++){
+        // lets just ASSUME that our buffer frame count is 44100
+
+        fn = (2*freqs[b])/(bin->srate);
+        freq_p[b]=fn;
+
+        fi = PI*fn;
+        for (size_t i=0;i<VPBUFFER_PERIOD;i++){
+            trig[0][b][i]=cosf(fi*i);
+            trig[1][b][i]=sinf(fi*i);
+        }
+    }
+
+    for (unsigned i=0;i<BAR_COUNT;i++){
+        mids[i]=0.0f;
+    }
+
+
+    equ_init (&sb_state, 10.0f, bin->chans);
     sb_recalc_table();
     initd = true;
+
     return 0;
 
 }
@@ -118,7 +130,7 @@ void VPEffectPluginEQ::applyKnowledge()
             sb_bands[i] = next;
             count++;
         } else {
-            knowledge[i]/=2.0f;
+            knowledge[i]*=0.5f;
         }
     }
     if (count>15) {
@@ -132,10 +144,12 @@ void VPEffectPluginEQ::process(float *buffer)
         sched_recalc=false;
     }
 
-    equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, owner->track_channels);
+    assert(buffer == bin->buffer1 || buffer == bin->buffer2);
+
+    equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, bin->chans);
 
     float mid,xre,xim,newb;
-    unsigned step=0,chans=owner->track_channels,ichans;
+    unsigned step=0,chans=2,ichans;
     float *bar_array_w=bar_array;
 
     while (step<BAR_SETS){
@@ -165,7 +179,7 @@ void VPEffectPluginEQ::process(float *buffer)
 
         step+=1;
         bar_array_w += BAR_COUNT;
-        buffer += VPBUFFER_PERIOD*owner->track_channels;
+        buffer += VPBUFFER_PERIOD*2;
     }
     if (!period_count){
         applyKnowledge();

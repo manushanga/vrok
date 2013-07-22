@@ -7,7 +7,7 @@
 */
 /*
   Notes
-  A file is played on play_worker thread, the mutexes[0], mutexes[2], mutex_pause
+  A file is played on playWorker thread, the mutex[0], mutex[2], mutex_pause
   control it's states. Pausing is done by invoking a try_lock() and the thread
   locks itself up next time it reaches mutex_pause->lock(), paused should be true.
 
@@ -21,54 +21,92 @@
 #include "decoder.h"
 #include "effect.h"
 
-void VPlayer::play_work(VPlayer *self)
+void VPlayer::playWork(VPlayer *self)
 {
     while (1) {
         self->vpdecode->reader();
         ATOMIC_CAS(&self->active,true,false);
-        self->next_track[0]='\0';
+        self->nextTrack[0]='\0';
 
 
-        if (self->next_track_cb && self->work) {
-            self->next_track_cb(self->next_track, self->next_cb_user);
+        if (self->nextTrackCallback && self->work) {
+            self->nextTrackCallback(self->nextTrack, self->nextCallbackUser);
 
-            if (self->next_track[0]!='\0') {
-                self->open(self->next_track);
+            if (self->nextTrack[0]!='\0') {
+                self->open(self->nextTrack);
                 self->active = true;
                 DBG("new track");
             } else {
-                delete self->play_worker;
-                self->play_worker = NULL;
+                delete self->playWorker;
+                self->playWorker = NULL;
                 break;
             }
         } else {
             DBG("no new track");
-            delete self->play_worker;
-            self->play_worker = NULL;
+            delete self->playWorker;
+            self->playWorker = NULL;
             break;
         }
     }
     DBG("play worker dying");
     self->announce(VP_STATUS_STOPPED);
-
 }
+
+VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
+{
+    control.try_lock();
+    nextCallbackUser = cb_user;
+
+    dspCount = 0;
+    playWorker = NULL;
+    work=false;
+    active=false;
+    effectsActive=false;
+
+    paused = true;
+
+    vpout=NULL;
+    vpdecode=NULL;
+
+    nextTrackCallback = cb;
+    nextTrack[0]='\0';
+    currentTrack[0]='\0';
+
+    bout.chans = 0;
+    bout.srate = 0;
+    bout.buffer1 = NULL;
+    bout.buffer2 = NULL;
+
+    control.unlock();
+    config_init();
+}
+
 
 void VPlayer::addEffect(VPEffectPlugin *eff)
 {
-    eff->init(this);
-    mutex_post_process.lock();
-    effect_entry_t e;
-    e.eff = eff;
-    e.active = true;
-    effects.push_back(e);
-    mutex_post_process.unlock();
+    stop();
+
+    dsp[dspCount].in = NULL;
+    dsp[dspCount].out = NULL;
+    dsp[dspCount].eff = eff;
+    dsp[dspCount].active = true;
+    dspCount++;
+
+    // we initialize DSP, this might be reinitialized if the srate and chans
+    // are different in the new track, for this function this never happens
+    if (currentTrack[0]!='\0') {
+        initializeEffects();
+
+        char copy[256];
+        strcpy(copy,currentTrack);
+        open(copy);
+    }
 }
-bool VPlayer::isActiveEffect(VPEffectPlugin *eff)
+bool VPlayer::isEffectActive(VPEffectPlugin *eff)
 {
     if (eff) {
-        for (std::vector<effect_entry_t>::iterator it=effects.begin();
-             it!=effects.end();it++){
-            if ((*it).eff==eff)
+        for (int i=0;i<dspCount;i++){
+            if (dsp[i].eff==eff && dsp[i].active)
                 return true;
         }
     }
@@ -76,61 +114,66 @@ bool VPlayer::isActiveEffect(VPEffectPlugin *eff)
 }
 void VPlayer::removeEffect(VPEffectPlugin *eff)
 {
+    // STHAP!
+    stop();
+
     if (eff) {
-        for (std::vector<effect_entry_t>::iterator it=effects.begin();
-             it!=effects.end();it++){
-            if ((*it).eff==eff){
-                mutex_post_process.lock();
-                effects.erase(it);
-                eff->finit();
-                mutex_post_process.unlock();
-                break;
+        if (eff == dsp[0].eff) {
+            memcpy(&bin,&bout,sizeof(VPEffect));
+            eff->finit();
+            dspCount--;
+        } else if (eff == dsp[dspCount-1].eff) {
+            memcpy(&bin,&dsp[dspCount-2].out,sizeof(VPEffect));
+            eff->finit();
+            dspCount--;
+        } else {
+            for (int i=0;i<dspCount-1;i++){
+                if (dsp[i].eff==eff) {
+                    eff->finit();
+                    for (int j=i+1;j<dspCount-1;j++) {
+                        memcpy(&dsp[j-1],&dsp[j],sizeof(VPEffect));
+                    }
+                    dspCount--;
+
+                    break;
+                }
             }
         }
     }
+
+    // we initialize DSP, this might be reinitialized if the srate and chans
+    // are different in the new track, for this function this never happens
+    if (currentTrack[0]!='\0') {
+        initializeEffects();
+
+        char copy[256];
+        strcpy(copy,currentTrack);
+        open(copy);
+    }
+    announce(VP_STATUS_OPEN);
+
 }
+void VPlayer::initializeEffects()
+{
+    VPBuffer *tmp=&bout;
+    for (int i=0;i<dspCount;i++){
+        dsp[i].in = tmp;
+        dsp[i].eff->init(this, tmp, &tmp);
+        dsp[i].out = tmp;
+        if (!dsp[i].active){
+            dsp[i].eff->finit();
+        }
+    }
+    memcpy(&bin,tmp,sizeof(VPBuffer));
+}
+
 void VPlayer::announce(VPStatus status)
 {
-    mutex_post_process.lock();
-    for (std::vector<effect_entry_t>::iterator it=effects.begin();
-         it!=effects.end();it++){
-        (*it).eff->status_change(status);
+    // pass status to all DSP plugins
+    for (int i=0;i<dspCount;i++){
+        dsp[i].eff->statusChange(status);
     }
-    mutex_post_process.unlock();
-}
 
-VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
-{
-    mutex_control.try_lock();
-    next_cb_user = cb_user;
-
-    track_channels = 0;
-    track_samplerate = 0;
-
-    buffer1 = NULL;
-    buffer2 = NULL;
-
-    play_worker = NULL;
-    work=false;
-    effects_active=false;
-
-    paused = true;
-    volume = 1.0f;
-
-    vpout=NULL;
-    vpdecode=NULL;
-
-    gapless_compatible = false;
-    next_track_cb = cb;
-    next_track[0]='\0';
-
-    play_worker_done = false;
-
-    track_channels = 0;
-    track_samplerate = 0;
-
-    mutex_control.unlock();
-    config_init();
 }
 
 int VPlayer::getSupportedFileTypeCount()
@@ -146,35 +189,17 @@ void VPlayer::getSupportedFileTypeExtensions(char **exts)
 }
 int VPlayer::open(const char *url)
 {
-    mutex_control.lock();
+    DBG(url);
+    stop();
 
-    if (vpdecode){
-        vpout->resume();
-        paused=false;
-        DBG("free decoder");
-        ATOMIC_CAS(&work,true,false);
-        while (ATOMIC_CAS(&active,true,true)) {}
-        delete vpdecode;
-        vpdecode = NULL;
-        vpout->rewind();
-
-    }
-
-    mutexes[1].try_lock();
-    mutexes[3].try_lock();
-    mutexes[0].try_lock();
-    mutexes[0].unlock();
-    mutexes[2].try_lock();
-    mutexes[2].unlock();
-
-    this_track[0]='\0';
+    currentTrack[0]='\0';
 
 
     unsigned len = strlen(url);
     for (unsigned i=0;i<sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);i++){
         if (strcasecmp(url + len - strlen(vpdecoder_entries[i].ext),vpdecoder_entries[i].ext) == 0) {
             DBG("open decoder "<<vpdecoder_entries[i].name);
-            vpdecode = (VPDecoder *)vpdecoder_entries[i].creator();
+            vpdecode = (VPDecoder *)vpdecoder_entries[i].creator(this);
             break;
         }
     }
@@ -182,7 +207,6 @@ int VPlayer::open(const char *url)
     int ret = 0;
 
     if (vpdecode){
-        vpdecode->init(this);
         ret += vpdecode->open(url);
     } else {
         ret = -1;
@@ -191,44 +215,68 @@ int VPlayer::open(const char *url)
     work = true;
     active = true;
 
-    if (!play_worker){
-        play_worker = new std::thread((void(*)(void*))VPlayer::play_work, this);
-        play_worker_done = false;
+    if (!playWorker){
+        playWorker = new std::thread((void(*)(void*))VPlayer::playWork, this);
         paused = false;
         DBG("make play worker");    
     }
 
     vpout->resume();
 
-    mutex_control.unlock();
     announce(VP_STATUS_OPEN);
 
-    strcpy(this_track, url);
+    strcpy(currentTrack, url);
     return ret;
 }
 int VPlayer::play()
 {
-    mutex_control.lock();
+    control.lock();
     if (vpdecode && paused && active) {
         paused = false;
         vpout->resume();
         announce(VP_STATUS_PLAYING);
     }
-    mutex_control.unlock();
+    control.unlock();
 
     return 0;
 }
 
 void VPlayer::pause()
 {
-    mutex_control.lock();
+    control.lock();
     if (vpdecode && !paused && active) {
         vpout->pause();
         paused = true;
         announce(VP_STATUS_PAUSED);
     }
-    mutex_control.unlock();
+    control.unlock();
 
+}
+
+void VPlayer::stop()
+{
+    control.lock();
+    if (active) {
+        if (vpdecode){
+            vpout->resume();
+            paused=false;
+            DBG("free decoder");
+            ATOMIC_CAS(&work,true,false);
+            while (ATOMIC_CAS(&active,true,true)) {}
+            delete vpdecode;
+            vpdecode = NULL;
+            vpout->rewind();
+        }
+
+        mutex[1].try_lock();
+        mutex[3].try_lock();
+        mutex[0].try_lock();
+        mutex[0].unlock();
+        mutex[2].try_lock();
+        mutex[2].unlock();
+        active=false;
+    }
+    control.unlock();
 }
 bool VPlayer::isPlaying()
 {
@@ -237,112 +285,85 @@ bool VPlayer::isPlaying()
 
 VPlayer::~VPlayer()
 {
-    mutex_control.lock();
-    if (vpdecode){
-        vpout->resume();
-        ATOMIC_CAS(&work,true,false);
-        while (ATOMIC_CAS(&active,true,true)) {}
-        delete vpdecode;
-        vpdecode = NULL;
-        vpout->rewind();
-    }
-
-    for (std::vector<effect_entry_t>::iterator it=effects.begin();
-         it!=effects.end();
-         it++){
-        if (it->active){
-            it->active = false;
-            it->eff->finit();
-            delete it->eff;
+    // stop the whole thing
+    stop();
+    // we do not free the effects plugins, their owners should free them
+    for (int i=0;i<dspCount;i++){
+        if (dsp[i].active){
+            dsp[i].active = false;
+            dsp[i].eff->finit();
         }
     }
-    mutex_control.unlock();
+
     if (vpout)
         delete vpout;
-    if (buffer1)
-        delete[] buffer1;
-    if (buffer2)
-        delete[] buffer2;
-
     config_finit();
-
 }
 
-void VPlayer::set_metadata(unsigned samplerate, unsigned channels)
+void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
 {
-    if (track_channels == channels && track_samplerate == samplerate)
-        gapless_compatible = true;
-    else
-        gapless_compatible = false;
 
-    //if (!gapless_compatible) {
+    *out = &bout;
+
+    if (bout.srate != outprop->srate || bout.chans != outprop->chans) {
         if (vpout){
             delete vpout;
             vpout=NULL;
         }
 
-        if (buffer1)
-            delete[] buffer1;
-        if (buffer2)
-            delete[] buffer2;
-
-        buffer1 = new float[VPBUFFER_FRAMES*channels];
-        buffer2 = new float[VPBUFFER_FRAMES*channels];
-
-        for (unsigned i=0;i<VPBUFFER_FRAMES*channels;i++){
-            buffer1[i]=0.0f;
-            buffer2[i]=0.0f;
+        if (bout.buffer1) {
+            delete[] bout.buffer1;
+            delete[] bout.buffer2;
         }
 
-        track_samplerate = samplerate;
-        track_channels = channels;
+        outprop->buffer1 = new float[VPBUFFER_FRAMES*outprop->chans];
+        outprop->buffer2 = new float[VPBUFFER_FRAMES*outprop->chans];
+
+        bout.chans = outprop->chans;
+        bout.srate = outprop->srate;
+        bout.buffer1 = outprop->buffer1;
+        bout.buffer2 = outprop->buffer2;
 
 
         DBG("Init sound output on "<< vpout_entries[DEFAULT_VPOUT_PLUGIN].name);
         vpout = (VPOutPlugin *) vpout_entries[DEFAULT_VPOUT_PLUGIN].creator();
 
-        DBG("track chs:"<<channels);
-        DBG("track rate:"<<samplerate);
+        DBG("track chs: "<<bout.chans);
+        DBG("track rate: "<<bout.srate);
 
-        for (std::vector<effect_entry_t>::iterator it=effects.begin();
-             it!=effects.end();
-             it++){
-            if (!it->active){
-                it->eff->init(this);
-                it->active=true;
-            } else {
-                it->eff->finit();
-                it->eff->init(this);
+        VPBuffer *tmp=&bout;
+        for (int i=0;i<dspCount;i++){
+            dsp[i].in = tmp;
+            dsp[i].eff->init(this, tmp, &tmp);
+            dsp[i].out = tmp;
+            if (!dsp[i].active){
+                dsp[i].eff->finit();
             }
         }
+        memcpy(&bin,tmp,sizeof(VPBuffer));
 
-        vpout->init(this, samplerate, channels);
-
-    //}
-
+        vpout->init(this, &bin);
+    }
 }
 
 void VPlayer::setVolume(float vol)
 {
-    volume = vol;
+    //volume = vol;
 }
 
 float VPlayer::getVolume()
 {
-    return volume;
+    //return volume;
 }
 
 
-void VPlayer::post_process(float *buffer)
+void VPlayer::postProcess(float *buffer)
 {
-    mutex_post_process.lock();
-    if (effects_active){
-        for (std::vector<effect_entry_t>::iterator it=effects.begin();
-             it!=effects.end();it++){
-            if (it->active)
-                it->eff->process( buffer);
+    if (effectsActive){
+        for (int i=0;i<dspCount;i++){
+            if (dsp[i].active)
+                dsp[i].eff->process(buffer);
         }
     }
-    mutex_post_process.unlock();
 }
 

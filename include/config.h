@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include <map>
-
-typedef void *(*vpdecode_creator_t)(void);
+class VPlayer;
+typedef void *(*vpdecode_creator_t)(VPlayer *v);
 
 typedef struct _vpdecoder_entry{
     char name[32];

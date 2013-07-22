@@ -22,26 +22,28 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
 {
     int ret;
     unsigned out_frames=0;
-    unsigned chans=self->owner->track_channels;
+    unsigned chans=self->bin->chans;
 
     while (ATOMIC_CAS(&self->work,true,true)){
         if (ATOMIC_CAS(&self->pause_check,true,true)) {
             ATOMIC_CAS(&self->paused,false,true);
+            snd_pcm_drain(self->handle);
             self->m_pause.lock();
             self->m_pause.unlock();
+            snd_pcm_prepare(self->handle);
             ATOMIC_CAS(&self->paused,true,false);
             ATOMIC_CAS(&self->pause_check,true,false);
         }
 
         self->rd.end_of_input = 0;
-        self->rd.data_in = self->owner->buffer1;
+        self->rd.data_in = self->bin->buffer1;
         self->rd.data_out = self->out_buf;
         self->rd.input_frames = VPBUFFER_FRAMES;
         self->rd.output_frames = self->out_frames;
         self->rd.output_frames_gen = 1;
         out_frames=0;
 
-        self->owner->mutexes[1].lock();
+        self->owner->mutex[1].lock();
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
 
@@ -54,17 +56,17 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
                              self->out_buf,
                              out_frames);
 
-        self->owner->mutexes[0].unlock();
+        self->owner->mutex[0].unlock();
 
         self->rd.end_of_input = 0;
-        self->rd.data_in = self->owner->buffer2;
+        self->rd.data_in = self->bin->buffer2;
         self->rd.data_out = self->out_buf;
         self->rd.input_frames = VPBUFFER_FRAMES;
         self->rd.output_frames = self->out_frames;
         self->rd.output_frames_gen = 1;
         out_frames=0;
 
-        self->owner->mutexes[3].lock();
+        self->owner->mutex[3].lock();
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
             self->rd.input_frames -= self->rd.input_frames_used;
@@ -75,7 +77,7 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
                              self->out_buf,
                              out_frames);
 
-        self->owner->mutexes[2].unlock();
+        self->owner->mutex[2].unlock();
         if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE){
             DBG("trying to recover");
             if ( snd_pcm_recover(self->handle, ret, 0) < 0 ) {
@@ -93,14 +95,14 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
     m_pause.lock();
     ATOMIC_CAS(&pause_check,false,true);
 
-    owner->mutexes[0].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
-        owner->buffer1[i]=0.0f;
-    owner->mutexes[1].unlock();
-    owner->mutexes[2].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
-        owner->buffer2[i]=0.0f;
-    owner->mutexes[3].unlock();
+    owner->mutex[0].try_lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+        bin->buffer1[i]=0.0f;
+    owner->mutex[1].unlock();
+    owner->mutex[2].try_lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+        bin->buffer2[i]=0.0f;
+    owner->mutex[3].unlock();
 
     while (!ATOMIC_CAS(&paused,false,false)) {}
 
@@ -127,10 +129,11 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::pause()
     }
 }
 
-int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
+int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
 {
     DBG("Alsa:init");
     owner = v;
+    bin = in;
     if (snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NO_AUTO_RESAMPLE) < 0){
         DBG("Alsa:init: failed to open pcm");
         return -1;
@@ -148,7 +151,7 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
 
     snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_FLOAT);
 
-    snd_pcm_hw_params_set_channels(handle, params, channels);
+    snd_pcm_hw_params_set_channels(handle, params, bin->chans);
 
     snd_pcm_hw_params_set_period_size(handle, params, PERIOD_SIZE, 0);
 
@@ -160,17 +163,18 @@ int VPOutPluginAlsa::init(VPlayer *v, unsigned samplerate, unsigned channels)
     snd_pcm_hw_params_current(handle, params);
     int dir;
     snd_pcm_hw_params_get_rate(params, &out_srate, &dir);
-    in_srate = samplerate;
+    in_srate = bin->srate;
     int rerr;
-    rs = src_new(SRC_SINC_FASTEST, channels, &rerr);
+    rs = src_new(SRC_SINC_FASTEST, bin->chans, &rerr);
     if (!rs){
         DBG("SRC error"<<rerr);
+        return -1;
     }
 
     rd.src_ratio = (out_srate*1.0d)/(in_srate*1.0d);
     out_frames = (VPBUFFER_FRAMES*rd.src_ratio)*2;
-    out_buf = (float *)malloc(out_frames*sizeof(float)*channels);
-    DBG("target rate"<<out_srate);
+    out_buf = (float *)malloc(out_frames*sizeof(float)*bin->chans);
+    DBG("target rate "<<out_srate);
     work = true;
     paused = false;
     pause_check = false;
@@ -186,15 +190,15 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     ATOMIC_CAS(&work,true,false);
     resume();
 
-    owner->mutexes[0].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
-        owner->buffer1[i]=0.0f;
-    owner->mutexes[1].unlock();
+    owner->mutex[0].try_lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+        bin->buffer1[i]=0.0f;
+    owner->mutex[1].unlock();
 
-    owner->mutexes[2].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*owner->track_channels;i++)
-        owner->buffer2[i]=0.0f;
-    owner->mutexes[3].unlock();
+    owner->mutex[2].try_lock();
+    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+        bin->buffer2[i]=0.0f;
+    owner->mutex[3].unlock();
 
     snd_pcm_close(handle);
 

@@ -70,8 +70,8 @@ public:
     inline unsigned getBarCount() const { return BAR_COUNT; }
     inline unsigned getBarSetCount() const { return BAR_SETS; }
 
-    int init(VPlayer *v);
-    void status_change(VPStatus status);
+    int init(VPlayer *v, VPBuffer *in, VPBuffer **out);
+    void statusChange(VPStatus status);
     void process(float *buffer);
     int finit();
     ~VPEffectPluginEQ();
