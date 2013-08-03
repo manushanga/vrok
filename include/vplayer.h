@@ -34,9 +34,7 @@ typedef void(*next_track_cb_t)(char *mem, void *user);
 struct VPBuffer {
     unsigned srate;
     unsigned chans;
-    float *buffer1;
-    float *buffer2;
-    float volume;
+    float *buffer;
 };
 
 struct VPEffect {
@@ -62,8 +60,8 @@ public:
     // take lock on mutex_control when writing to this
     char nextTrack[256];
 
-    // mutex[0..1] for buffer1, mutex[2..3] for buffer2
-    std::mutex mutex[4];
+    // mutex[0..1] for buffer, mutex[2..3] for buffer2
+    std::mutex mutex[2];
 
     // open, play, pause, stop event control all are considered as cirtical
     // sections, none run interleaved.

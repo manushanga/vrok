@@ -31,19 +31,17 @@ int OGGDecoder::open(const char *url)
         return -1;
     }
 
-    buffer = new float[VPBUFFER_FRAMES*ov_info(&vf,0)->channels*2];
+    buffer = new float[VPBUFFER_FRAMES*ov_info(&vf,0)->channels];
     half_buffer_size = VPBUFFER_FRAMES*ov_info(&vf,0)->channels*sizeof(float);
 
     VPBuffer bin;
     bin.srate = ov_info(&vf,0)->rate;
     bin.chans = ov_info(&vf,0)->channels;
-    bin.buffer1 = NULL;
-    bin.buffer2 = NULL;
+    bin.buffer = NULL;
 
     owner->setOutBuffers(&bin,&bout);
     for (unsigned i=0;i<VPBUFFER_FRAMES*bout->chans;i++){
-        bout->buffer1[i]=0.0f;
-        bout->buffer2[i]=0.0f;
+        bout->buffer[i]=0.0f;
     }
 
     return 0;
@@ -60,8 +58,8 @@ void OGGDecoder::reader()
         j=0;
         ret=1;
         done=0;
-        while (done<VPBUFFER_FRAMES*2 && ret > 0){
-            ret = ov_read_float( &vf, &pcm, VPBUFFER_FRAMES*2 - done,&bit );
+        while (done<VPBUFFER_FRAMES && ret > 0){
+            ret = ov_read_float( &vf, &pcm, VPBUFFER_FRAMES - done,&bit );
             for (long i=0;i<ret;i++){
                 for (size_t ch=0;ch<bout->chans;ch++){
                     buffer[j]=pcm[ch][i];
@@ -71,17 +69,11 @@ void OGGDecoder::reader()
             done+=ret;
         }
 
-        if (ret == 0)
-            break;
         owner->mutex[0].lock();
-        memcpy(bout->buffer1, buffer, VPBUFFER_FRAMES*bout->chans*sizeof(float) );
-        owner->postProcess(bout->buffer1);
+        memcpy(bout->buffer, buffer, VPBUFFER_FRAMES*bout->chans*sizeof(float) );
+        owner->postProcess(bout->buffer);
         owner->mutex[1].unlock();
 
-        owner->mutex[2].lock();
-        memcpy(bout->buffer2, buffer + VPBUFFER_FRAMES*bout->chans , VPBUFFER_FRAMES*bout->chans*sizeof(float) );
-        owner->postProcess(bout->buffer2);
-        owner->mutex[3].unlock();
 
     }
 

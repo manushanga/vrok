@@ -32,7 +32,7 @@ public:
     FLAC__StreamDecoderInitStatus init_status;
     float *buffer;
     unsigned buffer_write;
-    unsigned half_buffer_bytes;
+    unsigned buffer_bytes;
     int ret_vpout_open;
 
     FLACDecoder(VPlayer *v);

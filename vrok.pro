@@ -88,6 +88,7 @@ QMAKE_CXXFLAGS += -Wall -O4 -msse4.2 -ffast-math
 #QMAKE_CXXFLAGS_DEBUG += -pg
 #QMAKE_LFLAGS_DEBUG += -pg
 
+
 linux-g++* {
 LIBS += -lpthread
 
@@ -96,6 +97,11 @@ PulseAudio {
     DEFINES += VPOUT_PULSE
     HEADERS += outs/pulse.h
     SOURCES += outs/pulse.cpp
+} Dummy {
+    LIBS += -lsamplerate
+    DEFINES += VPOUT_DUMMY
+    HEADERS += outs/dummy.h
+    SOURCES += outs/dummy.cpp
 } else {
     LIBS += -lsamplerate -lasound
     DEFINES += VPOUT_ALSA

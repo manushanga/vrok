@@ -24,12 +24,16 @@ typedef struct _vpout_entry{
         #include "outs/alsa.h"
     #elif defined(VPOUT_PULSE)
         #include "outs/pulse.h"
+    #elif defined(VPOUT_DUMMY)
+        #include "outs/dummy.h"
     #endif
     static const vpout_entry_t vpout_entries[] = {
     #ifdef VPOUT_ALSA
           {"ALSA", (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD }
     #elif defined(VPOUT_PULSE)
           {"PULSE", (vpout_creator_t)VPOutPluginPulse::VPOutPluginPulse_new, VPBUFFER_PERIOD }
+    #elif defined(VPOUT_DUMMY)
+          {"DUMMY", (vpout_creator_t)VPOutPluginDummy::VPOutPluginDummy_new, VPBUFFER_PERIOD }
     #endif
     };
 

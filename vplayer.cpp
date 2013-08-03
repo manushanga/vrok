@@ -34,7 +34,6 @@ void VPlayer::playWork(VPlayer *self)
 
             if (self->nextTrack[0]!='\0') {
                 self->open(self->nextTrack);
-                self->active = true;
                 DBG("new track");
             } else {
                 delete self->playWorker;
@@ -74,8 +73,7 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 
     bout.chans = 0;
     bout.srate = 0;
-    bout.buffer1 = NULL;
-    bout.buffer2 = NULL;
+    bout.buffer = NULL;
 
     control.unlock();
     config_init();
@@ -212,6 +210,7 @@ int VPlayer::open(const char *url)
         ret = -1;
     }
 
+
     work = true;
     active = true;
 
@@ -221,11 +220,11 @@ int VPlayer::open(const char *url)
         DBG("make play worker");    
     }
 
-    vpout->resume();
-
     announce(VP_STATUS_OPEN);
 
     strcpy(currentTrack, url);
+
+    vpout->resume();
     return ret;
 }
 int VPlayer::play()
@@ -265,17 +264,17 @@ void VPlayer::stop()
             while (ATOMIC_CAS(&active,true,true)) {}
             delete vpdecode;
             vpdecode = NULL;
-            vpout->rewind();
         }
-
-        mutex[1].try_lock();
-        mutex[3].try_lock();
-        mutex[0].try_lock();
-        mutex[0].unlock();
-        mutex[2].try_lock();
-        mutex[2].unlock();
-        active=false;
     }
+
+    if (vpout)
+        vpout->rewind();
+
+    // reset mutexes, both out and decoding is stopped here
+    mutex[0].try_lock();
+    mutex[0].unlock();
+    mutex[1].try_lock();
+
     control.unlock();
 }
 bool VPlayer::isPlaying()
@@ -294,9 +293,14 @@ VPlayer::~VPlayer()
             dsp[i].eff->finit();
         }
     }
-
-    if (vpout)
+   // if (bout.buffer)
+   //     delete[] bout.buffer;
+   // if (bin.buffer)
+   //     delete[] bin.buffer;
+    if (vpout) {
         delete vpout;
+        vpout=NULL;
+    }
     config_finit();
 }
 
@@ -311,18 +315,16 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
             vpout=NULL;
         }
 
-        if (bout.buffer1) {
-            delete[] bout.buffer1;
-            delete[] bout.buffer2;
+        if (bout.buffer) {
+            delete[] bout.buffer;
+            bout.buffer = NULL;
         }
 
-        outprop->buffer1 = new float[VPBUFFER_FRAMES*outprop->chans];
-        outprop->buffer2 = new float[VPBUFFER_FRAMES*outprop->chans];
+        outprop->buffer = new float[VPBUFFER_FRAMES*outprop->chans];
 
         bout.chans = outprop->chans;
         bout.srate = outprop->srate;
-        bout.buffer1 = outprop->buffer1;
-        bout.buffer2 = outprop->buffer2;
+        bout.buffer = outprop->buffer;
 
 
         DBG("Init sound output on "<< vpout_entries[DEFAULT_VPOUT_PLUGIN].name);

@@ -9,16 +9,15 @@
 #include <unistd.h>
 
 #include "vrok.h"
-#include "alsa.h"
+#include "dummy.h"
 
-static const snd_pcm_uframes_t PERIOD_SIZE = 256;
 
-VPOutPlugin* VPOutPluginAlsa::VPOutPluginAlsa_new()
+VPOutPlugin* VPOutPluginDummy::VPOutPluginDummy_new()
 {
-    return (VPOutPlugin *) new VPOutPluginAlsa();
+    return (VPOutPlugin *) new VPOutPluginDummy();
 }
 
-void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
+void VPOutPluginDummy::worker_run(VPOutPluginDummy *self)
 {
     int ret;
     unsigned out_frames=0;
@@ -27,10 +26,8 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
     while (ATOMIC_CAS(&self->work,true,true)){
         if (ATOMIC_CAS(&self->pause_check,true,true)) {
             ATOMIC_CAS(&self->paused,false,true);
-            snd_pcm_drain(self->handle);
             self->m_pause.lock();
             self->m_pause.unlock();
-            snd_pcm_prepare(self->handle);
             ATOMIC_CAS(&self->paused,true,false);
             ATOMIC_CAS(&self->pause_check,true,false);
         }
@@ -44,7 +41,6 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
         out_frames=0;
 
         self->owner->mutex[1].lock();
-        DBG("play");
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
 
@@ -53,25 +49,14 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
             out_frames+=self->rd.output_frames_gen;
         }
 
-        ret = snd_pcm_writei(self->handle,
-                             self->out_buf,
-                             out_frames);
 
         self->owner->mutex[0].unlock();
 
-        if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE){
-            DBG("trying to recover");
-            if ( snd_pcm_recover(self->handle, ret, 0) < 0 ) {
-                DBG("recover failed for "<<ret);
-            }
-        } else if (ret < 0 && ret != -EAGAIN){
-            DBG("write error "<<ret);
-        }
     }
 
 }
 
-void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
+void __attribute__((optimize("O0"))) VPOutPluginDummy::rewind()
 {
     if (m_pause.try_lock()){
         //m_pause.lock();
@@ -86,17 +71,16 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
     }
 }
 
-void __attribute__((optimize("O0"))) VPOutPluginAlsa::resume()
+void __attribute__((optimize("O0"))) VPOutPluginDummy::resume()
 {
     if (ATOMIC_CAS(&paused,true,true)){
         ATOMIC_CAS(&pause_check,true,false);
 
-        m_pause.try_lock();
         m_pause.unlock();
         while (ATOMIC_CAS(&paused,true,true)) {}
     }
 }
-void __attribute__((optimize("O0"))) VPOutPluginAlsa::pause()
+void __attribute__((optimize("O0"))) VPOutPluginDummy::pause()
 {
     if (!ATOMIC_CAS(&paused,false,false)){
 
@@ -107,40 +91,13 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::pause()
     }
 }
 
-int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
+int VPOutPluginDummy::init(VPlayer *v, VPBuffer *in)
 {
-    DBG("Alsa:init");
+    DBG("Dummy:init");
     owner = v;
     bin = in;
-    if (snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NO_AUTO_RESAMPLE) < 0){
-        DBG("Alsa:init: failed to open pcm");
-        return -1;
-    }
-    snd_pcm_sw_params_t *swparams;
-    snd_pcm_sw_params_malloc(&swparams);
-    snd_pcm_sw_params_current (handle, swparams);
-    snd_pcm_sw_params_set_start_threshold (handle, swparams, VPBUFFER_FRAMES - PERIOD_SIZE);
-    snd_pcm_sw_params (handle, swparams);
-    snd_pcm_sw_params_free(swparams);
 
-    snd_pcm_hw_params_alloca(&params);
-    snd_pcm_hw_params_any(handle, params);
-    snd_pcm_hw_params_set_access(handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
-
-    snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_FLOAT);
-
-    snd_pcm_hw_params_set_channels(handle, params, bin->chans);
-
-    snd_pcm_hw_params_set_period_size(handle, params, PERIOD_SIZE, 0);
-
-    if (snd_pcm_hw_params(handle, params) < 0) {
-        DBG("Alsa:init: failed to set pcm params");
-       return -1;
-    }
-
-    snd_pcm_hw_params_current(handle, params);
-    int dir;
-    snd_pcm_hw_params_get_rate(params, &out_srate, &dir);
+    out_srate = 48000;
     in_srate = bin->srate;
     int rerr;
     rs = src_new(SRC_SINC_FASTEST, bin->chans, &rerr);
@@ -158,11 +115,11 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
     pause_check = false;
 
     worker = new std::thread((void(*)(void*))worker_run, this);
-    DBG("alsa thread made");
+    DBG("Dummy thread made");
     return 0;
 }
 
-VPOutPluginAlsa::~VPOutPluginAlsa()
+VPOutPluginDummy::~VPOutPluginDummy()
 {
     // make sure decoders are finished before calling
     ATOMIC_CAS(&work,true,false);
@@ -174,8 +131,6 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     owner->mutex[1].unlock();
 
 
-    snd_pcm_close(handle);
-
     if (worker){
         worker->join();
         DBG("out thread joined");
@@ -185,3 +140,4 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     src_delete(rs);
 
 }
+

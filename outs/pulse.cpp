@@ -32,15 +32,9 @@ void VPOutPluginPulse::worker_run(VPOutPluginPulse *self)
 
         self->owner->mutex[1].lock();
 
-        pa_simple_write(self->handle,self->bin->buffer1,VPBUFFER_FRAMES*sizeof(float)*chans,&error);
+        pa_simple_write(self->handle,self->bin->buffer,VPBUFFER_FRAMES*sizeof(float)*chans,&error);
 
         self->owner->mutex[0].unlock();
-
-        self->owner->mutex[3].lock();
-
-        pa_simple_write(self->handle,self->bin->buffer2,VPBUFFER_FRAMES*sizeof(float)*chans,&error);
-
-        self->owner->mutex[2].unlock();
     }
 
 }
@@ -48,19 +42,17 @@ void VPOutPluginPulse::worker_run(VPOutPluginPulse *self)
 void __attribute__((optimize("O0"))) VPOutPluginPulse::rewind()
 {
 
-    m_pause.lock();
-    ATOMIC_CAS(&pause_check,false,true);
+    if (m_pause.try_lock()){
+        //m_pause.lock();
+        ATOMIC_CAS(&pause_check,false,true);
 
-    owner->mutex[0].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer1[i]=0.0f;
-    owner->mutex[1].unlock();
-    owner->mutex[2].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer2[i]=0.0f;
-    owner->mutex[3].unlock();
+        owner->mutex[0].lock();
+        for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
+            bin->buffer[i]=0.0f;
+        owner->mutex[1].unlock();
 
-    while (!ATOMIC_CAS(&paused,false,false)) {}
+        while (!ATOMIC_CAS(&paused,false,false)) {}
+    }
 
 }
 
@@ -116,15 +108,10 @@ VPOutPluginPulse::~VPOutPluginPulse()
     ATOMIC_CAS(&work,true,false);
     resume();
 
-    owner->mutex[0].try_lock();
+    owner->mutex[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer1[i]=0.0f;
+        bin->buffer[i]=0.0f;
     owner->mutex[1].unlock();
-
-    owner->mutex[2].try_lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer2[i]=0.0f;
-    owner->mutex[3].unlock();
 
 
     if (worker){

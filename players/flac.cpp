@@ -24,21 +24,19 @@ void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
 
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
         me->to_fl = 1.0f/pow(2,metadata->data.stream_info.bits_per_sample);
-        me->half_buffer_bytes = VPBUFFER_FRAMES*metadata->data.stream_info.channels*sizeof(float);
-        me->buffer = new float[VPBUFFER_FRAMES*metadata->data.stream_info.channels*2];
+        me->buffer_bytes = VPBUFFER_FRAMES*metadata->data.stream_info.channels*sizeof(float);
+        me->buffer = new float[VPBUFFER_FRAMES*metadata->data.stream_info.channels];
 
         VPBuffer bin;
         bin.srate = metadata->data.stream_info.sample_rate;
         bin.chans = metadata->data.stream_info.channels;
-        bin.buffer1 = NULL;
-        bin.buffer2 = NULL;
+        bin.buffer = NULL;
 
         me->owner->setOutBuffers(&bin,&me->bout);
 
 
         for (unsigned i=0;i<VPBUFFER_FRAMES*me->bout->chans;i++){
-            me->bout->buffer1[i]=0.0f;
-            me->bout->buffer2[i]=0.0f;
+            me->bout->buffer[i]=0.0f;
         }
     }
 
@@ -67,20 +65,20 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
     // fill buffer if not full
     // return ok
     // if full
-    // write buffer1
+    // write buffer
     // write buffer2
     // if blocksize<buffersize
     //  fill
     //  return ok
     // else
-    //  write full buffers to buffer1 buffer2
+    //  write full buffers to buffer buffer2
     //  write remaining to buffer
     //  return ok
 
     if (!ATOMIC_CAS(&self->work,false,false))
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
-    if (selfp->buffer_write+frame->header.blocksize*selfp->bout->chans + 1 < VPBUFFER_FRAMES*2*selfp->bout->chans){
+    if (selfp->buffer_write+frame->header.blocksize*selfp->bout->chans + 1 < VPBUFFER_FRAMES*selfp->bout->chans){
         size_t i=0,j=0;
         //DBG("s1");
         while (i<frame->header.blocksize) {
@@ -92,7 +90,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
         }
         selfp->buffer_write+=j;
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
-    } else if (selfp->buffer_write+frame->header.blocksize*selfp->bout->chans + 1 == VPBUFFER_FRAMES*2*selfp->bout->chans) {
+    } else if (selfp->buffer_write+frame->header.blocksize*selfp->bout->chans + 1 == VPBUFFER_FRAMES*selfp->bout->chans) {
         size_t i=0,j=0;
 
         while (i<frame->header.blocksize) {
@@ -106,19 +104,12 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
         self->mutex[0].lock();
         j=0;
 
-        // write buffer1
-        memcpy(selfp->bout->buffer1,selfp->buffer,selfp->half_buffer_bytes );
-        self->postProcess(selfp->bout->buffer1);
+        // write buffer
+        memcpy(selfp->bout->buffer,selfp->buffer,selfp->buffer_bytes );
+        self->postProcess(selfp->bout->buffer);
 
         self->mutex[1].unlock();
 
-        self->mutex[2].lock();
-        j=0;
-
-        memcpy(selfp->bout->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
-        self->postProcess(selfp->bout->buffer2);
-
-        self->mutex[3].unlock();
 
         selfp->buffer_write=0;
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
@@ -126,7 +117,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 
         size_t i=0,j=selfp->buffer_write;
 
-        while (j<VPBUFFER_FRAMES*2*selfp->bout->chans) {
+        while (j<VPBUFFER_FRAMES*selfp->bout->chans) {
             for (unsigned ch=0;ch<selfp->bout->chans;ch++){
                 selfp->buffer[j]=selfp->to_fl*buffer[ch][i];
                 j++;
@@ -136,50 +127,30 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 
         self->mutex[0].lock();
         j=0;
-        // write buffer1
-        memcpy(selfp->bout->buffer1,selfp->buffer,selfp->half_buffer_bytes);
-        self->postProcess(selfp->bout->buffer1);
+        // write buffer
+        memcpy(selfp->bout->buffer,selfp->buffer,selfp->buffer_bytes);
+        self->postProcess(selfp->bout->buffer);
 
         self->mutex[1].unlock();
 
-        self->mutex[2].lock();
-        j=0;
-        // write buffer2
-        memcpy(selfp->bout->buffer2,((char *)selfp->buffer)+selfp->half_buffer_bytes,selfp->half_buffer_bytes );
-        self->postProcess(selfp->bout->buffer2);
-
-        self->mutex[3].unlock();
 
         if (!ATOMIC_CAS(&self->work,false,false))
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
-        while (frame->header.blocksize-i > VPBUFFER_FRAMES*2 ){
+        while (frame->header.blocksize-i > VPBUFFER_FRAMES ){
 
             self->mutex[0].lock();
             j=0;
-            // write buffer1
+            // write buffer
             while(j<VPBUFFER_FRAMES*selfp->bout->chans){
                 for (unsigned ch=0;ch<selfp->bout->chans;ch++){
-                    selfp->bout->buffer1[j]=selfp->to_fl*buffer[ch][i];
+                    selfp->bout->buffer[j]=selfp->to_fl*buffer[ch][i];
                     j++;
                 }
                 i++;
             }
-            self->postProcess(selfp->bout->buffer1);
+            self->postProcess(selfp->bout->buffer);
             self->mutex[1].unlock();
-
-            self->mutex[2].lock();
-            j=0;
-            // write buffer2
-            while(j<VPBUFFER_FRAMES*selfp->bout->chans){
-                for (unsigned ch=0;ch<selfp->bout->chans;ch++){
-                    selfp->bout->buffer2[j]=selfp->to_fl*buffer[ch][i];
-                    j++;
-                }
-                i++;
-            }
-            self->postProcess(selfp->bout->buffer2);
-            self->mutex[3].unlock();
 
             if (!ATOMIC_CAS(&self->work,false,false))
                 return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;

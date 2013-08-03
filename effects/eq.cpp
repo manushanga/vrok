@@ -144,7 +144,7 @@ void VPEffectPluginEQ::process(float *buffer)
         sched_recalc=false;
     }
 
-    assert(buffer == bin->buffer1 || buffer == bin->buffer2);
+    assert(buffer == bin->buffer);
 
     equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, bin->chans);
 

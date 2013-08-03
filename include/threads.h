@@ -120,6 +120,7 @@ public:
         runner = addr;
 
         pthread_create(&th,NULL,_std_thread_run, this);
+        std::cout<<"thread create"<<std::endl;
     }
     inline void detach()
     {
@@ -140,20 +141,23 @@ class mutex
 {
 private:
     volatile int cs;
+    pthread_mutex_t m_mutex;
 public:
     inline mutex()
     {
+        pthread_mutex_init(&m_mutex,NULL);
         cs=0;
     }
 
     inline ~mutex()
     {
-
+        pthread_mutex_destroy(&m_mutex);
     }
 
     inline void lock()
     {
-
+        pthread_mutex_lock(&m_mutex);
+/*
         int i, c;
 
         for (i = 0; i < SPIN_MAX; i++)
@@ -173,12 +177,13 @@ public:
             syscall(__NR_futex, &cs, FUTEX_WAIT_PRIVATE, 2, NULL, NULL, 0);
             c = __sync_lock_test_and_set(&cs, 2);
         }
-
+*/
     }
 
     inline void unlock()
     {
-
+        pthread_mutex_unlock(&m_mutex);
+/*
         int i;
 
 
@@ -200,14 +205,16 @@ public:
         }
 
         syscall(__NR_futex, &cs, FUTEX_WAKE_PRIVATE, 1, NULL, NULL, 0);
-
+*/
     }
     inline bool try_lock()
     {
+        return pthread_mutex_trylock(&m_mutex);
+        /*
         int c = __sync_val_compare_and_swap(&cs, 0, 1);
         if (!c)
             return true;
-        return false;
+        return false;*/
     }
 };
 }

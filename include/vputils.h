@@ -51,4 +51,6 @@ inline FILE *fopenu(const char *path,const char *opt){
 #define TOSTR( x ) dynamic_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
+typedef unsigned int uint;
+uint FNV(char *str);
 #endif // VPUTILS_H

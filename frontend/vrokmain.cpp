@@ -242,14 +242,29 @@ void VrokMain::fillQueue()
     if (contextMenuQueue[QA_FILLRAN]->isChecked()) {
         QStandardItemModel fileModel;
         int j=0;
-        while (queueModel.rowCount()<10){
-            loadDirFilesModel(dirs[rand() % (dirs.count()-1)], &fileModel);
-            for (int i=0;i<4;i++) {
-                int rc = queueModel.rowCount();
-                int tr = (rand()*5+rand()+i) % (fileModel.rowCount());
-                queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
-                queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
+        uint dbloom=0,drbloom;
+        while (queueModel.rowCount()<10 && j<100){
+            drbloom = abs(rand()) % (dirs.count()-1);
+            if ((drbloom & dbloom) != drbloom) {
+                DBG(drbloom);
+                DBG("--")
+                loadDirFilesModel(dirs[drbloom], &fileModel);
+                uint bloom=0;
 
+                int selectMax=(fileModel.rowCount()>4)?4:2;
+                for (int i=0;i<selectMax;i++) {
+                    int rc = queueModel.rowCount();
+                    int tr = abs(rand()*5+rand()+i) % (fileModel.rowCount());
+                    uint rbloom = FNV(fileModel.item(tr,1)->text().toUtf8().data());
+                    if ((rbloom & bloom) != rbloom) {
+                        DBG(rbloom<<fileModel.item(tr,1)->text().toStdString());
+                        queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
+                        queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
+
+                        bloom = bloom | rbloom;
+                    }
+                }
+                dbloom = dbloom | drbloom;
             }
             j++;
         }
@@ -258,14 +273,19 @@ void VrokMain::fillQueue()
         vp->open(path.toUtf8().data());
     } else if (contextMenuQueue[QA_FILLSEQ]->isChecked()) {
         QStandardItemModel fileModel;
+        uint dbloom=0,drbloom;
         while (queueModel.rowCount()<10){
-            loadDirFilesModel(dirs[rand() % (dirs.count()-1)], &fileModel);
+            drbloom = abs(rand()) % (dirs.count()-1);
+            if ((drbloom & dbloom) != drbloom) {
+                loadDirFilesModel(dirs[drbloom], &fileModel);
 
-            for (int i=0;i<fileModel.rowCount();i++) {
-                int rc = queueModel.rowCount();
-                queueModel.setItem(rc,0, fileModel.item(i,0)->clone());
-                queueModel.setItem(rc,1, fileModel.item(i,1)->clone());
+                for (int i=0;i<fileModel.rowCount();i++) {
+                    int rc = queueModel.rowCount();
+                    queueModel.setItem(rc,0, fileModel.item(i,0)->clone());
+                    queueModel.setItem(rc,1, fileModel.item(i,1)->clone());
 
+                }
+                dbloom = dbloom | drbloom;
             }
         }
         QString path = queueModel.item(0,1)->text();
