@@ -146,21 +146,18 @@ private:
 public:
     inline mutex()
     {
-        sem_init(&sem,0,1);
-    //    pthread_mutex_init(&m_mutex,NULL);
+    //    sem_init(&sem,0,1);
         cs=0;
     }
 
     inline ~mutex()
     {
-    //    pthread_mutex_destroy(&m_mutex);
+    //    sem_close(&sem);
     }
 
     inline void lock()
     {
-        sem_wait(&sem);
-  //      pthread_mutex_lock(&m_mutex);
-/*
+   //     sem_wait(&sem);
         int i, c;
 
         for (i = 0; i < SPIN_MAX; i++)
@@ -180,14 +177,12 @@ public:
             syscall(__NR_futex, &cs, FUTEX_WAIT_PRIVATE, 2, NULL, NULL, 0);
             c = __sync_lock_test_and_set(&cs, 2);
         }
-*/
     }
 
     inline void unlock()
     {
-        sem_post(&sem);
-//        pthread_mutex_unlock(&m_mutex);
-/*
+      //  sem_post(&sem);
+
         int i;
 
 
@@ -209,17 +204,14 @@ public:
         }
 
         syscall(__NR_futex, &cs, FUTEX_WAKE_PRIVATE, 1, NULL, NULL, 0);
-*/
     }
     inline bool try_lock()
     {
-        return (bool) (sem_trywait(&sem)==0);
-        //return pthread_mutex_trylock(&m_mutex);
-/*
+     //   return (bool) (sem_trywait(&sem)==0);
         int c = __sync_val_compare_and_swap(&cs, 0, 1);
         if (!c)
             return true;
-        return false;*/
+        return false;
     }
 };
 }
