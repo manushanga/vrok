@@ -51,7 +51,7 @@ void MPEGDecoder::reader()
                 bout->buffer[i]=SHORTTOFL*buffer[i];
             }
             owner->postProcess(bout->buffer);
-            DBG("decode done");
+           // DBG("decode done");
             owner->mutex[1].unlock();
         }
 

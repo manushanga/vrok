@@ -53,7 +53,7 @@ void VPlayer::playWork(VPlayer *self)
 
 VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 {
-    control.try_lock();
+    control.lock();
     nextCallbackUser = cb_user;
 
     dspCount = 0;
@@ -76,6 +76,8 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
     bout.buffer = NULL;
 
     control.unlock();
+
+    mutex[1].lock();
     config_init();
 }
 
@@ -113,15 +115,17 @@ bool VPlayer::isEffectActive(VPEffectPlugin *eff)
 void VPlayer::removeEffect(VPEffectPlugin *eff)
 {
     // STHAP!
+    bool wasPlaying=active;
+    DBG(wasPlaying);
     stop();
 
     if (eff) {
         if (eff == dsp[0].eff) {
-            memcpy(&bin,&bout,sizeof(VPEffect));
+            memcpy(&bin,&bout,sizeof(VPBuffer));
             eff->finit();
             dspCount--;
         } else if (eff == dsp[dspCount-1].eff) {
-            memcpy(&bin,&dsp[dspCount-2].out,sizeof(VPEffect));
+            memcpy(&bin,&dsp[dspCount-2].out,sizeof(VPBuffer));
             eff->finit();
             dspCount--;
         } else {
@@ -129,7 +133,7 @@ void VPlayer::removeEffect(VPEffectPlugin *eff)
                 if (dsp[i].eff==eff) {
                     eff->finit();
                     for (int j=i+1;j<dspCount-1;j++) {
-                        memcpy(&dsp[j-1],&dsp[j],sizeof(VPEffect));
+                        memcpy(&dsp[j-1],&dsp[j],sizeof(VPBuffer));
                     }
                     dspCount--;
 
@@ -141,14 +145,14 @@ void VPlayer::removeEffect(VPEffectPlugin *eff)
 
     // we initialize DSP, this might be reinitialized if the srate and chans
     // are different in the new track, for this function this never happens
-    if (currentTrack[0]!='\0') {
+    if (wasPlaying && currentTrack[0]!='\0') {
         initializeEffects();
 
         char copy[256];
         strcpy(copy,currentTrack);
         open(copy);
+        announce(VP_STATUS_OPEN);
     }
-    announce(VP_STATUS_OPEN);
 
 }
 void VPlayer::initializeEffects()
@@ -187,8 +191,8 @@ void VPlayer::getSupportedFileTypeExtensions(char **exts)
 }
 int VPlayer::open(const char *url)
 {
-    DBG(url);
     stop();
+    DBG(url);
 
     currentTrack[0]='\0';
 
@@ -265,25 +269,27 @@ void VPlayer::stop()
             delete vpdecode;
             vpdecode = NULL;
         }
+
+        if (vpout)
+            vpout->rewind();
+
+        // reset mutexes, both out and decoding is stopped here
+        mutex[0].try_lock();
+        mutex[0].unlock();
+        mutex[1].try_lock();
+        active = false;
     }
-
-    if (vpout)
-        vpout->rewind();
-
-    // reset mutexes, both out and decoding is stopped here
-    mutex[0].try_lock();
-    mutex[0].unlock();
-    mutex[1].try_lock();
 
     control.unlock();
 }
 bool VPlayer::isPlaying()
 {
-    return !paused && active;
+    return !paused && ATOMIC_CAS(&active,true,true);
 }
 
 VPlayer::~VPlayer()
 {
+
     // stop the whole thing
     stop();
     // we do not free the effects plugins, their owners should free them
@@ -301,7 +307,7 @@ VPlayer::~VPlayer()
         delete vpout;
         vpout=NULL;
     }
-    config_finit();
+   // config_finit();
 }
 
 void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)

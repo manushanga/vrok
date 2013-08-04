@@ -28,6 +28,7 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
         if (ATOMIC_CAS(&self->pause_check,true,true)) {
             ATOMIC_CAS(&self->paused,false,true);
             snd_pcm_drain(self->handle);
+            DBG("hiting lock");
             self->m_pause.lock();
             self->m_pause.unlock();
             snd_pcm_prepare(self->handle);
@@ -44,7 +45,6 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
         out_frames=0;
 
         self->owner->mutex[1].lock();
-        DBG("play");
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
 
@@ -83,6 +83,7 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
         owner->mutex[1].unlock();
 
         while (!ATOMIC_CAS(&paused,false,false)) {}
+
     }
 }
 

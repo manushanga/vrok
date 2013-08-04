@@ -93,6 +93,7 @@ public:
 }
 #elif defined(__linux__)
 #include <pthread.h>
+#include <semaphore.h>
 #include <unistd.h>
 #include <iostream>
 #include <sys/types.h>
@@ -141,22 +142,24 @@ class mutex
 {
 private:
     volatile int cs;
-    pthread_mutex_t m_mutex;
+    sem_t sem;
 public:
     inline mutex()
     {
-        pthread_mutex_init(&m_mutex,NULL);
+        sem_init(&sem,0,1);
+    //    pthread_mutex_init(&m_mutex,NULL);
         cs=0;
     }
 
     inline ~mutex()
     {
-        pthread_mutex_destroy(&m_mutex);
+    //    pthread_mutex_destroy(&m_mutex);
     }
 
     inline void lock()
     {
-        pthread_mutex_lock(&m_mutex);
+        sem_wait(&sem);
+  //      pthread_mutex_lock(&m_mutex);
 /*
         int i, c;
 
@@ -182,7 +185,8 @@ public:
 
     inline void unlock()
     {
-        pthread_mutex_unlock(&m_mutex);
+        sem_post(&sem);
+//        pthread_mutex_unlock(&m_mutex);
 /*
         int i;
 
@@ -209,8 +213,9 @@ public:
     }
     inline bool try_lock()
     {
-        return pthread_mutex_trylock(&m_mutex);
-        /*
+        return (bool) (sem_trywait(&sem)==0);
+        //return pthread_mutex_trylock(&m_mutex);
+/*
         int c = __sync_val_compare_and_swap(&cs, 0, 1);
         if (!c)
             return true;

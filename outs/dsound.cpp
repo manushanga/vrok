@@ -8,15 +8,7 @@
 #include <dsound.h>
 #include "vrok.h"
 
-LPDIRECTSOUND lpds;
-LPDIRECTSOUNDBUFFER lpdsbuffer;
-WAVEFORMATEX wfx;
-DSBUFFERDESC dsbdesc;
-HANDLE NotifyEvent[2];
-LPDIRECTSOUNDNOTIFY lpDsNotify;
-DSBPOSITIONNOTIFY PositionNotify[2];
-
-HRESULT createSoundObject(void){
+HRESULT VPOutPluginDSound::createSoundObject(void){
     HRESULT hr;
 
     hr = DirectSoundCreate(NULL,&lpds,NULL);
@@ -25,7 +17,7 @@ HRESULT createSoundObject(void){
     return hr;
 }
 
-WAVEFORMATEX setWaveFormat(unsigned samplerate , unsigned channels){
+WAVEFORMATEX VPOutPluginDSound::setWaveFormat(unsigned samplerate , unsigned channels){
     WAVEFORMATEX wfx;
     memset(&wfx, 0, sizeof(WAVEFORMATEX));
     wfx.wFormatTag = WAVE_FORMAT_PCM;
@@ -38,7 +30,7 @@ WAVEFORMATEX setWaveFormat(unsigned samplerate , unsigned channels){
 }
 
 
-DSBUFFERDESC setBufferDescription(unsigned size){
+DSBUFFERDESC VPOutPluginDSound::setBufferDescription(unsigned size){
     DSBUFFERDESC dsbdesc;
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
     dsbdesc.dwSize = sizeof(DSBUFFERDESC);
@@ -49,7 +41,7 @@ DSBUFFERDESC setBufferDescription(unsigned size){
 }
 
 
-HRESULT createSecondarySoundBuffer(void){
+HRESULT VPOutPluginDSound::createSecondarySoundBuffer(void){
     HRESULT hr = lpds->CreateSoundBuffer(&dsbdesc,&lpdsbuffer,NULL);
     return hr;
 }

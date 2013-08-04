@@ -13,6 +13,18 @@
 
 class VPOutPluginDSound : public VPOutPlugin {
 public:
+
+    LPDIRECTSOUND lpds;
+    LPDIRECTSOUNDBUFFER lpdsbuffer;
+    WAVEFORMATEX wfx;
+    DSBUFFERDESC dsbdesc;
+    HANDLE NotifyEvent[2];
+    LPDIRECTSOUNDNOTIFY lpDsNotify;
+    DSBPOSITIONNOTIFY PositionNotify[2];
+
+    HRESULT createSoundObject(void);
+    WAVEFORMATEX setWaveFormat(unsigned samplerate , unsigned channels);
+
     static VPOutPlugin* VPOutPluginDSound_new();
     static void worker_run(VPOutPluginDSound *self);
     VPlayer *owner;
