@@ -5,8 +5,16 @@
 
   See LICENSE for details.
 */
-#include <dsound.h>
 #include "vrok.h"
+#include "dsound.h"
+
+LPDIRECTSOUND VPOutPluginDSound::lpds;
+LPDIRECTSOUNDBUFFER VPOutPluginDSound::lpdsbuffer;
+WAVEFORMATEX VPOutPluginDSound::wfx;
+DSBUFFERDESC VPOutPluginDSound::dsbdesc;
+HANDLE VPOutPluginDSound::NotifyEvent[2];
+LPDIRECTSOUNDNOTIFY VPOutPluginDSound::lpDsNotify;
+DSBPOSITIONNOTIFY VPOutPluginDSound::PositionNotify[2];
 
 HRESULT VPOutPluginDSound::createSoundObject(void){
     HRESULT hr;

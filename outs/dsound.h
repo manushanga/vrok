@@ -2,7 +2,7 @@
 #define WAVEOUT_H
 
 #include <windows.h>
-#include "dsound.h"
+#include <dsound.h>
 
 #define _USE_MATH_DEFINES
 
@@ -14,16 +14,18 @@
 class VPOutPluginDSound : public VPOutPlugin {
 public:
 
-    LPDIRECTSOUND lpds;
-    LPDIRECTSOUNDBUFFER lpdsbuffer;
-    WAVEFORMATEX wfx;
-    DSBUFFERDESC dsbdesc;
-    HANDLE NotifyEvent[2];
-    LPDIRECTSOUNDNOTIFY lpDsNotify;
-    DSBPOSITIONNOTIFY PositionNotify[2];
+    static LPDIRECTSOUND lpds;
+    static LPDIRECTSOUNDBUFFER lpdsbuffer;
+    static WAVEFORMATEX wfx;
+    static DSBUFFERDESC dsbdesc;
+    static HANDLE NotifyEvent[2];
+    static LPDIRECTSOUNDNOTIFY lpDsNotify;
+    static DSBPOSITIONNOTIFY PositionNotify[2];
 
-    HRESULT createSoundObject(void);
-    WAVEFORMATEX setWaveFormat(unsigned samplerate , unsigned channels);
+    static HRESULT createSoundObject(void);
+    static WAVEFORMATEX setWaveFormat(unsigned samplerate , unsigned channels);
+    static DSBUFFERDESC setBufferDescription(unsigned size);
+    static HRESULT createSecondarySoundBuffer(void);
 
     static VPOutPlugin* VPOutPluginDSound_new();
     static void worker_run(VPOutPluginDSound *self);
