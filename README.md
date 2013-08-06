@@ -21,9 +21,11 @@ Make sure you have these dependencies,
 Run these commands in the project directory
 
 <pre>
-qmake [ CONFIG+=PulseAudio || CONFIG+=DEBUG || CONFIG+=console ]
+qmake CONFIG+=Alsa || CONFIG+=PulseAudio  [ CONFIG+=RELEASE || CONFIG+=DEBUG || CONFIG+=console ]
 make
 </pre>
+
+On Windows DSound is selected automatically. On Linux you must specify what to use.
 
 Running
 -------
