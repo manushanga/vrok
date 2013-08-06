@@ -70,9 +70,10 @@ void __attribute__((optimize("O0"))) VPOutPluginPulse::pause()
 {
     if (!ATOMIC_CAS(&paused,false,false)){
 
-        m_pause.lock();
-
-        ATOMIC_CAS(&pause_check,false,true);
+        if (m_pause.try_lock()){
+            ATOMIC_CAS(&pause_check,false,true);
+            while (!ATOMIC_CAS(&paused,false,false)) {}
+        }
         while (!ATOMIC_CAS(&paused,false,false)) {}
     }
 }

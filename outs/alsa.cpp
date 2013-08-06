@@ -108,11 +108,10 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::resume()
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::pause()
 {
     if (!ATOMIC_CAS(&paused,false,false)){
-
-        m_pause.lock();
-
-        ATOMIC_CAS(&pause_check,false,true);
-        while (!ATOMIC_CAS(&paused,false,false)) {}
+        if (m_pause.try_lock()){
+            ATOMIC_CAS(&pause_check,false,true);
+            while (!ATOMIC_CAS(&paused,false,false)) {}
+        }
     }
 }
 

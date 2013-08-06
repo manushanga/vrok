@@ -149,18 +149,19 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
         m_pause.try_lock();
         m_pause.unlock();
         while (ATOMIC_CAS(&paused,true,true)) {}
-        lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
+       // lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
     }
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
 {
     if (!ATOMIC_CAS(&paused,false,false)){
-
-        m_pause.lock();
-        ATOMIC_CAS(&pause_check,false,true);
-        while (!ATOMIC_CAS(&paused,false,false)) {}
-        lpdsbuffer->Stop();
+        if (m_pause.try_lock()){
+            ATOMIC_CAS(&pause_check,false,true);
+            while (!ATOMIC_CAS(&paused,false,false)) {}
+        }
+        //lpdsbuffer->Stop();
     }
+    DBG("ss");
 }
 
 int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
@@ -192,10 +193,9 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
             lpDsNotify->Release();
         }
     }
-
-    ATOMIC_CAS(&work,false,true);
-    ATOMIC_CAS(&paused,true,false);
-    ATOMIC_CAS(&pause_check,true,false);
+    work=true;
+    paused=false;
+    pause_check=false;
     worker = new std::thread( (void(*)(void*))worker_run, this);
     DBG("DSound thread made");
     return 0;
