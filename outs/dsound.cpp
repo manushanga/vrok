@@ -95,25 +95,23 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 
         self->owner->mutex[1].lock();
         if (lpdsbuffer->GetCurrentPosition(&play_at,NULL) == DS_OK && play_at < self->half_buffer_size*sizeof(short)-1){
-            DBG("first half play");
             WaitForSingleObject(NotifyEvent[0], INFINITE);
             hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
 
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[i]=(short)(self->bin->buffer[*self->bin->cursor][i]*32700.0f);
+                    ((short *)lpvWrite)[i]=(short)(self->bin->buffer[1-*self->bin->cursor][i]*32700.0f);
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
         } else {
-            DBG("second hald play");
             WaitForSingleObject(NotifyEvent[1], INFINITE);
 
             hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
 
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[self->half_buffer_size+i]=(short)(self->bin->buffer[*self->bin->cursor][i]*32700.0f);
+                    ((short *)lpvWrite)[self->half_buffer_size+i]=(short)(self->bin->buffer[1-*self->bin->cursor][i]*32700.0f);
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }

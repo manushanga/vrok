@@ -32,7 +32,7 @@ void VPOutPluginPulse::worker_run(VPOutPluginPulse *self)
 
         self->owner->mutex[1].lock();
 
-        pa_simple_write(self->handle,self->bin->buffer[*bin->cursor],VPBUFFER_FRAMES*sizeof(float)*chans,&error);
+        pa_simple_write(self->handle,self->bin->buffer[1-*self->bin->cursor],VPBUFFER_FRAMES*sizeof(float)*chans,&error);
 
         self->owner->mutex[0].unlock();
     }
