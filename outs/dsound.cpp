@@ -149,7 +149,7 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
         m_pause.try_lock();
         m_pause.unlock();
         while (ATOMIC_CAS(&paused,true,true)) {}
-       // lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
+        lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
     }
 }
 void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
@@ -159,9 +159,8 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
             ATOMIC_CAS(&pause_check,false,true);
             while (!ATOMIC_CAS(&paused,false,false)) {}
         }
-        //lpdsbuffer->Stop();
+        lpdsbuffer->Stop();
     }
-    DBG("ss");
 }
 
 int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
