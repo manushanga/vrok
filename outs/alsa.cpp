@@ -24,6 +24,11 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
     unsigned out_frames=0;
     unsigned chans=self->bin->chans;
 
+    int *cursor = self->bin->cursor;
+    float *buffer[2];
+    buffer[0] = self->bin->buffer[0];
+    buffer[1] = self->bin->buffer[1];
+
     while (ATOMIC_CAS(&self->work,true,true)){
         if (ATOMIC_CAS(&self->pause_check,true,true)) {
             ATOMIC_CAS(&self->paused,false,true);
@@ -37,7 +42,6 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
         }
 
         self->rd.end_of_input = 0;
-        self->rd.data_in = self->bin->buffer;
         self->rd.data_out = self->out_buf;
         self->rd.input_frames = VPBUFFER_FRAMES;
         self->rd.output_frames = self->out_frames;
@@ -45,6 +49,10 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
         out_frames=0;
 
         self->owner->mutex[1].lock();
+
+        self->rd.data_in = self->bin->buffer[1-(*self->bin->cursor)];
+
+
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
 
@@ -79,7 +87,7 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 
         owner->mutex[0].lock();
         for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-            bin->buffer[i]=0.0f;
+            bin->buffer[*bin->cursor][i]=0.0f;
         owner->mutex[1].unlock();
 
         while (!ATOMIC_CAS(&paused,false,false)) {}
@@ -171,7 +179,7 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
 
     owner->mutex[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer[i]=0.0f;
+        bin->buffer[*bin->cursor][i]=0.0f;
     owner->mutex[1].unlock();
 
 

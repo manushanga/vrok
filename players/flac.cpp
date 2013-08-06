@@ -30,13 +30,15 @@ void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
         VPBuffer bin;
         bin.srate = metadata->data.stream_info.sample_rate;
         bin.chans = metadata->data.stream_info.channels;
-        bin.buffer = NULL;
-
+        bin.buffer[0] = NULL;
+        bin.buffer[1] = NULL;
         me->owner->setOutBuffers(&bin,&me->bout);
 
 
         for (unsigned i=0;i<VPBUFFER_FRAMES*me->bout->chans;i++){
-            me->bout->buffer[i]=0.0f;
+            me->bout->buffer[0][i]=0.0f;
+            me->bout->buffer[1][i]=0.0f;
+
         }
     }
 
@@ -100,14 +102,14 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
             }
             i++;
         }
-
-        self->mutex[0].lock();
         j=0;
 
         // write buffer
-        memcpy(selfp->bout->buffer,selfp->buffer,selfp->buffer_bytes );
-        self->postProcess(selfp->bout->buffer);
+        memcpy(selfp->bout->buffer[*selfp->bout->cursor],selfp->buffer,selfp->buffer_bytes );
+        self->postProcess(selfp->bout->buffer[*selfp->bout->cursor]);
 
+        self->mutex[0].lock();
+        VP_SWAP_BUFFERS(selfp->bout);
         self->mutex[1].unlock();
 
 
@@ -125,12 +127,15 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
             i++;
         }
 
-        self->mutex[0].lock();
         j=0;
         // write buffer
-        memcpy(selfp->bout->buffer,selfp->buffer,selfp->buffer_bytes);
-        self->postProcess(selfp->bout->buffer);
+        memcpy(selfp->bout->buffer[*selfp->bout->cursor],selfp->buffer,selfp->buffer_bytes);
 
+        self->postProcess(selfp->bout->buffer[*selfp->bout->cursor]);
+
+
+        self->mutex[0].lock();
+        VP_SWAP_BUFFERS(selfp->bout);
         self->mutex[1].unlock();
 
 
@@ -139,17 +144,20 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 
         while (frame->header.blocksize-i > VPBUFFER_FRAMES ){
 
-            self->mutex[0].lock();
             j=0;
             // write buffer
             while(j<VPBUFFER_FRAMES*selfp->bout->chans){
                 for (unsigned ch=0;ch<selfp->bout->chans;ch++){
-                    selfp->bout->buffer[j]=selfp->to_fl*buffer[ch][i];
+                    selfp->bout->buffer[*selfp->bout->cursor][j]=selfp->to_fl*buffer[ch][i];
                     j++;
                 }
                 i++;
             }
-            self->postProcess(selfp->bout->buffer);
+            self->postProcess(selfp->bout->buffer[*selfp->bout->cursor]);
+
+
+            self->mutex[0].lock();
+            VP_SWAP_BUFFERS(selfp->bout);
             self->mutex[1].unlock();
 
             if (!ATOMIC_CAS(&self->work,false,false))

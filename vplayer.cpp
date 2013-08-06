@@ -73,8 +73,10 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 
     bout.chans = 0;
     bout.srate = 0;
-    bout.buffer = NULL;
+    bout.buffer[0] = NULL;
+    bout.buffer[1] = NULL;
 
+    bufferCursor = 0;
     control.unlock();
 
     mutex[1].lock();
@@ -299,39 +301,46 @@ VPlayer::~VPlayer()
             dsp[i].eff->finit();
         }
     }
-   // if (bout.buffer)
-   //     delete[] bout.buffer;
-   // if (bin.buffer)
-   //     delete[] bin.buffer;
+
     if (vpout) {
         delete vpout;
         vpout=NULL;
     }
-   // config_finit();
+    if (bout.buffer[0]) {
+        delete[] bout.buffer[0];
+        delete[] bout.buffer[1];
+    }
+    config_finit();
 }
 
 void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
 {
 
     *out = &bout;
-
+    bufferCursor = 0;
     if (bout.srate != outprop->srate || bout.chans != outprop->chans) {
         if (vpout){
             delete vpout;
             vpout=NULL;
         }
 
-        if (bout.buffer) {
-            delete[] bout.buffer;
-            bout.buffer = NULL;
+        if (bout.buffer[0]) {
+            delete[] bout.buffer[0];
+            bout.buffer[0] = NULL;
+            delete[] bout.buffer[1];
+            bout.buffer[1] = NULL;
         }
 
-        outprop->buffer = new float[VPBUFFER_FRAMES*outprop->chans];
+        outprop->buffer[0] = new float[VPBUFFER_FRAMES*outprop->chans];
+        outprop->buffer[1] = new float[VPBUFFER_FRAMES*outprop->chans];
+        outprop->cursor = &bufferCursor;
 
         bout.chans = outprop->chans;
         bout.srate = outprop->srate;
-        bout.buffer = outprop->buffer;
+        bout.buffer[0] = outprop->buffer[0];
+        bout.buffer[1] = outprop->buffer[1];
 
+        bout.cursor = &bufferCursor;
 
         DBG("Init sound output on "<< vpout_entries[DEFAULT_VPOUT_PLUGIN].name);
         vpout = (VPOutPlugin *) vpout_entries[DEFAULT_VPOUT_PLUGIN].creator();

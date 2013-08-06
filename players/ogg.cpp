@@ -37,11 +37,14 @@ int OGGDecoder::open(const char *url)
     VPBuffer bin;
     bin.srate = ov_info(&vf,0)->rate;
     bin.chans = ov_info(&vf,0)->channels;
-    bin.buffer = NULL;
+    bin.buffer[0] = NULL;
+    bin.buffer[1] = NULL;
 
     owner->setOutBuffers(&bin,&bout);
     for (unsigned i=0;i<VPBUFFER_FRAMES*bout->chans;i++){
-        bout->buffer[i]=0.0f;
+        bout->buffer[0][i]=0.0f;
+        bout->buffer[1][i]=0.0f;
+
     }
 
     return 0;
@@ -69,14 +72,13 @@ void OGGDecoder::reader()
             done+=ret;
         }
 
+        memcpy(bout->buffer[*bout->cursor], buffer, VPBUFFER_FRAMES*bout->chans*sizeof(float) );
+        owner->postProcess(bout->buffer[*bout->cursor]);
+
         owner->mutex[0].lock();
-        memcpy(bout->buffer, buffer, VPBUFFER_FRAMES*bout->chans*sizeof(float) );
-        owner->postProcess(bout->buffer);
+        VP_SWAP_BUFFERS(bout);
         owner->mutex[1].unlock();
-
-
     }
-
 }
 
 unsigned long OGGDecoder::getLength()

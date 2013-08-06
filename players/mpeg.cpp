@@ -46,12 +46,12 @@ void MPEGDecoder::reader()
             DBG("MPEG error");
             break;
         } else {
-            owner->mutex[0].lock();
             for (size_t i=0;i<count;i++){
-                bout->buffer[i]=SHORTTOFL*buffer[i];
+                bout->buffer[*bout->cursor][i]=SHORTTOFL*buffer[i];
             }
-            owner->postProcess(bout->buffer);
-           // DBG("decode done");
+            owner->postProcess(bout->buffer[*bout->cursor]);
+            owner->mutex[0].lock();
+            VP_SWAP_BUFFERS(bout);
             owner->mutex[1].unlock();
         }
 
@@ -89,11 +89,14 @@ int MPEGDecoder::open(const char *url)
     VPBuffer bin;
     bin.srate = rate;
     bin.chans = channels;
-    bin.buffer = NULL;
+    bin.buffer[0] = NULL;
+    bin.buffer[1] = NULL;
 
     owner->setOutBuffers(&bin,&bout);
     for (unsigned i=0;i<VPBUFFER_FRAMES*bout->chans;i++){
-        bout->buffer[i]=0.0f;
+        bout->buffer[0][i]=0.0f;
+        bout->buffer[1][i]=0.0f;
+
     }
     DBG("mpeg open done");
     return 0;

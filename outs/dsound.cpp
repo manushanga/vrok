@@ -101,7 +101,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[i]=(short)(self->bin->buffer[i]*32700.0f);
+                    ((short *)lpvWrite)[i]=(short)(self->bin->buffer[*self->bin->cursor][i]*32700.0f);
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
@@ -113,7 +113,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[self->half_buffer_size+i]=(short)(self->bin->buffer[i]*32700.0f);
+                    ((short *)lpvWrite)[self->half_buffer_size+i]=(short)(self->bin->buffer[*self->bin->cursor][i]*32700.0f);
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
@@ -134,7 +134,7 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
 
         owner->mutex[0].lock();
         for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-            bin->buffer[i]=0.0f;
+            bin->buffer[*bin->cursor][i]=0.0f;
         owner->mutex[1].unlock();
 
         while (!ATOMIC_CAS(&paused,false,false)) {}
@@ -211,7 +211,7 @@ VPOutPluginDSound::~VPOutPluginDSound()
 
     owner->mutex[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer[i]=0.0f;
+        bin->buffer[*bin->cursor][i]=0.0f;
     owner->mutex[1].unlock();
 
     if (worker){

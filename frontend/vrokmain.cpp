@@ -50,7 +50,6 @@ void VrokMain::callback_next(char *mem, void *user)
 bool VrokMain::eventFilter(QObject *target, QEvent *event)
 {
     if ( event->type() == QEvent::MouseButtonPress ){
-        DBG("ss");
         return true;
     }
     if ((target == (QObject *)ui->lvFiles) && (event->type() == QEvent::KeyPress)) {

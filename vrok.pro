@@ -97,12 +97,16 @@ PulseAudio {
     DEFINES += VPOUT_PULSE
     HEADERS += outs/pulse.h
     SOURCES += outs/pulse.cpp
-} Dummy {
+}
+
+Dummy {
     LIBS += -lsamplerate
     DEFINES += VPOUT_DUMMY
     HEADERS += outs/dummy.h
     SOURCES += outs/dummy.cpp
-} else {
+}
+
+Alsa {
     LIBS += -lsamplerate -lasound
     DEFINES += VPOUT_ALSA
     HEADERS += outs/alsa.h

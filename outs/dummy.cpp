@@ -33,7 +33,6 @@ void VPOutPluginDummy::worker_run(VPOutPluginDummy *self)
         }
 
         self->rd.end_of_input = 0;
-        self->rd.data_in = self->bin->buffer;
         self->rd.data_out = self->out_buf;
         self->rd.input_frames = VPBUFFER_FRAMES;
         self->rd.output_frames = self->out_frames;
@@ -41,6 +40,9 @@ void VPOutPluginDummy::worker_run(VPOutPluginDummy *self)
         out_frames=0;
 
         self->owner->mutex[1].lock();
+
+        self->rd.data_in = self->bin->buffer[*bin->cursor];
+
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
 
@@ -64,7 +66,7 @@ void __attribute__((optimize("O0"))) VPOutPluginDummy::rewind()
 
         owner->mutex[0].lock();
         for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-            bin->buffer[i]=0.0f;
+            bin->buffer[*bin->cursor][i]=0.0f;
         owner->mutex[1].unlock();
 
         while (!ATOMIC_CAS(&paused,false,false)) {}
@@ -127,7 +129,7 @@ VPOutPluginDummy::~VPOutPluginDummy()
 
     owner->mutex[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer[i]=0.0f;
+        bin->buffer[*bin->cursor][i]=0.0f;
     owner->mutex[1].unlock();
 
 

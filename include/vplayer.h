@@ -23,7 +23,16 @@
 
 #define VP_MAX_EFFECTS 32
 
-enum VPStatus{VP_STATUS_OPEN,VP_STATUS_PLAYING,VP_STATUS_PAUSED,VP_STATUS_STOPPED};
+#define VP_SWAP_BUFFERS(v) \
+    *(v->cursor) = 1-*(v->cursor);
+
+
+enum VPStatus {
+    VP_STATUS_OPEN,
+    VP_STATUS_PLAYING,
+    VP_STATUS_PAUSED,
+    VP_STATUS_STOPPED
+};
 
 class VPOutPlugin;
 class VPEffectPlugin;
@@ -34,7 +43,8 @@ typedef void(*next_track_cb_t)(char *mem, void *user);
 struct VPBuffer {
     unsigned srate;
     unsigned chans;
-    float *buffer;
+    int *cursor;
+    float *buffer[2];
 };
 
 struct VPEffect {
@@ -55,6 +65,8 @@ private:
     void *nextCallbackUser;
     void initializeEffects();
     void announce(VPStatus status);
+
+    int bufferCursor;
 public:
     char currentTrack[256];
     // take lock on mutex_control when writing to this

@@ -32,7 +32,7 @@ void VPOutPluginPulse::worker_run(VPOutPluginPulse *self)
 
         self->owner->mutex[1].lock();
 
-        pa_simple_write(self->handle,self->bin->buffer,VPBUFFER_FRAMES*sizeof(float)*chans,&error);
+        pa_simple_write(self->handle,self->bin->buffer[*bin->cursor],VPBUFFER_FRAMES*sizeof(float)*chans,&error);
 
         self->owner->mutex[0].unlock();
     }
@@ -48,7 +48,7 @@ void __attribute__((optimize("O0"))) VPOutPluginPulse::rewind()
 
         owner->mutex[0].lock();
         for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-            bin->buffer[i]=0.0f;
+            bin->buffer[*bin->cursor][i]=0.0f;
         owner->mutex[1].unlock();
 
         while (!ATOMIC_CAS(&paused,false,false)) {}
@@ -81,6 +81,7 @@ int VPOutPluginPulse::init(VPlayer *v, VPBuffer *in)
 {
     DBG("Pulse:init");
     owner = v;
+    bin=in;
 
     int error;
     pa_sample_spec ss;
@@ -110,7 +111,7 @@ VPOutPluginPulse::~VPOutPluginPulse()
 
     owner->mutex[0].lock();
     for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer[i]=0.0f;
+        bin->buffer[*bin->cursor][i]=0.0f;
     owner->mutex[1].unlock();
 
 

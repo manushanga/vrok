@@ -49,10 +49,6 @@ VPEffectPluginEQ::~VPEffectPluginEQ()
     if (initd)
         finit();
 
-    config_set_eq_bands(target);
-    config_set_eq_knowledge_bands(knowledge);
-    config_set_eq_preamp(sb_preamp);
-
     for (size_t i=0;i<BAR_COUNT;i++){
         delete[] trig[0][i];
         delete[] trig[1][i];
@@ -144,7 +140,7 @@ void VPEffectPluginEQ::process(float *buffer)
         sched_recalc=false;
     }
 
-    assert(buffer == bin->buffer);
+    //assert(buffer == bin->buffer);
 
     equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, bin->chans);
 
@@ -190,6 +186,10 @@ void VPEffectPluginEQ::process(float *buffer)
 
 int VPEffectPluginEQ::finit()
 {
+    config_set_eq_bands(target);
+    config_set_eq_knowledge_bands(knowledge);
+    config_set_eq_preamp(sb_preamp);
+
     equ_quit(&sb_state);
     memset(&sb_state, 0, sizeof(SuperEqState));
 
