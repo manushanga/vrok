@@ -196,6 +196,8 @@ int VPlayer::open(const char *url)
     stop();
     DBG(url);
 
+    control.lock();
+
     currentTrack[0]='\0';
 
 
@@ -231,6 +233,9 @@ int VPlayer::open(const char *url)
     strcpy(currentTrack, url);
 
     vpout->resume();
+
+    control.unlock();
+
     return ret;
 }
 int VPlayer::play()

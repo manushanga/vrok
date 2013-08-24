@@ -181,14 +181,14 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
         bin->buffer[*bin->cursor][i]=0.0f;
     owner->mutex[1].unlock();
 
-
-    snd_pcm_close(handle);
-
     if (worker){
         worker->join();
         DBG("out thread joined");
         delete worker;
     }
+
+    snd_pcm_close(handle);
+
     free(out_buf);
     src_delete(rs);
 

@@ -22,4 +22,5 @@ int main(int argc, char *argv[])
     VrokMain w;
     w.show();
     return a.exec();
+//    return 0;
 }

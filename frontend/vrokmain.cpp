@@ -39,8 +39,7 @@ void VrokMain::callback_next(char *mem, void *user)
     VrokMain *mm =(VrokMain *) user;
     if (mm->queueModel.rowCount() < 3) {
         mm->metaObject()->invokeMethod(mm,"startFillTimer");
-    }
-    if (mm->queueModel.rowCount() > 0){
+    } else if (mm->queueModel.rowCount() > 0){
         QString path = mm->queueModel.item(0,1)->text();
         mm->queueModel.removeRow(0);
         strcpy(mem,path.toUtf8().data());
@@ -182,11 +181,11 @@ VrokMain::VrokMain(QWidget *parent) :
         ui->lvFiles->setModel(&dirFilesModel);
 
         ui->lblDisplay->setText("Scanning...");
-        qApp->processEvents();
+       // QApplication::instance()->processEvents();
         QDir rdir(QString(config_get_lastopen().c_str()));
         folderSeekSweep(rdir);
         ui->lblDisplay->setText("Done.");
-        qApp->processEvents();
+      //  QApplication::instance()->processEvents();
         ui->sbFolderSeek->setMinimum(0);
         ui->sbFolderSeek->setMaximum(dirs.size()-1);
 
@@ -471,8 +470,10 @@ void VrokMain::actionQueueTriggered()
 void VrokMain::actionQueueRemove()
 {
     QModelIndexList selected=ui->lvQueue->selectionModel()->selectedIndexes();
-    for (int i=0;i<selected.size();i++) {
-        queueModel.removeRow(selected[i].row());
+    int count=selected.size();
+    for (int i=0;i<count;i++) {
+        queueModel.removeRow(selected[i].row()-i);
+
 
     }
 }

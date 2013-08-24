@@ -121,7 +121,6 @@ public:
         runner = addr;
 
         pthread_create(&th,NULL,_std_thread_run, this);
-        std::cout<<"thread create"<<std::endl;
     }
     inline void detach()
     {
@@ -146,19 +145,19 @@ private:
 public:
     inline mutex()
     {
-    //    sem_init(&sem,0,1);
+        sem_init(&sem,0,1);
         cs=0;
     }
 
     inline ~mutex()
     {
-    //    sem_close(&sem);
+        sem_close(&sem);
     }
 
     inline void lock()
     {
-   //     sem_wait(&sem);
-        int i, c;
+       sem_wait(&sem);
+        /*int i, c;
 
         for (i = 0; i < SPIN_MAX; i++)
         {
@@ -176,14 +175,14 @@ public:
         {
             syscall(__NR_futex, &cs, FUTEX_WAIT_PRIVATE, 2, NULL, NULL, 0);
             c = __sync_lock_test_and_set(&cs, 2);
-        }
+        }*/
     }
 
     inline void unlock()
     {
-      //  sem_post(&sem);
+        sem_post(&sem);
 
-        int i;
+        /*int i;
 
 
         if (cs == 2)
@@ -203,15 +202,15 @@ public:
             }
         }
 
-        syscall(__NR_futex, &cs, FUTEX_WAKE_PRIVATE, 1, NULL, NULL, 0);
+        syscall(__NR_futex, &cs, FUTEX_WAKE_PRIVATE, 1, NULL, NULL, 0);*/
     }
     inline bool try_lock()
     {
-     //   return (bool) (sem_trywait(&sem)==0);
-        int c = __sync_val_compare_and_swap(&cs, 0, 1);
+        return (bool) (sem_trywait(&sem)==0);
+        /*int c = __sync_val_compare_and_swap(&cs, 0, 1);
         if (!c)
             return true;
-        return false;
+        return false;*/
     }
 };
 }

@@ -20,7 +20,7 @@ HRESULT VPOutPluginDSound::createSoundObject(void){
     HRESULT hr;
 
     hr = DirectSoundCreate(NULL,&lpds,NULL);
-    hr = CoInitializeEx(NULL, 0);
+    hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     hr = lpds->SetCooperativeLevel(GetForegroundWindow(),DSSCL_NORMAL);
     return hr;
 }
@@ -188,9 +188,12 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
 
         if(hr = lpDsNotify->SetNotificationPositions((DWORD)2, PositionNotify) != DS_OK){
             DBG("Error while setting up Notification Positions!" );
-        }else {
+            return -1;
+        } else {
             lpDsNotify->Release();
-        }
+        }        
+    } else {
+        return -1;
     }
     work=true;
     paused=false;

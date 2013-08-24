@@ -34,6 +34,7 @@ void MPEGDecoder::reader()
 {
     int err = MPG123_ERR;
     size_t done=0;
+    DBG(&owner->bout<<bout);
     size_t count = VPBUFFER_FRAMES*bout->chans;
 
     while (ATOMIC_CAS(&owner->work,true,true)) {
@@ -50,6 +51,7 @@ void MPEGDecoder::reader()
                 bout->buffer[*bout->cursor][i]=SHORTTOFL*buffer[i];
             }
             owner->postProcess(bout->buffer[*bout->cursor]);
+
             owner->mutex[0].lock();
             VP_SWAP_BUFFERS(bout);
             owner->mutex[1].unlock();

@@ -41,7 +41,7 @@ void VPOutPluginDummy::worker_run(VPOutPluginDummy *self)
 
         self->owner->mutex[1].lock();
 
-        self->rd.data_in = self->bin->buffer[*bin->cursor];
+        self->rd.data_in = self->bin->buffer[1-*self->bin->cursor];
 
         while (self->rd.output_frames_gen) {
             src_process(self->rs,&self->rd);
