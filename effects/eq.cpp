@@ -8,16 +8,21 @@
 
 #include <cstring>
 #include "config.h"
+#include "vputils.h"
 #include "eq.h"
 
 
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
-    sb_preamp = config_get_eq_preamp();
+    sb_preamp = (float) VSettings::getSingleton()->readFloat("eqpre",1.0f);
     sb_paramsroot = NULL;
     sched_recalc = false;
     owner=NULL;
-    config_get_eq_bands(target);
+    for (int i=0;i<BAR_COUNT;i++) {
+        std::string band("eq");
+        band.append(TOSTR(i));
+        target[i]=VSettings::getSingleton()->readFloat(band,1.0f);
+    }
     memset(&sb_state, 0, sizeof(SuperEqState));
 
     bar_array = NULL;
@@ -26,8 +31,12 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
         trig[1][i]=(float *)new float[VPBUFFER_PERIOD*sizeof(float)];
     }
 
+    for (int i=0;i<BAR_COUNT;i++) {
+        std::string band("eqk");
+        band.append(TOSTR(i));
+        knowledge[i]=VSettings::getSingleton()->readFloat(band,1.0f);
+    }
 
-    config_get_eq_knowledge_bands(knowledge);
     limit= cap;
     initd=false;
 
@@ -186,9 +195,17 @@ void VPEffectPluginEQ::process(float *buffer)
 
 int VPEffectPluginEQ::finit()
 {
-    config_set_eq_bands(target);
-    config_set_eq_knowledge_bands(knowledge);
-    config_set_eq_preamp(sb_preamp);
+    for (int i=0;i<BAR_COUNT;i++) {
+        std::string band("eq");
+        band.append(TOSTR(i));
+        VSettings::getSingleton()->writeFloat(band,target[i]);
+    }
+    for (int i=0;i<BAR_COUNT;i++) {
+        std::string band("eqk");
+        band.append(TOSTR(i));
+        VSettings::getSingleton()->writeFloat(band,knowledge[i]);
+    }
+    VSettings::getSingleton()->writeFloat("eqpre",sb_preamp);
 
     equ_quit(&sb_state);
     memset(&sb_state, 0, sizeof(SuperEqState));

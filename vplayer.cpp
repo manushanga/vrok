@@ -23,6 +23,7 @@
 
 void VPlayer::playWork(VPlayer *self)
 {
+    self->vpout->wakeup();
     while (1) {
         self->vpdecode->reader();
         ATOMIC_CAS(&self->active,true,false);
@@ -47,8 +48,10 @@ void VPlayer::playWork(VPlayer *self)
             break;
         }
     }
+    self->vpout->idle();
     DBG("play worker dying");
     self->announce(VP_STATUS_STOPPED);
+
 }
 
 VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
@@ -80,7 +83,6 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
     control.unlock();
 
     mutex[1].lock();
-    config_init();
 }
 
 
@@ -315,7 +317,6 @@ VPlayer::~VPlayer()
         delete[] bout.buffer[0];
         delete[] bout.buffer[1];
     }
-    config_finit();
 }
 
 void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)

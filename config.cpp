@@ -4,8 +4,6 @@
 #include "config.h"
 #include "vputils.h"
 
-std::map<std::string, std::vector<int> > __vrok_settings;
-
 #ifdef _WIN32
 #include <shlobj.h>
 #include <shlwapi.h>
@@ -70,123 +68,12 @@ static std::string settings_path(bool *firsttime)
     #error "Unsupported platform!"
 #endif
 
-static std::string read_string(std::string field)
-{
-    try{
-        std::vector<int> list = __vrok_settings[field];
-        char buffer[list.size()+1];
-        memset(buffer,'\0',list.size()+1);
-        for (size_t i=0;i<list.size();i++){
-            buffer[i] = (char)list[i];
-        }
-        return std::string(buffer);
-    } catch (std::exception e) {
-        return std::string("");
-    }
-}
-static void write_string(std::string field, std::string str)
-{
-    std::map< std::string, std::vector<int> >::iterator it = __vrok_settings.find(field);
-    std::vector<int> list;
-    if (__vrok_settings.end()== it) {
-        __vrok_settings.insert(std::pair< std::string, std::vector<int> >(field,list));
-        it = __vrok_settings.find(field);
-    }
-
-    (*it).second.clear();
-    for (size_t i=0;i<str.length();i++){
-        (*it).second.push_back((int)str[i]);
-    }
-    DBG((*it).second.size());
-}
-static int read_int(std::string field)
-{
-    try{
-        std::vector<int> list = __vrok_settings[field];
-        return list[0];
-    } catch (std::exception e) {
-        return 0;
-    }
-}
-static void write_int(std::string field, int i)
-{
-    std::map< std::string, std::vector<int> >::iterator it = __vrok_settings.find(field);
-    std::vector<int> list;
-    if (__vrok_settings.end() == it) {
-        __vrok_settings.insert(std::pair< std::string, std::vector<int> >(field,list));
-        it = __vrok_settings.find(field);
-    }
-
-    (*it).second.clear();
-    (*it).second.push_back(i);
-}
-static double read_double(std::string field)
-{
-    try{
-        std::vector<int> list = __vrok_settings[field];
-        double d;
-        unsigned char *ptr = (unsigned char *)&d;
-        for (size_t i=0;i<sizeof(double);i++) {
-            ptr[i]=(unsigned char)list[i];
-        }
-        return d;
-    } catch (std::exception e) {
-        return 0.0;
-    }
-
-}
-static void write_double(std::string field, double d)
-{
-    std::map< std::string, std::vector<int> >::iterator it = __vrok_settings.find(field);
-    std::vector<int> list;
-    if (__vrok_settings.end() == it) {
-        __vrok_settings.insert(std::pair< std::string, std::vector<int> >(field,list));
-        it = __vrok_settings.find(field);
-    }
-
-    (*it).second.clear();
-    unsigned char *ptr = (unsigned char *) &d;
-    for (size_t i=0;i<sizeof(double);i++){
-        (*it).second.push_back((int)ptr[i]);
-    }
-}
-
-static void config_write()
-{
-    bool first;
-    std::string path = settings_path(&first);
-    FILE *f = fopenu(path.c_str(),"w");
-    for (std::map< std::string, std::vector<int> >::iterator it=__vrok_settings.begin();
-         it!=__vrok_settings.end();
-         it++) {
-        fprintf(f,"%s %d ",(*it).first.c_str(),(int)(*it).second.size());
-        for (size_t i=0;i<(*it).second.size();i++){
-            fprintf(f,"%d ",(*it).second[i]);
-        }
-        fprintf(f,"\n");
-    }
-    fclose(f);
-}
-
-static void config_read()
+VSettings::VSettings()
 {
     bool first;
     std::string path = settings_path(&first);
     DBG("config: up");
-    if (first) {
-        DBG("config: setting defaults");
-        write_double("volume",1.0);
-        for (int i=0;i<18;i++){
-            std::string eqb("eq");
-            std::string eqk("eqk");
-            write_double(eqb.append(TOSTR(i)),1.0);
-            write_double(eqk.append(TOSTR(i)),0.0);
-        }
-        write_int("eqon",0);
-        write_double("eqpre",1.0);
-        write_string("lastopen","");
-        config_write();
-    } else {
+    if (!first) {
         FILE *f = fopenu(path.c_str(),"r");
 
         while (!feof(f)){
@@ -201,82 +88,146 @@ static void config_read()
                 fscanf(f,"%d",&num);
                 list.push_back(num);
             }
-            __vrok_settings.insert(std::pair< std::string, std::vector<int> >(std::string(name),list));
+            settings.insert(std::pair< std::string, std::vector<int> >(std::string(name),list));
         }
+
         fclose(f);
+
     }
 
 }
 
+std::string VSettings::readString(std::string field, std::string def)
+{
+    if (settings.find(field)!=settings.end()){
+        std::vector<int>& list = settings[field];
+        char buffer[list.size()+1];
+        memset(buffer,'\0',list.size()+1);
+        for (size_t i=0;i<list.size();i++){
+            buffer[i] = (char)list[i];
+        }
+        return std::string(buffer);
+    }  else {
+        return def;
+    }
+}
+void VSettings::writeString(std::string field, std::string str)
+{
+    std::map< std::string, std::vector<int> >::iterator it = settings.find(field);
+    std::vector<int> list;
+    if (settings.end()== it) {
+        settings.insert(std::pair< std::string, std::vector<int> >(field,list));
+        it = settings.find(field);
+    }
 
-void config_init()
-{
-    config_read();
+    (*it).second.clear();
+    for (size_t i=0;i<str.length();i++){
+        (*it).second.push_back((int)str[i]);
+    }
 }
-bool config_get_eq()
+int VSettings::readInt(std::string field, int def)
 {
-    return (bool) read_int("eqon");
+    if (settings.find(field)!=settings.end()){
+        std::vector<int>& list = settings[field];
+        return list[0];
+    } else {
+        return def;
+    }
 }
-void config_set_eq(bool on)
+void VSettings::writeInt(std::string field, int i)
 {
-    write_int("eqon",(on)?1:0);
+    std::map< std::string, std::vector<int> >::iterator it = settings.find(field);
+    std::vector<int> list;
+    if (settings.end() == it) {
+        settings.insert(std::pair< std::string, std::vector<int> >(field,list));
+        it = settings.find(field);
+    }
+
+    (*it).second.clear();
+    (*it).second.push_back(i);
 }
-std::string config_get_lastopen()
+double VSettings::readDouble(std::string field, double def)
 {
-    return read_string("lastopen");
+    if (settings.find(field)!=settings.end()){
+        std::vector<int> list = settings[field];
+        double d;
+        unsigned char *ptr = (unsigned char *)&d;
+        for (size_t i=0;i<sizeof(double);i++) {
+            ptr[i]=(unsigned char)list[i];
+        }
+        return d;
+    } else {
+        return def;
+    }
+
+}
+void VSettings::writeDouble(std::string field, double dbl)
+{
+    std::map< std::string, std::vector<int> >::iterator it = settings.find(field);
+    std::vector<int> list;
+    if (settings.end() == it) {
+        settings.insert(std::pair< std::string, std::vector<int> >(field,list));
+        it = settings.find(field);
+    }
+
+    (*it).second.clear();
+    unsigned char *ptr = (unsigned char *) &dbl;
+    for (size_t i=0;i<sizeof(double);i++){
+        (*it).second.push_back((int)ptr[i]);
+    }
 }
 
-void config_set_lastopen(std::string last)
+float VSettings::readFloat(std::string field, float def)
 {
-    write_string("lastopen",last);
-}
-void config_set_eq_bands(float *bands)
-{
-    for (int i=0;i<18;i++){
-        std::string eqb("eq");
-        write_double(eqb.append(TOSTR(i)),(double)bands[i]);
+    if (settings.find(field)!=settings.end()){
+        std::vector<int> list = settings[field];
+        double d;
+        unsigned char *ptr = (unsigned char *)&d;
+        for (size_t i=0;i<sizeof(float);i++) {
+            ptr[i]=(unsigned char)list[i];
+        }
+        return d;
+    } else {
+        return def;
     }
+
 }
-void config_set_eq_knowledge_bands(float *bands)
+void VSettings::writeFloat(std::string field, float flt)
 {
-    for (int i=0;i<18;i++){
-        std::string eqk("eqk");
-        write_double(eqk.append(TOSTR(i)),(double)bands[i]);
+    std::map< std::string, std::vector<int> >::iterator it = settings.find(field);
+    std::vector<int> list;
+    if (settings.end() == it) {
+        settings.insert(std::pair< std::string, std::vector<int> >(field,list));
+        it = settings.find(field);
     }
-}
-void config_set_eq_preamp(float pa)
-{
-    write_double("eqpre",(double)pa);
-}
-float config_get_eq_preamp()
-{
-    return (float) read_double("eqpre");
-}
-void config_get_eq_knowledge_bands(float *bands)
-{
-    for (int i=0;i<18;i++){
-        std::string eqk("eqk");
-        bands[i] = read_double(eqk.append(TOSTR(i)));
+
+    (*it).second.clear();
+    unsigned char *ptr = (unsigned char *) &flt;
+    for (size_t i=0;i<sizeof(float);i++){
+        (*it).second.push_back((int)ptr[i]);
     }
-}
-void config_get_eq_bands(float *bands)
-{
-    for (int i=0;i<18;i++){
-        std::string eq("eq");
-        bands[i] = read_double(eq.append(TOSTR(i)));
-    }
-}
-float config_get_volume()
-{
-    return (float)read_double("volume");
-}
-void config_set_volume(float vol)
-{
-    write_double("volume",(double)vol);
 }
 
-void config_finit()
+VSettings *VSettings::getSingleton()
 {
-    DBG("config: dying");
-    config_write();
+    static VSettings vs;
+    return &vs;
 }
+
+VSettings::~VSettings()
+{
+    bool first;
+    std::string path = settings_path(&first);
+    FILE *f = fopenu(path.c_str(),"w");
+    for (std::map< std::string, std::vector<int> >::iterator it=settings.begin();
+         it!=settings.end();
+         it++) {
+        fprintf(f,"%s %d ",(*it).first.c_str(),(int)(*it).second.size());
+        for (size_t i=0;i<(*it).second.size();i++){
+            fprintf(f,"%d ",(*it).second[i]);
+        }
+        fprintf(f,"\n");
+    }
+    fclose(f);
+}
+

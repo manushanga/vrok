@@ -24,22 +24,23 @@ static vpdecoder_entry_t vpdecoder_entries[] = {
                                                  {"MPEG", "mp3" ,(vpdecode_creator_t)MPEGDecoder::VPDecoderMPEG_new },
                                                  {"OGG", "ogg" ,(vpdecode_creator_t)OGGDecoder::VPDecoderOGG_new }
                                                };
+class VSettings {
+private:
+    std::map<std::string, std::vector<int> > settings;
+public:
+    static VSettings *getSingleton();
 
-void config_init();
-void config_set_lastopen(std::string last);
-void config_set_eq_preamp(float pa);
-void config_set_eq_bands(float *bands);
-void config_set_eq_knowledge_bands(float *bands);
-void config_set_volume();
-void config_set_eq(bool on);
+    VSettings();
+    void writeInt(std::string field, int i);
+    void writeDouble(std::string field, double dbl);
+    void writeFloat(std::string field, float flt);
+    void writeString(std::string field, std::string str);
+    int readInt(std::string field, int def);
+    double readDouble(std::string field, double def);
+    float readFloat(std::string field, float def);
+    std::string readString(std::string field, std::string def);
+    ~VSettings();
+};
 
-std::string config_get_lastopen();
-float config_get_eq_preamp();
-void config_get_eq_bands(float *bands);
-void config_get_eq_knowledge_bands(float *bands);
-float config_get_volume();
-bool config_get_eq();
-
-void config_finit();
 
 #endif // CONFIG_H

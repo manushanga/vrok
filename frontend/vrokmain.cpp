@@ -121,7 +121,7 @@ VrokMain::VrokMain(QWidget *parent) :
     vp = new VPlayer(callback_next, this);
     eq = new VPEffectPluginEQ(100);
 
-    if (config_get_eq()){
+    if (VSettings::getSingleton()->readInt("eqon",1) ){
         vp->addEffect((VPEffectPlugin *)eq);
         ui->btnEQt->setChecked(true);
     }
@@ -177,15 +177,15 @@ VrokMain::VrokMain(QWidget *parent) :
     }
     ui->gvDisplay->setScene(gs);
 
-    if (config_get_lastopen().size()>0) {
+    if (( VSettings::getSingleton()->readString("lastopen","") ).size()>0) {
         ui->lvFiles->setModel(&dirFilesModel);
 
         ui->lblDisplay->setText("Scanning...");
-       // QApplication::instance()->processEvents();
-        QDir rdir(QString(config_get_lastopen().c_str()));
+        QApplication::instance()->processEvents();
+        QDir rdir(QString(VSettings::getSingleton()->readString("lastopen","").c_str()));
         folderSeekSweep(rdir);
         ui->lblDisplay->setText("Done.");
-      //  QApplication::instance()->processEvents();
+        QApplication::instance()->processEvents();
         ui->sbFolderSeek->setMinimum(0);
         ui->sbFolderSeek->setMaximum(dirs.size()-1);
 
@@ -379,9 +379,10 @@ void VrokMain::folderSeekSweep(QDir& root){
 void VrokMain::on_btnOpenDir_clicked()
 {
     QString d = QFileDialog::getExistingDirectory(this, tr("Open Dir"),
-                                             QString(config_get_lastopen().c_str()),
-                                             0);
-    config_set_lastopen(d.toStdString());
+                                                  QString(VSettings::getSingleton()->readString("lastopen","").c_str()),
+                                                  0);
+
+    VSettings::getSingleton()->writeString("lastopen",d.toStdString());
     dirs.clear();
     dirFilesModel.clear();
     ui->lblDisplay->setText("Scanning...");
@@ -415,11 +416,11 @@ void VrokMain::on_btnEQ_clicked()
 void VrokMain::on_btnEQt_clicked()
 {
     if (vp->isEffectActive((VPEffectPlugin *)eq)){
-        config_set_eq(false);
+        VSettings::getSingleton()->writeInt("eqon",0);
         vp->removeEffect((VPEffectPlugin *)eq);
     } else {
         vp->addEffect((VPEffectPlugin *)eq);
-        config_set_eq(true);
+        VSettings::getSingleton()->writeInt("eqon",1);
     }
 }
 void VrokMain::on_btnSpec_clicked()

@@ -125,6 +125,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 
 void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
 {
+    wakeup();
 
     if (m_pause.try_lock()){
         //m_pause.lock();
@@ -143,6 +144,8 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
 
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
 {
+    wakeup();
+
     if (ATOMIC_CAS(&paused,true,true)){
         ATOMIC_CAS(&pause_check,true,false);
 
@@ -152,6 +155,24 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
         lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
     }
 }
+
+void VPOutPluginDSound::wakeup()
+{
+    DBG("wake");
+    if (!wake){
+        lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
+        wake=true;
+    }
+}
+
+void VPOutPluginDSound::idle()
+{
+    if (wake){
+        lpdsbuffer->Stop();
+        wake=false;
+    }
+}
+
 void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
 {
     if (!ATOMIC_CAS(&paused,false,false)){
@@ -195,6 +216,7 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
     } else {
         return -1;
     }
+    wake=true;
     work=true;
     paused=false;
     pause_check=false;
@@ -205,6 +227,9 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
 
 VPOutPluginDSound::~VPOutPluginDSound()
 {
+    // get up DSound!
+    wakeup();
+
     // make sure decoders are finished before calling
     ATOMIC_CAS(&work,true,false);
     resume();

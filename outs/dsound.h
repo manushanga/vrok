@@ -33,6 +33,7 @@ public:
     std::thread *worker;
     std::mutex m_pause;
     std::mutex *mutex_pause;
+    volatile bool wake;
     volatile bool work;
     volatile bool paused;
     volatile bool pause_check;
@@ -41,6 +42,8 @@ public:
     virtual int init(VPlayer *v, VPBuffer *in);
     virtual void rewind();
     virtual void resume();
+    virtual void wakeup();
+    virtual void idle();
     virtual void pause();
     virtual ~VPOutPluginDSound();
 };

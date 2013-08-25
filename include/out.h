@@ -25,6 +25,8 @@ public:
     virtual void rewind() = 0;
     virtual void resume() = 0;
     virtual void pause() = 0;
+    virtual void wakeup() {}
+    virtual void idle() {}
     virtual ~VPOutPlugin() {}
 };
 
