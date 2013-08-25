@@ -75,7 +75,7 @@ VSettings::VSettings()
     DBG("config: up");
     if (!first) {
         FILE *f = fopenu(path.c_str(),"r");
-
+        DBG("read");
         while (!feof(f)){
             char name[32];
             fscanf(f,"%32s",name);
@@ -88,6 +88,7 @@ VSettings::VSettings()
                 fscanf(f,"%d",&num);
                 list.push_back(num);
             }
+            DBG(name);
             settings.insert(std::pair< std::string, std::vector<int> >(std::string(name),list));
         }
 
@@ -108,6 +109,14 @@ std::string VSettings::readString(std::string field, std::string def)
         }
         return std::string(buffer);
     }  else {
+        std::vector<int> list;
+        unsigned char *ptr = (unsigned char *) def.c_str();
+        for (size_t i=0;i<def.length();i++) {
+            list.push_back((unsigned char) ptr[i]);
+        }
+
+        settings.insert(std::pair<std::string, std::vector<int> >(field, list) );
+
         return def;
     }
 }
@@ -131,6 +140,9 @@ int VSettings::readInt(std::string field, int def)
         std::vector<int>& list = settings[field];
         return list[0];
     } else {
+        std::vector<int> list;
+        list.push_back(def);
+        settings.insert(std::pair<std::string, std::vector<int> >(field, list) );
         return def;
     }
 }
@@ -149,7 +161,7 @@ void VSettings::writeInt(std::string field, int i)
 double VSettings::readDouble(std::string field, double def)
 {
     if (settings.find(field)!=settings.end()){
-        std::vector<int> list = settings[field];
+        std::vector<int>& list = settings[field];
         double d;
         unsigned char *ptr = (unsigned char *)&d;
         for (size_t i=0;i<sizeof(double);i++) {
@@ -157,6 +169,13 @@ double VSettings::readDouble(std::string field, double def)
         }
         return d;
     } else {
+        std::vector<int> list;
+        unsigned char *ptr = (unsigned char *)&def;
+        for (size_t i=0;i<sizeof(double);i++) {
+            list.push_back((unsigned char)ptr[i]);
+        }
+
+        settings.insert(std::pair<std::string, std::vector<int> >(field, list) );
         return def;
     }
 
@@ -180,14 +199,21 @@ void VSettings::writeDouble(std::string field, double dbl)
 float VSettings::readFloat(std::string field, float def)
 {
     if (settings.find(field)!=settings.end()){
-        std::vector<int> list = settings[field];
-        double d;
+        std::vector<int>& list = settings[field];
+        float d;
         unsigned char *ptr = (unsigned char *)&d;
         for (size_t i=0;i<sizeof(float);i++) {
             ptr[i]=(unsigned char)list[i];
         }
         return d;
     } else {
+        std::vector<int> list;
+        unsigned char *ptr = (unsigned char *)&def;
+        for (size_t i=0;i<sizeof(float);i++) {
+            list.push_back((unsigned char)ptr[i]);
+        }
+
+        settings.insert(std::pair<std::string, std::vector<int> >(field, list) );
         return def;
     }
 
