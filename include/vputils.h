@@ -9,22 +9,25 @@
 #ifndef VPUTILS_H
 #define VPUTILS_H
 #include <sstream>
+#include "threads.h"
+extern std::mutex __m_console;
 
 #define DEBUG
 
 #ifdef DEBUG
     #include <iostream>
-    #include "threads.h"
-    extern std::mutex __m_dbgw;
     #define DBG(...) \
-    __m_dbgw.lock(); \
+    __m_console.lock(); \
     std::cout<<__VA_ARGS__<<" at "<<__PRETTY_FUNCTION__<<std::endl; \
-    __m_dbgw.unlock();
+    __m_console.unlock();
 #else
     #define DBG(...)
 #endif
+#define WARN(...) \
+    __m_console.lock(); \
+    std::cerr<<__VA_ARGS__<<std::endl; \
+    __m_console.unlock();
 
-#define strtolower(p) for ( ; *p; ++p) *p = tolower(*p)
 
 #include <cstdio>
 #if defined(_WIN32) && defined(UNICODE)
@@ -47,9 +50,6 @@ inline FILE *fopenu(const char *path,const char *opt){
 #define FOPEN_WB "w"
 #define FOPEN_AB "w+"
 #endif
-
-#define TOSTR( x ) dynamic_cast< std::ostringstream & >( \
-        ( std::ostringstream() << std::dec << x ) ).str()
 
 typedef unsigned int uint;
 uint FNV(char *str);

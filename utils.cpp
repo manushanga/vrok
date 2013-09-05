@@ -1,9 +1,7 @@
 #include "vputils.h"
 #include "threads.h"
 
-#ifdef DEBUG
-std::mutex __m_dbgw;
-#endif
+std::mutex __m_console;
 
 uint FNV(char *str)
 {

@@ -14,12 +14,12 @@
 #include "vplayer.h"
 #include "decoder.h"
 
-class MPEGDecoder : public VPDecoder
+class MPEGDecoder : public VPDecoderPlugin
 {
 private:
     FILE *fcurrent;
 public:
-    static VPDecoder* VPDecoderMPEG_new(VPlayer *v);
+    static VPDecoderPlugin* VPDecoderMPEG_new(VPlayer *v);
     mpg123_handle *mh;
     short *buffer;
     VPlayer *owner;

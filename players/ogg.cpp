@@ -12,9 +12,9 @@
 #include "vrok.h"
 #include "ogg.h"
 
-VPDecoder* OGGDecoder::VPDecoderOGG_new(VPlayer *v)
+VPDecoderPlugin* OGGDecoder::VPDecoderOGG_new(VPlayer *v)
 {
-    return (VPDecoder *)new OGGDecoder(v);
+    return (VPDecoderPlugin *)new OGGDecoder(v);
 }
 
 OGGDecoder::OGGDecoder(VPlayer *v)

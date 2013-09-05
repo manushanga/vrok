@@ -5,12 +5,12 @@
 
 #include "vplayer.h"
 #include "decoder.h"
-class OGGDecoder : public VPDecoder
+class OGGDecoder : public VPDecoderPlugin
 {
 private:
     FILE *fcurrent;
 public:
-    static VPDecoder* VPDecoderOGG_new(VPlayer *v);
+    static VPDecoderPlugin* VPDecoderOGG_new(VPlayer *v);
     OggVorbis_File vf;
     float *buffer;
     unsigned half_buffer_size;

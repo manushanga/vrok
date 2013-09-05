@@ -1,48 +1,123 @@
 #ifndef CONFIG_OUT_H
 #define CONFIG_OUT_H
 
+#include "vputils.h"
+#include "out.h"
+#include <map>
+#include <list>
 #include <cassert>
 
+#include "players/flac.h"
+#include "players/mpeg.h"
+#include "players/ogg.h"
+
+class VPlayer;
+
 typedef void *(*vpout_creator_t)(void);
+typedef void *(*vpdecode_creator_t)(VPlayer *v);
 
-#define VPBUFFER_PERIOD 512
+#define VPBUFFER_PERIOD 128
 
-typedef struct _vpout_entry{
-    char name[8];
+struct vpout_entry_t{
     vpout_creator_t creator;
     unsigned frames;
-}vpout_entry_t;
+};
 
-#define DEFAULT_VPOUT_PLUGIN 0
+class VSettings {
+private:
+    std::map<std::string, std::vector<int> > settings;
+public:
+    static VSettings *getSingleton();
 
-#ifdef _WIN32
-    #include "outs/dsound.h"
+    VSettings();
+    void writeInt(std::string field, int i);
+    void writeDouble(std::string field, double dbl);
+    void writeFloat(std::string field, float flt);
+    void writeString(std::string field, std::string str);
+    int readInt(std::string field, int def);
+    double readDouble(std::string field, double def);
+    float readFloat(std::string field, float def);
+    std::string readString(std::string field, std::string def);
+    ~VSettings();
+};
 
-    static const vpout_entry_t vpout_entries[] = { {"DSound", (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*6 } };
-#elif defined(__linux__)
-    #ifdef VPOUT_ALSA
-        #include "outs/alsa.h"
-    #elif defined(VPOUT_PULSE)
-        #include "outs/pulse.h"
-    #elif defined(VPOUT_DUMMY)
-        #include "outs/dummy.h"
-    #endif
-    static const vpout_entry_t vpout_entries[] = {
-    #ifdef VPOUT_ALSA
-          {"ALSA", (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD }
-    #elif defined(VPOUT_PULSE)
-          {"PULSE", (vpout_creator_t)VPOutPluginPulse::VPOutPluginPulse_new, VPBUFFER_PERIOD }
-    #elif defined(VPOUT_DUMMY)
-          {"DUMMY", (vpout_creator_t)VPOutPluginDummy::VPOutPluginDummy_new, VPBUFFER_PERIOD }
-    #endif
-    };
+class VPOutFactory
+{
+private:
+    std::map<std::string, vpout_entry_t> creators;
+    std::string currentOut;
+public:
+    static VPOutFactory *getSingleton()
+    {
+        static VPOutFactory vpf;
+        return &vpf;
+    }
+    inline uint getBufferSize()
+    {
+        std::map<std::string, vpout_entry_t>::iterator it=creators.find(currentOut);
+        if (it == creators.end()) {
+            DBG("Error getting buffer size for outplugin");
+            return 0;
+        } else {
+            return it->second.frames;
+        }
+    }
+    VPOutFactory();
 
-#else
-    #error "Unsupported platform."
-#endif
+    inline VPOutPlugin *create(std::string name)
+    {
+        std::map<std::string, vpout_entry_t>::iterator it=creators.find(name);
+        if (it!= creators.end()){
+            currentOut = name;
+            VSettings::getSingleton()->writeString("outplugin",currentOut);
+            return (VPOutPlugin *)it->second.creator();
+        } else {
+            return NULL;
+        }
+    }
 
-#define VPBUFFER_FRAMES vpout_entries[DEFAULT_VPOUT_PLUGIN].frames
+};
 
-#include "vputils.h"
+struct vpdecoder_entry_t{
+    std::string name;
+    vpdecode_creator_t creator;
+};
+
+class VPDecoderFactory{
+private:
+    std::map<std::string, vpdecoder_entry_t> creators;
+public:
+    static VPDecoderFactory *getSingleton()
+    {
+        static VPDecoderFactory vpd;
+        return &vpd;
+    }
+    VPDecoderFactory();
+    VPDecoderPlugin *create(std::string ext, VPlayer *v)
+    {
+        std::map<std::string, vpdecoder_entry_t>::iterator it=creators.find(ext);
+        if (it == creators.end())
+        {
+            WARN("no decoder for "<<ext);
+            return NULL;
+        } else {
+            return (VPDecoderPlugin *)it->second.creator(v);
+        }
+    }
+    int count()
+    {
+        return (int)creators.size();
+    }
+    void getExtensionsList(std::vector<std::string>& list)
+    {
+        for (std::map<std::string, vpdecoder_entry_t>::iterator it=creators.begin();
+             it!=creators.end();
+             it++)
+        {
+            list.push_back(it->first);
+        }
+    }
+};
+#define VPBUFFER_FRAMES VPOutFactory::getSingleton()->getBufferSize()
 #endif // CONFIG_OUT_H
 

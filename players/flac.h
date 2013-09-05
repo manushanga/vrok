@@ -14,7 +14,7 @@
 #include "vplayer.h"
 #include "decoder.h"
 
-class FLACDecoder : public VPDecoder
+class FLACDecoder : public VPDecoderPlugin
 {
 private:
     FILE *fcurrent;
@@ -27,7 +27,7 @@ private:
                                                          const FLAC__int32 * const buffer[],
                                                          void *client_data);
 public:
-    static VPDecoder* VPDecoderFLAC_new(VPlayer *v);
+    static VPDecoderPlugin* VPDecoderFLAC_new(VPlayer *v);
     FLAC__StreamDecoder *decoder;
     FLAC__StreamDecoderInitStatus init_status;
     float *buffer;

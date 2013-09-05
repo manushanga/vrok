@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include "config.h"
+#include "vrok.h"
 #include "vputils.h"
 
 #ifdef _WIN32

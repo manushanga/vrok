@@ -36,7 +36,7 @@ enum VPStatus {
 
 class VPOutPlugin;
 class VPEffectPlugin;
-class VPDecoder;
+class VPDecoderPlugin;
 
 typedef void(*next_track_cb_t)(char *mem, void *user);
 
@@ -90,8 +90,8 @@ public:
 
     std::thread *playWorker;
     VPOutPlugin *vpout;
-    VPDecoder *vpdecode;
-    // bout: buffer out from vpdecoder
+    VPDecoderPlugin *vpdecode;
+    // bout: buffer out from VPDecoderPlugin
     // bin: buffer in for vpout
     VPBuffer bout,bin;
 
@@ -114,7 +114,7 @@ public:
     void removeEffect(VPEffectPlugin *eff);
     bool isPlaying();
     int getSupportedFileTypeCount();
-    void getSupportedFileTypeExtensions(char **exts);
+    void getSupportedFileTypeExtensions(std::vector<std::string>& exts);
     ~VPlayer() ;
 };
 

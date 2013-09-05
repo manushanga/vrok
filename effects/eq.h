@@ -15,7 +15,6 @@
 #include "shibatch/Equ.h"
 
 #include "vrok.h"
-#include "config.h"
 
 #define BACK_LOG 18
 #define BAR_COUNT 18

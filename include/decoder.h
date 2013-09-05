@@ -3,7 +3,7 @@
 
 #include "vplayer.h"
 
-class VPDecoder
+class VPDecoderPlugin
 {
 protected:
     VPBuffer *bout;
@@ -14,7 +14,7 @@ public:
     virtual unsigned long getLength() = 0;
     virtual void setPosition(unsigned long t) = 0;
     virtual unsigned long getPosition() = 0;
-    virtual ~VPDecoder() {}
+    virtual ~VPDecoderPlugin() {}
 };
 
 

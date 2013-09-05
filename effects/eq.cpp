@@ -7,7 +7,6 @@
 */
 
 #include <cstring>
-#include "config.h"
 #include "vputils.h"
 #include "eq.h"
 
@@ -20,7 +19,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     owner=NULL;
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
-        band.append(TOSTR(i));
+        band.append(std::to_string(i));
         target[i]=VSettings::getSingleton()->readFloat(band,1.0f);
     }
     memset(&sb_state, 0, sizeof(SuperEqState));
@@ -33,7 +32,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eqk");
-        band.append(TOSTR(i));
+        band.append(std::to_string(i));
         knowledge[i]=VSettings::getSingleton()->readFloat(band,1.0f);
     }
 
@@ -197,12 +196,12 @@ int VPEffectPluginEQ::finit()
 {
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
-        band.append(TOSTR(i));
+        band.append(std::to_string(i));
         VSettings::getSingleton()->writeFloat(band,target[i]);
     }
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eqk");
-        band.append(TOSTR(i));
+        band.append(std::to_string(i));
         VSettings::getSingleton()->writeFloat(band,knowledge[i]);
     }
     VSettings::getSingleton()->writeFloat("eqpre",sb_preamp);

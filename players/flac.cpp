@@ -12,9 +12,9 @@
 #include "vrok.h"
 #include "flac.h"
 
-VPDecoder* FLACDecoder::VPDecoderFLAC_new(VPlayer *v)
+VPDecoderPlugin* FLACDecoder::VPDecoderFLAC_new(VPlayer *v)
 {
-    return (VPDecoder *)new FLACDecoder(v);
+    return (VPDecoderPlugin *)new FLACDecoder(v);
 }
 void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
                               const FLAC__StreamMetadata *metadata,

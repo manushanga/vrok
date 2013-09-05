@@ -22,7 +22,6 @@
 #include "players/mpeg.h"
 #include "players/ogg.h"
 #include "effects/eq.h"
-#include "config.h"
 
 #include <cstring>
 #include <ctime>
@@ -482,14 +481,13 @@ void VrokMain::actionQueueRemove()
 
 QStringList VrokMain::getExtentionsList()
 {
-    int count=vp->getSupportedFileTypeCount();
-    char *exts[count];
+    std::vector<std::string> exts;
     QStringList list;
-    vp->getSupportedFileTypeExtensions(&exts[0]);
+    vp->getSupportedFileTypeExtensions(exts);
 
 
-    for (int i=0;i<count;i++) {
-        list.append(QString("*.").append(exts[i]));
+    for (int i=0;i<(int)exts.size();i++) {
+        list.append(QString("*.").append(exts[i].c_str()));
     }
     return list;
 }

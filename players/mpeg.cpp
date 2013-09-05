@@ -12,9 +12,9 @@
 
 #define SHORTTOFL (1.0f/__SHRT_MAX__)
 
-VPDecoder* MPEGDecoder::VPDecoderMPEG_new(VPlayer *v)
+VPDecoderPlugin* MPEGDecoder::VPDecoderMPEG_new(VPlayer *v)
 {
-    return (VPDecoder *)new MPEGDecoder(v);
+    return (VPDecoderPlugin *)new MPEGDecoder(v);
 }
 
 MPEGDecoder::MPEGDecoder(VPlayer *v)

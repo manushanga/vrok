@@ -27,13 +27,11 @@ SOURCES += \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    config.cpp \
     utils.cpp
 HEADERS  += \
     include/vplayer.h \
     include/decoder.h \
     include/effect.h \
-    include/config.h \
     include/threads.h \
     include/vrok.h \
     include/out.h \
@@ -57,13 +55,11 @@ SOURCES += \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    config.cpp \
     utils.cpp
 HEADERS  += \
     include/vplayer.h \
     include/decoder.h \
     include/effect.h \
-    include/config.h \
     include/vputils.h \
     include/threads.h \
     include/vrok.h \
@@ -125,6 +121,10 @@ SOURCES += outs/dsound.cpp
 TRANSLATIONS += vrok_si.ts
 
 RESOURCES += vrok.qrc
+
+SOURCES += \
+    vrok.cpp \
+    settings.cpp
 
 
 

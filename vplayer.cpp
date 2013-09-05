@@ -14,8 +14,8 @@
   Only play_worker is managed here.
 */
 #include <cstring>
+#include <algorithm>
 #include "vrok.h"
-#include "config.h"
 #include "vplayer.h"
 #include "out.h"
 #include "decoder.h"
@@ -88,7 +88,9 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 
 void VPlayer::addEffect(VPEffectPlugin *eff)
 {
+    control.lock();
     stop();
+    control.unlock();
 
     dsp[dspCount].in = NULL;
     dsp[dspCount].out = NULL;
@@ -184,39 +186,39 @@ void VPlayer::announce(VPStatus status)
 
 int VPlayer::getSupportedFileTypeCount()
 {
-    return (int)sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);
+    return VPDecoderFactory::getSingleton()->count();
 }
 
-void VPlayer::getSupportedFileTypeExtensions(char **exts)
+void VPlayer::getSupportedFileTypeExtensions(std::vector<std::string>& exts)
 {
-    for (unsigned i=0;i<sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);i++){
-        exts[i] = vpdecoder_entries[i].ext;
-    }
+    VPDecoderFactory::getSingleton()->getExtensionsList(exts);
 }
 int VPlayer::open(const char *url)
 {
-    stop();
-    DBG(url);
 
     control.lock();
 
+    stop();
+    DBG(url);
+
     currentTrack[0]='\0';
 
-
-    unsigned len = strlen(url);
-    for (unsigned i=0;i<sizeof(vpdecoder_entries)/sizeof(vpdecoder_entry_t);i++){
-        if (strcasecmp(url + len - strlen(vpdecoder_entries[i].ext),vpdecoder_entries[i].ext) == 0) {
-            DBG("open decoder "<<vpdecoder_entries[i].name);
-            vpdecode = (VPDecoder *)vpdecoder_entries[i].creator(this);
+    std::string ext;
+    for (int i=strlen(url)-1;i>0;i--) {
+        if (url[i]=='.'){
             break;
+        } else {
+            ext+=(url[i]);
         }
     }
-
+    std::reverse(ext.begin(),ext.end());
+    vpdecode=VPDecoderFactory::getSingleton()->create(ext,this);
     int ret = 0;
 
     if (vpdecode){
         ret += vpdecode->open(url);
     } else {
+        WARN("failed to make vpdecoder");
         ret = -1;
     }
 
@@ -267,7 +269,7 @@ void VPlayer::pause()
 
 void VPlayer::stop()
 {
-    control.lock();
+    // only run on control mutex locked
     if (active) {
         if (vpdecode){
             vpout->resume();
@@ -288,8 +290,6 @@ void VPlayer::stop()
         mutex[1].try_lock();
         active = false;
     }
-
-    control.unlock();
 }
 bool VPlayer::isPlaying()
 {
@@ -298,9 +298,10 @@ bool VPlayer::isPlaying()
 
 VPlayer::~VPlayer()
 {
-
+    control.lock();
     // stop the whole thing
     stop();
+    control.unlock();
     // we do not free the effects plugins, their owners should free them
     for (int i=0;i<dspCount;i++){
         if (dsp[i].active){
@@ -337,6 +338,9 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
             bout.buffer[1] = NULL;
         }
 
+        vpout =VPOutFactory::getSingleton()->create("ALSA");
+        assert(vpout);
+
         outprop->buffer[0] = new float[VPBUFFER_FRAMES*outprop->chans];
         outprop->buffer[1] = new float[VPBUFFER_FRAMES*outprop->chans];
         outprop->cursor = &bufferCursor;
@@ -348,8 +352,6 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
 
         bout.cursor = &bufferCursor;
 
-        DBG("Init sound output on "<< vpout_entries[DEFAULT_VPOUT_PLUGIN].name);
-        vpout = (VPOutPlugin *) vpout_entries[DEFAULT_VPOUT_PLUGIN].creator();
 
         DBG("track chs: "<<bout.chans);
         DBG("track rate: "<<bout.srate);
