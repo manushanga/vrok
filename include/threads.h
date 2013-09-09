@@ -91,7 +91,7 @@ public:
     }
 };
 }
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
