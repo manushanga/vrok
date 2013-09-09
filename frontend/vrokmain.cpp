@@ -38,7 +38,8 @@ void VrokMain::callback_next(char *mem, void *user)
     VrokMain *mm =(VrokMain *) user;
     if (mm->queueModel.rowCount() < 3) {
         mm->metaObject()->invokeMethod(mm,"startFillTimer");
-    } else if (mm->queueModel.rowCount() > 0){
+    }
+    if (mm->queueModel.rowCount() > 0){
         QString path = mm->queueModel.item(0,1)->text();
         mm->queueModel.removeRow(0);
         strcpy(mem,path.toUtf8().data());

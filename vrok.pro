@@ -27,7 +27,8 @@ SOURCES += \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    utils.cpp
+    util/utils.cpp \
+    util/cpplib.cpp
 HEADERS  += \
     include/vplayer.h \
     include/decoder.h \
@@ -36,6 +37,7 @@ HEADERS  += \
     include/vrok.h \
     include/out.h \
     include/vputils.h \
+    include/cpplib.h \
     effects/shibatch/paramlist.hpp \
     effects/shibatch/Equ.h \
     effects/eq.h \
@@ -55,7 +57,8 @@ SOURCES += \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
-    utils.cpp
+    util/utils.cpp \
+    util/cpplib.cpp
 HEADERS  += \
     include/vplayer.h \
     include/decoder.h \
@@ -63,6 +66,7 @@ HEADERS  += \
     include/vputils.h \
     include/threads.h \
     include/vrok.h \
+    include/cpplib.h \
     frontend/vrokmain.h \
     frontend/eqwidget.h \
     effects/shibatch/paramlist.hpp \
@@ -107,6 +111,12 @@ Alsa {
     DEFINES += VPOUT_ALSA
     HEADERS += outs/alsa.h
     SOURCES += outs/alsa.cpp
+}
+Ao {
+    LIBS += -lao
+    DEFINES += VPOUT_AO
+    HEADERS += outs/ao.h
+    SOURCES += outs/ao.cpp
 }
 
 }

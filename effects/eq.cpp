@@ -10,7 +10,6 @@
 #include "vputils.h"
 #include "eq.h"
 
-
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
     sb_preamp = (float) VSettings::getSingleton()->readFloat("eqpre",1.0f);
@@ -129,7 +128,8 @@ void VPEffectPluginEQ::applyKnowledge()
 {
     int count=0;
     for (unsigned i=0;i<BAR_COUNT;i++){
-        float next=(knowledge[i]-mids[i]*0.00008f)*mids[i]*0.1f+sb_bands[i]*0.9f;
+
+        float next=knowledge[i]*mids[i]*0.6f + sb_bands[i]*0.4f;
         if (next<target[i] && next>target[i]-3.0f){
             sb_bands[i] = next;
             count++;

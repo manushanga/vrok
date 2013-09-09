@@ -11,6 +11,8 @@
 #include "players/mpeg.h"
 #include "players/ogg.h"
 
+#include "cpplib.h"
+
 class VPlayer;
 
 typedef void *(*vpout_creator_t)(void);
@@ -63,6 +65,15 @@ public:
         }
     }
     VPOutFactory();
+    inline VPOutPlugin *create()
+    {
+        std::map<std::string, vpout_entry_t>::iterator it=creators.find(currentOut);
+        if (it!= creators.end()){
+            return (VPOutPlugin *)it->second.creator();
+        } else {
+            return NULL;
+        }
+    }
 
     inline VPOutPlugin *create(std::string name)
     {

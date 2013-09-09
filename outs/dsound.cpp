@@ -91,6 +91,10 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
             ATOMIC_CAS(&self->paused,true,false);
             DBG("out of pause");
             ATOMIC_CAS(&self->pause_check,true,false);
+            if (!ATOMIC_CAS(&self->work,false,false)) {
+                break;
+            }
+
         }
 
         self->owner->mutex[1].lock();
@@ -228,16 +232,10 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
 VPOutPluginDSound::~VPOutPluginDSound()
 {
     // get up DSound!
-    wakeup();
-
+    rewind();
     // make sure decoders are finished before calling
     ATOMIC_CAS(&work,true,false);
     resume();
-
-    owner->mutex[0].lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer[*bin->cursor][i]=0.0f;
-    owner->mutex[1].unlock();
 
     if (worker){
         worker->join();

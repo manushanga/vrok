@@ -7,20 +7,17 @@
 */
 
 #include <unistd.h>
-
 #include "vrok.h"
-#include "dummy.h"
+#include "ao.h"
 
-
-VPOutPlugin* VPOutPluginDummy::VPOutPluginDummy_new()
+VPOutPlugin* VPOutPluginAO::VPOutPluginAO_new()
 {
-    return (VPOutPlugin *) new VPOutPluginDummy();
+    return (VPOutPlugin *) new VPOutPluginAO();
 }
 
-void VPOutPluginDummy::worker_run(VPOutPluginDummy *self)
+void VPOutPluginAO::worker_run(VPOutPluginAO *self)
 {
-    int ret;
-    unsigned out_frames=0;
+    int error;
     unsigned chans=self->bin->chans;
 
     while (ATOMIC_CAS(&self->work,true,true)){
@@ -36,34 +33,21 @@ void VPOutPluginDummy::worker_run(VPOutPluginDummy *self)
 
         }
 
-        self->rd.end_of_input = 0;
-        self->rd.data_out = self->out_buf;
-        self->rd.input_frames = VPBUFFER_FRAMES;
-        self->rd.output_frames = self->out_frames;
-        self->rd.output_frames_gen = 1;
-        out_frames=0;
-
         self->owner->mutex[1].lock();
 
-        self->rd.data_in = self->bin->buffer[1-*self->bin->cursor];
-
-        while (self->rd.output_frames_gen) {
-            src_process(self->rs,&self->rd);
-
-            self->rd.input_frames -= self->rd.input_frames_used;
-            self->rd.data_in += self->rd.input_frames_used*chans;
-            out_frames+=self->rd.output_frames_gen;
-        }
-
+        for (int i=0;i<VPBUFFER_FRAMES*chans;i++){
+            self->buffer[i]=(unsigned short)(self->bin->buffer[1-*self->bin->cursor][i]*32767.0f);
+		}
+        ao_play(self->device, (char *)self->buffer,VPBUFFER_FRAMES*chans*sizeof(unsigned short));
 
         self->owner->mutex[0].unlock();
-
     }
 
 }
 
-void __attribute__((optimize("O0"))) VPOutPluginDummy::rewind()
+void __attribute__((optimize("O0"))) VPOutPluginAO::rewind()
 {
+
     if (m_pause.try_lock()){
         //m_pause.lock();
         ATOMIC_CAS(&pause_check,false,true);
@@ -75,20 +59,23 @@ void __attribute__((optimize("O0"))) VPOutPluginDummy::rewind()
 
         while (!ATOMIC_CAS(&paused,false,false)) {}
     }
+
 }
 
-void __attribute__((optimize("O0"))) VPOutPluginDummy::resume()
+void __attribute__((optimize("O0"))) VPOutPluginAO::resume()
 {
     if (ATOMIC_CAS(&paused,true,true)){
         ATOMIC_CAS(&pause_check,true,false);
 
+        m_pause.try_lock();
         m_pause.unlock();
         while (ATOMIC_CAS(&paused,true,true)) {}
     }
 }
-void __attribute__((optimize("O0"))) VPOutPluginDummy::pause()
+void __attribute__((optimize("O0"))) VPOutPluginAO::pause()
 {
     if (!ATOMIC_CAS(&paused,false,false)){
+
         if (m_pause.try_lock()){
             ATOMIC_CAS(&pause_check,false,true);
             while (!ATOMIC_CAS(&paused,false,false)) {}
@@ -97,48 +84,56 @@ void __attribute__((optimize("O0"))) VPOutPluginDummy::pause()
     }
 }
 
-int VPOutPluginDummy::init(VPlayer *v, VPBuffer *in)
+int VPOutPluginAO::init(VPlayer *v, VPBuffer *in)
 {
-    DBG("Dummy:init");
+	ao_sample_format format;
+	int default_driver;
+	
+    DBG("AO:init");
     owner = v;
-    bin = in;
+    bin=in;
 
-    out_srate = 48000;
-    in_srate = bin->srate;
-    int rerr;
-    rs = src_new(SRC_SINC_FASTEST, bin->chans, &rerr);
-    if (!rs){
-        DBG("SRC error"<<rerr);
-        return -1;
-    }
-
-    rd.src_ratio = (out_srate*1.0d)/(in_srate*1.0d);
-    out_frames = (VPBUFFER_FRAMES*rd.src_ratio)*2;
-    out_buf = (float *)malloc(out_frames*sizeof(float)*bin->chans);
-    DBG("target rate "<<out_srate);
+	ao_initialize();
+	default_driver = ao_default_driver_id();
+	memset(&format, 0, sizeof(format));
+	format.bits = 16;
+    format.channels = in->chans;
+	format.rate = in->srate;
+    format.byte_format = AO_FMT_LITTLE;
+	
+	/* -- Open driver -- */
+	device = ao_open_live(default_driver, &format, NULL /* no options */);
+	if (device == NULL) {
+		DBG("Error opening device");
+		return 1;
+	}
+    buffer= new unsigned short[VPBUFFER_FRAMES*in->chans];
     work = true;
     paused = false;
     pause_check = false;
 
     worker = new std::thread((void(*)(void*))worker_run, this);
-    DBG("Dummy thread made");
+    DBG("ao thread made");
     return 0;
 }
 
-VPOutPluginDummy::~VPOutPluginDummy()
+VPOutPluginAO::~VPOutPluginAO()
 {
-    // make sure decoders are finished before calling
     rewind();
     ATOMIC_CAS(&work,true,false);
     resume();
+
 
     if (worker){
         worker->join();
         DBG("out thread joined");
         delete worker;
     }
-    free(out_buf);
-    src_delete(rs);
+	
+	delete[] buffer;
+	
+    ao_close(device);
+
+	ao_shutdown();
 
 }
-

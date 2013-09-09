@@ -1,43 +1,50 @@
 #include "vrok.h"
-#if defined(_WIN32)
+
+#if defined(VPOUT_DUMMY)
+#include "outs/dummy.h"
+#elif defined(_WIN32)
 #include "dsound.h"
 #elif defined(__linux__)
 #if defined(VPOUT_ALSA)
 #include "outs/alsa.h"
+#elif defined(VPOUT_AO)
+#include "outs/ao.h"
 #elif defined(VPOUT_PULSE)
 #include "outs/pulse.h"
-#elif defined(VPOUT_DUMMY)
-#include "outs/dummy.h"
 #endif
 #endif
 
 VPOutFactory::VPOutFactory()
 {
-#if defined(_WIN32)
+#if defined(VPOUT_DUMMY)
+    vpout_entry_t def=
+    { (vpout_creator_t)VPOutPluginDummy::VPOutPluginDummy_new, VPBUFFER_PERIOD };
+    creators.insert(std::pair<std::string, vpout_entry_t> ("Dummy",def));
+    currentOut = "Dummy";
+#elif defined(_WIN32)
     vpout_entry_t def=
     { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD };
     creators.insert(std::pair<std::string, vpout_entry_t> ("DSound",def));
     currentOut = "DSound";
 #elif defined(__linux__)
+
 #if defined(VPOUT_ALSA)
-#include "outs/alsa.h"
     vpout_entry_t def=
     { (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD };
     creators.insert(std::pair<std::string, vpout_entry_t> ("ALSA",def));
     currentOut = "ALSA";
 #elif defined(VPOUT_PULSE)
-#include "outs/pulse.h"
     vpout_entry_t def=
     { (vpout_creator_t)VPOutPluginPulse::VPOutPluginPulse_new, VPBUFFER_PERIOD };
     creators.insert(std::pair<std::string, vpout_entry_t> ("PulseAudio",def));
     currentOut = "PulseAudio";
-#elif defined(VPOUT_DUMMY)
-#include "outs/dummy.h"
+#elif defined(VPOUT_AO)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginDummy::VPOutPluginDummy_new, VPBUFFER_PERIOD };
-    creators.insert(std::pair<std::string, vpout_entry_t> ("Dummy",def));
-    currentOut = "Dummy";
+    { (vpout_creator_t)VPOutPluginAO::VPOutPluginAO_new, VPBUFFER_PERIOD };
+    creators.insert(std::pair<std::string, vpout_entry_t> ("AO",def));
+    currentOut = "AO";
 #endif
+
 #endif
     currentOut=VSettings::getSingleton()->readString("outplugin",currentOut);
 

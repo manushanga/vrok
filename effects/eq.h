@@ -62,7 +62,7 @@ public:
     inline const float *getBands() const { return sb_bands; }
     inline const float *getTargetBands() const {  return target; }
     inline const float *getMids() const { return mids; }
-    inline void setTargetBand(int i, float val) { sb_bands[i]=val; target[i]=val; }
+    inline void setTargetBand(int i, float val) { sb_bands[i]=val; target[i]=val; knowledge[i]=0.99f; mids[i]=val; }
     inline void setBand(int i, float val) { sb_bands[i]=val; sched_recalc=true; }
     inline void setPreamp(float val) { sb_preamp = val; sched_recalc=true; }
     inline float getPreamp() const { return sb_preamp; }

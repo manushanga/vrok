@@ -88,7 +88,6 @@ VSettings::VSettings()
                 fscanf(f,"%d",&num);
                 list.push_back(num);
             }
-            DBG(name);
             settings.insert(std::pair< std::string, std::vector<int> >(std::string(name),list));
         }
 

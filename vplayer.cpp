@@ -56,7 +56,6 @@ void VPlayer::playWork(VPlayer *self)
 
 VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 {
-    control.lock();
     nextCallbackUser = cb_user;
 
     dspCount = 0;
@@ -80,7 +79,6 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
     bout.buffer[1] = NULL;
 
     bufferCursor = 0;
-    control.unlock();
 
     mutex[1].lock();
 }
@@ -212,6 +210,7 @@ int VPlayer::open(const char *url)
         }
     }
     std::reverse(ext.begin(),ext.end());
+    ext=std::to_lower(ext);
     vpdecode=VPDecoderFactory::getSingleton()->create(ext,this);
     int ret = 0;
 
@@ -338,7 +337,7 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
             bout.buffer[1] = NULL;
         }
 
-        vpout =VPOutFactory::getSingleton()->create("ALSA");
+        vpout =VPOutFactory::getSingleton()->create();
         assert(vpout);
 
         outprop->buffer[0] = new float[VPBUFFER_FRAMES*outprop->chans];

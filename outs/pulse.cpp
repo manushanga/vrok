@@ -28,6 +28,10 @@ void VPOutPluginPulse::worker_run(VPOutPluginPulse *self)
             self->m_pause.unlock();
             ATOMIC_CAS(&self->paused,true,false);
             ATOMIC_CAS(&self->pause_check,true,false);
+            if (!ATOMIC_CAS(&self->work,false,false)) {
+                break;
+            }
+
         }
 
         self->owner->mutex[1].lock();
@@ -106,14 +110,9 @@ int VPOutPluginPulse::init(VPlayer *v, VPBuffer *in)
 
 VPOutPluginPulse::~VPOutPluginPulse()
 {
-    // make sure decoders are finished before calling
+    rewind();
     ATOMIC_CAS(&work,true,false);
     resume();
-
-    owner->mutex[0].lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer[*bin->cursor][i]=0.0f;
-    owner->mutex[1].unlock();
 
 
     if (worker){

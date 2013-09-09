@@ -39,6 +39,10 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
             snd_pcm_prepare(self->handle);
             ATOMIC_CAS(&self->paused,true,false);
             ATOMIC_CAS(&self->pause_check,true,false);
+            if (!ATOMIC_CAS(&self->work,false,false)) {
+                break;
+            }
+
         }
 
         self->rd.end_of_input = 0;
@@ -172,14 +176,9 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
 
 VPOutPluginAlsa::~VPOutPluginAlsa()
 {
-    // make sure decoders are finished before calling
+    rewind();
     ATOMIC_CAS(&work,true,false);
     resume();
-
-    owner->mutex[0].lock();
-    for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-        bin->buffer[*bin->cursor][i]=0.0f;
-    owner->mutex[1].unlock();
 
     if (worker){
         worker->join();
