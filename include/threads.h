@@ -140,77 +140,58 @@ public:
 class mutex
 {
 private:
-    volatile int cs;
-    sem_t sem;
+    pthread_mutex_t mMutex;
+    pthread_cond_t mCond;
+
+    bool signal;
 public:
-    inline mutex()
+    mutex():
+        signal(true)
     {
-        sem_init(&sem,0,1);
-        cs=0;
+        pthread_mutex_init(&mMutex,NULL);
+        pthread_cond_init(&mCond,NULL);
+
     }
 
-    inline ~mutex()
+    ~mutex()
     {
-        sem_close(&sem);
+        pthread_mutex_destroy(&mMutex);
+        pthread_cond_destroy(&mCond);
+
     }
 
     inline void lock()
     {
-       sem_wait(&sem);
-        /*int i, c;
+        pthread_mutex_lock(&mMutex);
+        while (!signal)
+            pthread_cond_wait(&mCond,&mMutex);
+        signal=false;
+        pthread_mutex_unlock(&mMutex);
 
-        for (i = 0; i < SPIN_MAX; i++)
-        {
-            c = __sync_val_compare_and_swap(&cs, 0, 1);
-            if (!c)
-                return;
-
-        }
-
-        if (c == 1) {
-            c = __sync_lock_test_and_set(&cs,2);
-        }
-
-        while (c)
-        {
-            syscall(__NR_futex, &cs, FUTEX_WAIT_PRIVATE, 2, NULL, NULL, 0);
-            c = __sync_lock_test_and_set(&cs, 2);
-        }*/
     }
 
     inline void unlock()
     {
-        sem_post(&sem);
+        pthread_mutex_lock(&mMutex);
 
-        /*int i;
-
-
-        if (cs == 2)
-        {
-            __sync_lock_test_and_set(&cs, 0) ;
+        if (!signal){
+            pthread_cond_signal(&mCond);
         }
-        else if (__sync_lock_test_and_set(&cs, 0) == 1)
-            return ;
+        signal=true;
+        pthread_mutex_unlock(&mMutex);
 
-        for (i = 0; i < SPIN_MAX; i++)
-        {
-            if (cs)
-            {
-
-                if (__sync_val_compare_and_swap(&cs, 1, 2))
-                    return ;
-            }
-        }
-
-        syscall(__NR_futex, &cs, FUTEX_WAKE_PRIVATE, 1, NULL, NULL, 0);*/
     }
     inline bool try_lock()
     {
-        return (bool) (sem_trywait(&sem)==0);
-        /*int c = __sync_val_compare_and_swap(&cs, 0, 1);
-        if (!c)
+        pthread_mutex_lock(&mMutex);
+        if (signal) {
+            signal=false;
+            pthread_mutex_unlock(&mMutex);
             return true;
-        return false;*/
+        } else {
+            pthread_mutex_unlock(&mMutex);
+            return false;
+        }
     }
 };
 }

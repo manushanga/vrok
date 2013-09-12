@@ -80,7 +80,6 @@ void __attribute__((optimize("O0"))) VPOutPluginAO::pause()
             ATOMIC_CAS(&pause_check,false,true);
             while (!ATOMIC_CAS(&paused,false,false)) {}
         }
-        while (!ATOMIC_CAS(&paused,false,false)) {}
     }
 }
 

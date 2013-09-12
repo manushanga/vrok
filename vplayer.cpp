@@ -37,14 +37,14 @@ void VPlayer::playWork(VPlayer *self)
                 self->open(self->nextTrack);
                 DBG("new track");
             } else {
-                delete self->playWorker;
-                self->playWorker = NULL;
+               // delete self->playWorker;
+               // self->playWorker = NULL;
                 break;
             }
         } else {
             DBG("no new track");
-            delete self->playWorker;
-            self->playWorker = NULL;
+            //delete self->playWorker;
+            //self->playWorker = NULL;
             break;
         }
     }
@@ -56,6 +56,7 @@ void VPlayer::playWork(VPlayer *self)
 
 VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 {
+    control.lock();
     nextCallbackUser = cb_user;
 
     dspCount = 0;
@@ -80,7 +81,8 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 
     bufferCursor = 0;
 
-    mutex[1].lock();
+    mutex[1].try_lock();
+    control.unlock();
 }
 
 
@@ -275,7 +277,10 @@ void VPlayer::stop()
             paused=false;
             DBG("free decoder");
             ATOMIC_CAS(&work,true,false);
-            while (ATOMIC_CAS(&active,true,true)) {}
+            playWorker->join();
+            DBG("cleaning off playWorker");
+            delete playWorker;
+            playWorker = NULL;
             delete vpdecode;
             vpdecode = NULL;
         }
