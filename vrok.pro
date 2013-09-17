@@ -134,7 +134,11 @@ RESOURCES += vrok.qrc
 
 SOURCES += \
     vrok.cpp \
-    settings.cpp
+    settings.cpp \
+    frontend/playlistfactory.cpp
+
+HEADERS += \
+    frontend/playlistfactory.h
 
 
 

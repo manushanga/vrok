@@ -37,14 +37,17 @@ void VPlayer::playWork(VPlayer *self)
                 self->open(self->nextTrack);
                 DBG("new track");
             } else {
-               // delete self->playWorker;
-               // self->playWorker = NULL;
+                delete self->vpdecode;
+                self->vpdecode = NULL;
+                delete self->playWorker;
+                self->playWorker = NULL;
                 break;
             }
         } else {
-            DBG("no new track");
-            //delete self->playWorker;
-            //self->playWorker = NULL;
+            delete self->vpdecode;
+            self->vpdecode = NULL;
+            delete self->playWorker;
+            self->playWorker = NULL;
             break;
         }
     }
@@ -271,27 +274,23 @@ void VPlayer::pause()
 void VPlayer::stop()
 {
     // only run on control mutex locked
-    if (active) {
+    if (ATOMIC_CAS(&active,true,true)) {
         if (vpdecode){
-            vpout->resume();
-            paused=false;
+
             DBG("free decoder");
             ATOMIC_CAS(&work,true,false);
+            vpout->resume();
+
             playWorker->join();
-            DBG("cleaning off playWorker");
+            paused=true;
+
             delete playWorker;
-            playWorker = NULL;
+            playWorker=NULL;
             delete vpdecode;
             vpdecode = NULL;
         }
 
-        if (vpout)
-            vpout->rewind();
 
-        // reset mutexes, both out and decoding is stopped here
-        mutex[0].try_lock();
-        mutex[0].unlock();
-        mutex[1].try_lock();
         active = false;
     }
 }

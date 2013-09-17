@@ -45,39 +45,25 @@ void VPOutPluginPulse::worker_run(VPOutPluginPulse *self)
 
 void __attribute__((optimize("O0"))) VPOutPluginPulse::rewind()
 {
-
-    if (m_pause.try_lock()){
-        //m_pause.lock();
+    if (!ATOMIC_CAS(&paused,false,false) ){
+        m_pause.lock();
         ATOMIC_CAS(&pause_check,false,true);
-
-        owner->mutex[0].lock();
-        for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-            bin->buffer[*bin->cursor][i]=0.0f;
-        owner->mutex[1].unlock();
-
         while (!ATOMIC_CAS(&paused,false,false)) {}
     }
-
 }
 
 void __attribute__((optimize("O0"))) VPOutPluginPulse::resume()
 {
-    if (ATOMIC_CAS(&paused,true,true)){
-        ATOMIC_CAS(&pause_check,true,false);
-
-        m_pause.try_lock();
+    if (ATOMIC_CAS(&paused,false,false) ){
         m_pause.unlock();
-        while (ATOMIC_CAS(&paused,true,true)) {}
+        while (ATOMIC_CAS(&paused,false,false)) {}
     }
 }
 void __attribute__((optimize("O0"))) VPOutPluginPulse::pause()
 {
-    if (!ATOMIC_CAS(&paused,false,false)){
-
-        if (m_pause.try_lock()){
-            ATOMIC_CAS(&pause_check,false,true);
-            while (!ATOMIC_CAS(&paused,false,false)) {}
-        }
+    if (!ATOMIC_CAS(&paused,false,false) ){
+        m_pause.lock();
+        ATOMIC_CAS(&pause_check,false,true);
         while (!ATOMIC_CAS(&paused,false,false)) {}
     }
 }
@@ -110,8 +96,11 @@ int VPOutPluginPulse::init(VPlayer *v, VPBuffer *in)
 
 VPOutPluginPulse::~VPOutPluginPulse()
 {
-    rewind();
     ATOMIC_CAS(&work,true,false);
+    // make sure decoders have properly ended then mutex[0] should locked and
+    // mutex[1] unlocked from the decoder and mutex[1] locked by output thread
+    // we unlock it here to avoid deadlock
+    owner->mutex[1].unlock();
     resume();
 
 

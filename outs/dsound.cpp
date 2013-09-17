@@ -81,15 +81,13 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
         DBG("fail");
     }
     while (ATOMIC_CAS(&self->work,true,true)){
-        if (ATOMIC_CAS(&self->pause_check,true,true)){
-            DBG("going to pause");
+        if (ATOMIC_CAS(&self->pause_check,true,true)) {
             ATOMIC_CAS(&self->paused,false,true);
             lpdsbuffer->Stop();
             self->m_pause.lock();
             self->m_pause.unlock();
             lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
             ATOMIC_CAS(&self->paused,true,false);
-            DBG("out of pause");
             ATOMIC_CAS(&self->pause_check,true,false);
             if (!ATOMIC_CAS(&self->work,false,false)) {
                 break;
@@ -98,6 +96,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
         }
 
         self->owner->mutex[1].lock();
+
         if (lpdsbuffer->GetCurrentPosition(&play_at,NULL) == DS_OK && play_at < self->half_buffer_size*sizeof(short)-1){
             WaitForSingleObject(NotifyEvent[0], INFINITE);
             hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
@@ -126,43 +125,36 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
     }
     lpdsbuffer->Stop();
 }
-
 void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
 {
-    wakeup();
 
-    if (m_pause.try_lock()){
-        //m_pause.lock();
+    if (!ATOMIC_CAS(&paused,false,false) ){
+        m_pause.lock();
         ATOMIC_CAS(&pause_check,false,true);
-
-        owner->mutex[0].lock();
-        for (unsigned i=0;i<VPBUFFER_FRAMES*bin->chans;i++)
-            bin->buffer[*bin->cursor][i]=0.0f;
-        owner->mutex[1].unlock();
-
         while (!ATOMIC_CAS(&paused,false,false)) {}
-        lpdsbuffer->Stop();
+        idle();
     }
-
 }
 
 void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
 {
-    wakeup();
-
-    if (ATOMIC_CAS(&paused,true,true)){
-        ATOMIC_CAS(&pause_check,true,false);
-
-        m_pause.try_lock();
+    if (ATOMIC_CAS(&paused,false,false) ){
         m_pause.unlock();
-        while (ATOMIC_CAS(&paused,true,true)) {}
-        lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
+        while (ATOMIC_CAS(&paused,false,false)) {}
+        wakeup();
     }
 }
-
+void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
+{
+    if (!ATOMIC_CAS(&paused,false,false) ){
+        m_pause.lock();
+        ATOMIC_CAS(&pause_check,false,true);
+        while (!ATOMIC_CAS(&paused,false,false)) {}
+        idle();
+    }
+}
 void VPOutPluginDSound::wakeup()
 {
-    DBG("wake");
     if (!wake){
         lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
         wake=true;
@@ -174,17 +166,6 @@ void VPOutPluginDSound::idle()
     if (wake){
         lpdsbuffer->Stop();
         wake=false;
-    }
-}
-
-void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
-{
-    if (!ATOMIC_CAS(&paused,false,false)){
-        if (m_pause.try_lock()){
-            ATOMIC_CAS(&pause_check,false,true);
-            while (!ATOMIC_CAS(&paused,false,false)) {}
-        }
-        lpdsbuffer->Stop();
     }
 }
 
@@ -231,10 +212,18 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
 
 VPOutPluginDSound::~VPOutPluginDSound()
 {
-    // get up DSound!
-    rewind();
     // make sure decoders are finished before calling
     ATOMIC_CAS(&work,true,false);
+    // make sure decoders have properly ended then mutex[0] should locked and
+    // mutex[1] unlocked from the decoder and mutex[1] locked by output thread
+    // we unlock it here to avoid deadlock
+
+    // special lock release for DSound, the locking for output thread happens
+    // twice at mutex[1] and WaitForSingleObject() we should release both to get
+    // out of lock, the release is done in reverse to guarantee that both get
+    // released
+    lpdsbuffer->Play(0,0,DSBPLAY_LOOPING);
+    owner->mutex[1].unlock();
     resume();
 
     if (worker){

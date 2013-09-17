@@ -113,7 +113,6 @@ public:
     static void *_std_thread_run(void *self)
     {
         ((std::thread*)self)->runner(((std::thread*)self)->data);
-        pthread_exit(0);
     }
     thread(void(*addr)(void *), void *user)
     {
@@ -132,7 +131,6 @@ public:
     }
     ~thread()
     {
-
     }
 };
 

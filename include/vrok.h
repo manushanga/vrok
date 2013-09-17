@@ -18,7 +18,7 @@ class VPlayer;
 typedef void *(*vpout_creator_t)(void);
 typedef void *(*vpdecode_creator_t)(VPlayer *v);
 
-#define VPBUFFER_PERIOD 128
+#define VPBUFFER_PERIOD 512
 
 struct vpout_entry_t{
     vpout_creator_t creator;

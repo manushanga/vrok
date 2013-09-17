@@ -89,8 +89,8 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
         bar_array[i] = 0.0f;
     }
     for (unsigned i=0;i<BAR_COUNT;i++){
-        mids[i] = 0.0f;
-        sb_bands[i] = 0.6f*target[i];
+        mids[i] = 20.0f;
+        sb_bands[i] = target[i];
     }
 
     owner = v;
@@ -112,11 +112,6 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
         }
     }
 
-    for (unsigned i=0;i<BAR_COUNT;i++){
-        mids[i]=0.0f;
-    }
-
-
     equ_init (&sb_state, 10.0f, bin->chans);
     sb_recalc_table();
     initd = true;
@@ -126,20 +121,17 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 }
 void VPEffectPluginEQ::applyKnowledge()
 {
-    int count=0;
-    for (unsigned i=0;i<BAR_COUNT;i++){
 
+    for (unsigned i=0;i<BAR_COUNT;i++){
         float next=knowledge[i]*mids[i]*0.6f + sb_bands[i]*0.4f;
         if (next<target[i] && next>target[i]-3.0f){
             sb_bands[i] = next;
-            count++;
         } else {
             knowledge[i]*=0.5f;
         }
     }
-    if (count>15) {
-        sched_recalc=true;
-    }
+    sched_recalc=true;
+
 }
 void VPEffectPluginEQ::process(float *buffer)
 {
@@ -155,6 +147,8 @@ void VPEffectPluginEQ::process(float *buffer)
     float mid,xre,xim,newb;
     unsigned step=0,chans=2,ichans;
     float *bar_array_w=bar_array;
+    float delta;
+    float changes=0.0f;
 
     while (step<BAR_SETS){
         for (size_t b=0;b<BAR_COUNT;b++){
@@ -175,9 +169,13 @@ void VPEffectPluginEQ::process(float *buffer)
             }
 
         }
+
         for (unsigned b=0;b<BAR_COUNT;b++){
             for (unsigned h=0;h<10;h++){
-                knowledge[b] -= 0.0002f*(mids[b]*knowledge[b]-target[b])*mids[b];
+                delta = 0.0002f*(mids[b]*knowledge[b]-target[b])*mids[b];
+                knowledge[b] -= delta;
+                changes+=delta;
+
             }
         }
 
@@ -185,7 +183,7 @@ void VPEffectPluginEQ::process(float *buffer)
         bar_array_w += BAR_COUNT;
         buffer += VPBUFFER_PERIOD*2;
     }
-    if (!period_count){
+    if (changes > 0.002f*BAR_SETS && !period_count){
         applyKnowledge();
     }
     period_count = (period_count + BAR_SETS) % 100;

@@ -3,7 +3,7 @@
 #if defined(VPOUT_DUMMY)
 #include "outs/dummy.h"
 #elif defined(_WIN32)
-#include "dsound.h"
+#include "outs/dsound.h"
 #elif defined(__linux__)
 #if defined(VPOUT_ALSA)
 #include "outs/alsa.h"
@@ -23,7 +23,7 @@ VPOutFactory::VPOutFactory()
     currentOut = "Dummy";
 #elif defined(_WIN32)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD };
+    { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*6 };
     creators.insert(std::pair<std::string, vpout_entry_t> ("DSound",def));
     currentOut = "DSound";
 #elif defined(__linux__)

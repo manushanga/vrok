@@ -62,9 +62,13 @@ public slots:
     void on_sbFolderSeek_valueChanged(int value);
     void actionQueueTriggered();
     void actionQueueRemove();
+    void actionNewQueue();
     void startFillTimer();
 private slots:
     void on_lvQueue_doubleClicked(const QModelIndex &index);
+    void on_tbQueues_tabCloseRequested(int index);
+
+    void on_tbQueues_currentChanged(int index);
 
 private:
     void folderSeekSweep(QDir& root);
@@ -85,6 +89,7 @@ private:
     QGraphicsRectItem *gbars[BAR_COUNT];
     QGraphicsRectItem *gmbars[BAR_COUNT];
     QGraphicsRectItem *gbbars[BAR_COUNT];
+    int lastTab;
 
     // playlist
     void loadDirFilesModel(QString opendir, QStandardItemModel *model);
