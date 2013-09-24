@@ -22,15 +22,21 @@ int main(int argc, char *argv[])
 {
     gargv = argv;
     gargc=argc;
-    VPlayer pl(next_cb, NULL);
-    VPEffectPluginEQ eq(100.0);
+    VPlayer *pl= new VPlayer(next_cb, NULL);
+    VPEffectPluginEQ *eq=new VPEffectPluginEQ(100.0);
 
-    pl.addEffect((VPEffectPlugin*)&eq);
-    pl.open(argv[1]);
+    pl->addEffect((VPEffectPlugin*)eq);
+    pl->open(argv[1]);
 
-    while (pl.isPlaying()) {
+    while (pl->isPlaying()) {
+        sleep(3);
+        pl->pause();
         sleep(1);
+        pl->play();
+        sleep(2);
     }
-    pl.removeEffect((VPEffectPlugin*)&eq);
+    pl->removeEffect((VPEffectPlugin*)eq);
+    delete pl;
+    delete eq;
     return 0;
 }

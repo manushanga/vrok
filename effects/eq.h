@@ -39,13 +39,11 @@ class VPEffectPluginEQ : VPEffectPlugin {
 private:
     VPlayer *owner;
     SuperEqState sb_state;
-    unsigned log_write;
     float sb_preamp;
     void *sb_paramsroot;
     float sb_bands[BAR_COUNT] __attribute__ ((aligned(16)));
     float target[BAR_COUNT] __attribute__ ((aligned(16)));
     bool sched_recalc;
-    float *bars[2];
     float *trig[2][BAR_COUNT] __attribute__ ((aligned(16)));
     float mids[BAR_COUNT] __attribute__ ((aligned(16)));
     float limit;

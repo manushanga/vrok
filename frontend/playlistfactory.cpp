@@ -34,7 +34,6 @@ int PlaylistFactory::loadQueue(QStandardItemModel *m, int idx)
 
 int PlaylistFactory::saveQueue(QStandardItemModel *m, int idx)
 {
-
     QFile f(root + QDir::separator() + ".vrok." +QString::number(idx) + ".queue");
     f.open(QFile::Text | QFile::WriteOnly);
     f.setTextModeEnabled(true);

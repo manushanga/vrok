@@ -1,7 +1,7 @@
 #include "vputils.h"
 #include "threads.h"
 
-std::mutex __m_console;
+std::shared_mutex __m_console;
 
 uint FNV(char *str)
 {

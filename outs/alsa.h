@@ -25,7 +25,7 @@ public:
     snd_pcm_t *handle;
     snd_pcm_hw_params_t *params;
     std::thread *worker;
-    std::mutex m_pause;
+    std::shared_mutex m_pause;
     volatile bool work;
     volatile bool pause_check;
     volatile bool paused;

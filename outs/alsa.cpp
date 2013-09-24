@@ -147,7 +147,7 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
         return -1;
     }
 
-    rd.src_ratio = (out_srate*1.0d)/(in_srate*1.0d);
+    rd.src_ratio = (out_srate*1.0)/(in_srate*1.0);
     out_frames = (VPBUFFER_FRAMES*rd.src_ratio)*2;
     out_buf = (float *)malloc(out_frames*sizeof(float)*bin->chans);
     DBG("target rate "<<out_srate);

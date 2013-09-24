@@ -65,6 +65,7 @@ private:
     void *nextCallbackUser;
     void initializeEffects();
     void announce(VPStatus status);
+    float volume;
 
     int bufferCursor;
 public:
@@ -73,11 +74,11 @@ public:
     char nextTrack[256];
 
     // mutex[0..1] for buffer, mutex[2..3] for buffer2
-    std::mutex mutex[2];
+    std::shared_mutex mutex[2];
 
     // open, play, pause, stop event control all are considered as cirtical
     // sections, none run interleaved.
-    std::mutex control;
+    std::shared_mutex control;
 
     // internal, play_worker runs only if work==true, if not it MUST return
     bool work;

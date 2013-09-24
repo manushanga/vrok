@@ -51,20 +51,20 @@ public:
 // http://preshing.com/20111124/always-use-a-lightweight-mutex
 
 
-class mutex
+class shared_mutex
 {
 private:
     LONG m_counter;
     HANDLE m_semaphore;
 
 public:
-    inline mutex()
+    inline shared_mutex()
     {
         m_counter = 0;
         m_semaphore = CreateSemaphore(NULL, 0, 1, NULL);
     }
 
-    inline ~mutex()
+    inline ~shared_mutex()
     {
         CloseHandle(m_semaphore);
     }
@@ -113,6 +113,7 @@ public:
     static void *_std_thread_run(void *self)
     {
         ((std::thread*)self)->runner(((std::thread*)self)->data);
+        return NULL;
     }
     thread(void(*addr)(void *), void *user)
     {
@@ -135,7 +136,7 @@ public:
 };
 
 
-class mutex
+class shared_mutex
 {
 private:
     pthread_mutex_t mMutex;
@@ -143,7 +144,7 @@ private:
 
     bool signal;
 public:
-    mutex():
+    shared_mutex():
         signal(true)
     {
         pthread_mutex_init(&mMutex,NULL);
@@ -151,7 +152,7 @@ public:
 
     }
 
-    ~mutex()
+    ~shared_mutex()
     {
         pthread_mutex_destroy(&mMutex);
         pthread_cond_destroy(&mCond);

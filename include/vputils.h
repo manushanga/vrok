@@ -10,7 +10,7 @@
 #define VPUTILS_H
 #include <sstream>
 #include "threads.h"
-extern std::mutex __m_console;
+extern std::shared_mutex __m_console;
 
 #define DEBUG
 

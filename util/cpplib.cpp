@@ -23,7 +23,7 @@ float from_string<float>(std::string number, float base)
 {
 
     float final=0.0f;
-    int radix=number.find('.');
+    size_t radix=number.find('.');
     int i=number.length()-1;
 
     if (radix!= std::string::npos){
@@ -56,7 +56,7 @@ double from_string<double>(std::string number, double base)
 {
 
     double final=0.0;
-    int radix=number.find('.');
+    size_t radix=number.find('.');
     int i=number.length()-1;
 
     if (radix!= std::string::npos){
@@ -93,7 +93,7 @@ std::string to_upper(std::string str)
         tptr++;
         sptr++;
     }
-    tptr='\0';
+    *tptr='\0';
     return final;
 }
 
@@ -110,7 +110,7 @@ std::string to_lower(std::string str)
         sptr++;
     }
 
-    tptr='\0';
+    *tptr='\0';
     return final;
 }
 

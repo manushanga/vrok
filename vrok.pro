@@ -89,7 +89,7 @@ QMAKE_CXXFLAGS_DEBUG += -O0 #-pg
 QMAKE_LFLAGS_DEBUG += -O0 #-pg
 
 
-linux-g++* {
+linux* {
 LIBS += -lpthread
 
 PulseAudio {
@@ -135,10 +135,12 @@ RESOURCES += vrok.qrc
 SOURCES += \
     vrok.cpp \
     settings.cpp \
-    frontend/playlistfactory.cpp
+    frontend/playlistfactory.cpp \
+    frontend/displayticker.cpp
 
 HEADERS += \
-    frontend/playlistfactory.h
+    frontend/playlistfactory.h \
+    frontend/displayticker.h
 
 
 

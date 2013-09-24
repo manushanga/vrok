@@ -376,12 +376,12 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
 
 void VPlayer::setVolume(float vol)
 {
-    //volume = vol;
+    volume = vol;
 }
 
 float VPlayer::getVolume()
 {
-    //return volume;
+    return volume;
 }
 
 

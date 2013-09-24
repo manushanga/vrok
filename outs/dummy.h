@@ -22,7 +22,7 @@ public:
     static void worker_run(VPOutPluginDummy *self);
     VPlayer *owner;
     std::thread *worker;
-    std::mutex m_pause;
+    std::shared_mutex m_pause;
     volatile bool work;
     volatile bool pause_check;
     volatile bool paused;

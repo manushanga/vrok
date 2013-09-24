@@ -30,6 +30,7 @@
 #include <QActionGroup>
 
 #include "eqwidget.h"
+#include "displayticker.h"
 
 namespace Ui {
 class VrokMain;
@@ -45,6 +46,7 @@ public:
     explicit VrokMain(QWidget *parent = 0);
     static void callback_next(char *next, void *user);
     bool eventFilter(QObject *target, QEvent *event);
+    void resizeEvent(QResizeEvent *event);
     ~VrokMain();
 
 
@@ -81,6 +83,7 @@ private:
     VPEffectPluginEQ *eq;
 
     // visuals
+    DisplayTicker dt;
     QTimer tx;
     unsigned vis_counter;
     float bar_vals[BAR_COUNT];
@@ -101,6 +104,7 @@ private:
     QStandardItemModel queueModel;
     QList< QAction * > contextMenuFiles;
     QList< QAction * > contextMenuQueue;
+    QList< QAction * > contextMenuTab;
     QActionGroup *queueToggleFillType;
 };
 

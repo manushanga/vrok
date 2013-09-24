@@ -81,6 +81,13 @@ bool VrokMain::eventFilter(QObject *target, QEvent *event)
         return false;
     }
 }
+
+void VrokMain::resizeEvent(QResizeEvent *event)
+{
+    ui->lblDisplay->setMaximumWidth(ui->lvFiles->width());
+
+    dt.resize(event->size().width());
+}
 void VrokMain::on_btnAbout_clicked()
 {
     QDialog d(this);
@@ -238,8 +245,7 @@ VrokMain::VrokMain(QWidget *parent) :
     ui->lblDisplay->setText("<center><b>-- Vrok</b> --</center>");
     // temp stuff until settings are written
     contextMenuQueue[QA_FILLRAN]->setChecked(true);
-
-
+    dt.setLabel(ui->lblDisplay);
 }
 void VrokMain::startFillTimer()
 {
@@ -528,9 +534,12 @@ void VrokMain::loadDirFilesModel(QString opendir, QStandardItemModel *model)
 
 void VrokMain::on_lvQueue_doubleClicked(const QModelIndex &index)
 {
+
     QString path = queueModel.item(index.row(),1)->text();
+    dt.setSongName(queueModel.item(index.row(),0)->text());
     queueModel.removeRow(index.row());
     vp->open(path.toUtf8().data());
+
 }
 
 void VrokMain::on_tbQueues_tabCloseRequested(int index)

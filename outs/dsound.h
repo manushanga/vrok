@@ -31,8 +31,8 @@ public:
     static void worker_run(VPOutPluginDSound *self);
     VPlayer *owner;
     std::thread *worker;
-    std::mutex m_pause;
-    std::mutex *mutex_pause;
+    std::shared_mutex m_pause;
+    std::shared_mutex *mutex_pause;
     volatile bool wake;
     volatile bool work;
     volatile bool paused;
