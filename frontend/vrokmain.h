@@ -31,7 +31,7 @@
 
 #include "eqwidget.h"
 #include "displayticker.h"
-
+#include "folderseeker.h"
 namespace Ui {
 class VrokMain;
 }
@@ -83,7 +83,7 @@ private:
     VPEffectPluginEQ *eq;
 
     // visuals
-    DisplayTicker dt;
+    DisplayTicker *lblDisplay;
     QTimer tx;
     unsigned vis_counter;
     float bar_vals[BAR_COUNT];

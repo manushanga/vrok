@@ -84,9 +84,7 @@ bool VrokMain::eventFilter(QObject *target, QEvent *event)
 
 void VrokMain::resizeEvent(QResizeEvent *event)
 {
-    ui->lblDisplay->setMaximumWidth(ui->lvFiles->width());
 
-    dt.resize(event->size().width());
 }
 void VrokMain::on_btnAbout_clicked()
 {
@@ -125,6 +123,9 @@ VrokMain::VrokMain(QWidget *parent) :
     lastTab(0)
 {
     ui->setupUi(this);
+
+    lblDisplay = new DisplayTicker(this);
+    ui->vlColumn2->addWidget(lblDisplay);
 
     vp=NULL;
     ew=NULL;
@@ -190,20 +191,20 @@ VrokMain::VrokMain(QWidget *parent) :
     }
     ui->gvDisplay->setScene(gs);
 
+    FolderSeeker::getSingleton()->setExtensionList(getExtentionsList());
     if (( VSettings::getSingleton()->readString("lastopen","") ).size()>0) {
         ui->lvFiles->setModel(&dirFilesModel);
 
-        ui->lblDisplay->setText("Scanning...");
+        lblDisplay->setText("Scanning...");
         QApplication::instance()->processEvents();
-        QDir rdir(QString(VSettings::getSingleton()->readString("lastopen","").c_str()));
-        folderSeekSweep(rdir);
-        ui->lblDisplay->setText("Done.");
+        FolderSeeker::getSingleton()->setSeekPath(QString(VSettings::getSingleton()->readString("lastopen","").c_str()));
+        lblDisplay->setText("Done.");
         QApplication::instance()->processEvents();
         ui->sbFolderSeek->setMinimum(0);
-        ui->sbFolderSeek->setMaximum(dirs.size()-1);
+        ui->sbFolderSeek->setMaximum(FolderSeeker::getSingleton()->getFolderCount() - 1);
 
         on_sbFolderSeek_valueChanged(0);
-        PlaylistFactory::getSingleton()->setRoot(rdir.absolutePath());
+        PlaylistFactory::getSingleton()->setRoot(FolderSeeker::getSingleton()->getSeekPath());
     }
     ui->lvFiles->installEventFilter(this);
     vis_counter = 0;
@@ -242,10 +243,10 @@ VrokMain::VrokMain(QWidget *parent) :
     connect(&tx, SIGNAL(timeout()), this, SLOT(process()));
     connect(&tcb,SIGNAL(timeout()), this, SLOT(fillQueue()));
 
-    ui->lblDisplay->setText("<center><b>-- Vrok</b> --</center>");
+    lblDisplay->setText("<center><b>-- Vrok</b> --</center>");
     // temp stuff until settings are written
     contextMenuQueue[QA_FILLRAN]->setChecked(true);
-    dt.setLabel(ui->lblDisplay);
+
 }
 void VrokMain::startFillTimer()
 {
@@ -269,8 +270,7 @@ void VrokMain::fillQueue()
             while (queueModel.rowCount()<10 && j<100){
                 drbloom = abs(rand()) % (dirs.count()-1);
                 if ((drbloom & dbloom) != drbloom) {
-                    DBG(drbloom);
-                    DBG("--")
+
                     loadDirFilesModel(dirs[drbloom], &fileModel);
                     uint bloom=0;
 
@@ -280,7 +280,7 @@ void VrokMain::fillQueue()
                         int tr = abs(rand()*5+rand()+i) % (fileModel.rowCount());
                         uint rbloom = FNV(fileModel.item(tr,1)->text().toUtf8().data());
                         if ((rbloom & bloom) != rbloom) {
-                            DBG(rbloom<<fileModel.item(tr,1)->text().toStdString());
+
                             queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
                             queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
 
@@ -402,15 +402,14 @@ void VrokMain::on_btnOpenDir_clicked()
     VSettings::getSingleton()->writeString("lastopen",d.toStdString());
     dirs.clear();
     dirFilesModel.clear();
-    ui->lblDisplay->setText("Scanning...");
+    lblDisplay->setText("Scanning...");
     qApp->processEvents();
-    QDir rdir(d);
-    folderSeekSweep(rdir);
-    ui->lblDisplay->setText("Done.");
+    FolderSeeker::getSingleton()->setSeekPath(d);
+    lblDisplay->setText("Done.");
     qApp->processEvents();
     ui->sbFolderSeek->setMinimum(0);
-    ui->sbFolderSeek->setMaximum(dirs.size()-1);
-
+    ui->sbFolderSeek->setMaximum(FolderSeeker::getSingleton()->getFolderCount()-1);
+    FolderSeeker::getSingleton()->getQueue(&dirFilesModel,0);
     on_sbFolderSeek_valueChanged(0);
     PlaylistFactory::getSingleton()->setRoot(d);
 }
@@ -466,9 +465,10 @@ VrokMain::~VrokMain()
 void VrokMain::on_sbFolderSeek_valueChanged(int value)
 {
 
-    if (dirs.count() > 0) {
-        ui->lblDisplay->setText(dirs.at(value).section(QDir::separator(),-1,-1));
-        loadDirFilesModel(dirs.at(value),&dirFilesModel);
+    if (FolderSeeker::getSingleton()->getFolderCount() > 0) {
+
+        QString dname=FolderSeeker::getSingleton()->getQueue(&dirFilesModel,value);
+        lblDisplay->setText(dname.section('/',-1,-1));
     }
 }
 
@@ -536,7 +536,7 @@ void VrokMain::on_lvQueue_doubleClicked(const QModelIndex &index)
 {
 
     QString path = queueModel.item(index.row(),1)->text();
-    dt.setSongName(queueModel.item(index.row(),0)->text());
+    lblDisplay->setText(queueModel.item(index.row(),0)->text());
     queueModel.removeRow(index.row());
     vp->open(path.toUtf8().data());
 

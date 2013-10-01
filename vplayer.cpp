@@ -21,6 +21,7 @@
 #include "decoder.h"
 #include "effect.h"
 
+
 void VPlayer::playWork(VPlayer *self)
 {
     self->vpout->wakeup();

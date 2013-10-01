@@ -85,9 +85,17 @@ OTHER_FILES += README.md \
     LICENSE
 
 QMAKE_CXXFLAGS += -Wall -O4 -msse4.2 -ffast-math
-QMAKE_CXXFLAGS_DEBUG += -O0 #-pg
-QMAKE_LFLAGS_DEBUG += -O0 #-pg
 
+linux-clang {
+    QMAKE_CXXFLAGS_DEBUG += -fno-omit-frame-pointer \
+                            -O2 #-pg
+    #QMAKE_LFLAGS_DEBUG += # -fsanitize=thread  #-pg
+}
+
+!linux-clang {
+    QMAKE_CXXFLAGS_DEBUG += -O0 #-pg
+    QMAKE_LFLAGS_DEBUG += -O0 #-pg
+}
 
 linux* {
 LIBS += -lpthread
@@ -136,11 +144,13 @@ SOURCES += \
     vrok.cpp \
     settings.cpp \
     frontend/playlistfactory.cpp \
-    frontend/displayticker.cpp
+    frontend/displayticker.cpp \
+    frontend/folderseeker.cpp
 
 HEADERS += \
     frontend/playlistfactory.h \
-    frontend/displayticker.h
+    frontend/displayticker.h \
+    frontend/folderseeker.h
 
 
 
