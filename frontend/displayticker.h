@@ -47,20 +47,13 @@ protected:
     }
     void paintEvent(QPaintEvent *evt) {
         QPainter painter(this);
-        QImage buffer = QImage(size(), QImage::Format_ARGB32_Premultiplied);
 
-        buffer.fill(qRgba(0, 0 ,0, 0));
-        QPainter pb(&buffer);
-        QPen s(Qt::black);
-        pb.setPen(painter.pen());
-        pb.setFont(painter.font());
         int textWidth =fontMetrics().width(_text) ;
         if (textWidth < width() && x + textWidth> width()) {
-            pb.drawText(x-width(),fontMetrics().height(),_text);
+            painter.drawText(x-width(),fontMetrics().height(),_text);
         };
-        pb.drawText(x,fontMetrics().height(),_text);
+        painter.drawText(x,fontMetrics().height(),_text);
 
-        painter.drawImage(0,0,buffer);
 
     }
 

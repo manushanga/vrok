@@ -243,7 +243,7 @@ VrokMain::VrokMain(QWidget *parent) :
     connect(&tx, SIGNAL(timeout()), this, SLOT(process()));
     connect(&tcb,SIGNAL(timeout()), this, SLOT(fillQueue()));
 
-    lblDisplay->setText("<center><b>-- Vrok</b> --</center>");
+    lblDisplay->setText(" *smoke* ... V r o k ... *some more smoke* ");
     // temp stuff until settings are written
     contextMenuQueue[QA_FILLRAN]->setChecked(true);
 
@@ -259,8 +259,8 @@ void VrokMain::fillQueue()
         QStandardItemModel fileModel;
         int j=0;
         uint dbloom=0,drbloom;
-        if (dirs.count()==1) {
-            loadDirFilesModel(dirs[0],&fileModel);
+        if (FolderSeeker::getSingleton()->getFolderCount()==1) {
+            FolderSeeker::getSingleton()->getQueue(&fileModel,0);
             for (int i=0;i<fileModel.rowCount();i++) {
                 int rc = queueModel.rowCount();
                 queueModel.setItem(rc,0, fileModel.item(i,0)->clone());
@@ -268,10 +268,9 @@ void VrokMain::fillQueue()
             }
         } else {
             while (queueModel.rowCount()<10 && j<100){
-                drbloom = abs(rand()) % (dirs.count()-1);
+                drbloom = abs(rand()) % (FolderSeeker::getSingleton()->getFolderCount()-1);
                 if ((drbloom & dbloom) != drbloom) {
-
-                    loadDirFilesModel(dirs[drbloom], &fileModel);
+                    FolderSeeker::getSingleton()->getQueue(&fileModel,drbloom);
                     uint bloom=0;
 
                     int selectMax=(fileModel.rowCount()>4)?4:2;
@@ -300,8 +299,8 @@ void VrokMain::fillQueue()
     } else if (contextMenuQueue[QA_FILLSEQ]->isChecked()) {
         QStandardItemModel fileModel;
         uint dbloom=0,drbloom;
-        if (dirs.count()==1) {
-            loadDirFilesModel(dirs[0],&fileModel);
+        if (FolderSeeker::getSingleton()->getFolderCount()==1) {
+            PlaylistFactory::getSingleton()->loadQueue(&fileModel,0);
             for (int i=0;i<fileModel.rowCount();i++) {
                 int rc = queueModel.rowCount();
                 queueModel.setItem(rc,0, fileModel.item(i,0)->clone());
@@ -309,9 +308,9 @@ void VrokMain::fillQueue()
             }
         } else {
             while (queueModel.rowCount()<10){
-                drbloom = abs(rand()) % (dirs.count()-1);
+                drbloom = abs(rand()) % (FolderSeeker::getSingleton()->getFolderCount()-1);
                 if ((drbloom & dbloom) != drbloom) {
-                    loadDirFilesModel(dirs[drbloom], &fileModel);
+                    PlaylistFactory::getSingleton()->loadQueue(&fileModel,drbloom);
 
                     for (int i=0;i<fileModel.rowCount();i++) {
                         int rc = queueModel.rowCount();
@@ -372,27 +371,7 @@ void VrokMain::on_btnPlay_clicked()
     if (ui->btnSpec->isChecked())
         tx.start();
 }
-void VrokMain::folderSeekSweep(QDir& root){
 
-   QDirIterator iterator(root.absolutePath(), QDirIterator::Subdirectories );
-
-   QStringList exts=getExtentionsList();
-
-   QDirIterator iteratorSubRoot(root.absolutePath(),exts,QDir::Files);
-   if (iteratorSubRoot.hasNext())
-       dirs.append(root.absolutePath());
-
-   while (iterator.hasNext()) {
-      iterator.next();
-      if (iterator.fileInfo().isDir() && (iterator.fileName()!="..") && (iterator.fileName() != ".")) {
-          QDirIterator iteratorSub(iterator.filePath(),exts,QDir::Files);
-          if (iteratorSub.hasNext())
-              dirs.append(iterator.filePath());
-      }
-   }
-   dirs.sort();
-
-}
 void VrokMain::on_btnOpenDir_clicked()
 {
     QString d = QFileDialog::getExistingDirectory(this, tr("Open Dir"),
@@ -400,7 +379,6 @@ void VrokMain::on_btnOpenDir_clicked()
                                                   0);
 
     VSettings::getSingleton()->writeString("lastopen",d.toStdString());
-    dirs.clear();
     dirFilesModel.clear();
     lblDisplay->setText("Scanning...");
     qApp->processEvents();
@@ -515,22 +493,6 @@ QStringList VrokMain::getExtentionsList()
     return list;
 }
 
-void VrokMain::loadDirFilesModel(QString opendir, QStandardItemModel *model)
-{
-    if (!dirs.empty()) {
-        QStringList exts=getExtentionsList();
-        QDirIterator iterator(opendir,exts,QDir::Files);
-        curdir.setPath(opendir);
-        int i=0;
-        model->removeRows(0,model->rowCount());
-        while (iterator.hasNext()){
-            iterator.next();
-            model->setItem(i,0, new QStandardItem(iterator.fileName()));
-            model->setItem(i,1, new QStandardItem(iterator.filePath()));
-            i++;
-        }
-    }
-}
 
 void VrokMain::on_lvQueue_doubleClicked(const QModelIndex &index)
 {

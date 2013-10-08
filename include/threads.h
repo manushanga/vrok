@@ -1,14 +1,15 @@
 #ifndef THREADS_H
 #define THREADS_H
-
+#if defined( __GNUC__) || defined(__clang__)
 #define ATOMIC_CAS(ptr,oldv,newv) __sync_val_compare_and_swap(ptr, oldv, newv)
 #define ATOMIC_FADD(ptr,v) __sync_fetch_and_add(ptr, v)
 #define ATOMIC_FSUB(ptr,v) __sync_fetch_and_sub(ptr, v)
 #define ATOMIC_ADDF(ptr,v) __sync_add_and_fetch(ptr, v)
 #define ATOMIC_SUBF(ptr,v) __sync_sub_and_fetch(ptr, v)
 #define ATOMIC_BOOL_CAS(ptr,oldv,newv) __sync_bool_compare_and_swap(ptr, oldv, newv)
-
-#ifdef _WIN32
+#elif defined(_MSC_VER)
+#endif
+#if defined(_WIN32) || defined(WIN32)
 #include <windows.h>
 #include <process.h>
 

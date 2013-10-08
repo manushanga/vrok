@@ -30,7 +30,7 @@ VPOutFactory::VPOutFactory()
 
 #if defined(VPOUT_ALSA)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD };
+    { (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD*4 };
     creators.insert(std::pair<std::string, vpout_entry_t> ("ALSA",def));
     currentOut = "ALSA";
 #elif defined(VPOUT_PULSE)

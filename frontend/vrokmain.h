@@ -98,7 +98,6 @@ private:
     void loadDirFilesModel(QString opendir, QStandardItemModel *model);
     QDir curdir;
     QDir cursweep;
-    QStringList dirs;
     QStandardItemModel dirFilesModel;
 
     QStandardItemModel queueModel;
