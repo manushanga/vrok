@@ -20,7 +20,7 @@ HRESULT VPOutPluginDSound::createSoundObject(void){
     HRESULT hr;
 
     hr = DirectSoundCreate(NULL,&lpds,NULL);
-    hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    hr = CoInitializeEx(NULL, COINIT_SPEED_OVER_MEMORY);
     hr = lpds->SetCooperativeLevel(GetForegroundWindow(),DSSCL_PRIORITY);
     return hr;
 }
@@ -64,7 +64,9 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 {
     LPVOID lpvWrite;
     DWORD play_at;
+    DWORD half_at =self->half_buffer_size*sizeof(short)-1;
     DWORD  dwLength;
+    int firstHalf=1;
     HRESULT hr;
 
     hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
@@ -97,7 +99,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 
         self->owner->mutex[1].lock();
 
-        if (lpdsbuffer->GetCurrentPosition(&play_at,NULL) == DS_OK && play_at < self->half_buffer_size*sizeof(short)-1){
+        if (firstHalf){
             WaitForSingleObject(NotifyEvent[0], INFINITE);
             hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
 
@@ -107,6 +109,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
+            firstHalf=0;
         } else {
             WaitForSingleObject(NotifyEvent[1], INFINITE);
 
@@ -118,12 +121,14 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
+
+            firstHalf=1;
         }
 
         self->owner->mutex[0].unlock();
 
     }
-    lpdsbuffer->Stop();
+    self->idle();
 }
 
 #if defined(_MSC_VER)
