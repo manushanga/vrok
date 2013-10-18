@@ -130,7 +130,22 @@ Ao {
 
 }
 
-win32 {
+win32* {
+
+Dsound {
+    LIBS += -lole32 -ldxguid -ldsound
+    DEFINES += VPOUT_DSOUND
+    HEADERS  +=  outs/dsound.h
+    SOURCES += outs/dsound.cpp
+}
+
+Ao {
+    LIBS += -lao
+    DEFINES += VPOUT_AO
+    HEADERS += outs/ao.h
+    SOURCES += outs/ao.cpp
+}
+
 QMAKE_CXXFLAGS += /TP
 debug {
 QMAKE_CXXFLAGS += /INCREMENTAL
@@ -140,9 +155,8 @@ INCLUDEPATH += ./libs/include \
                 .
 LIBS    += -L"C:\Users\madura\Desktop\vrok-master\libs\static\release"
 LIBS     += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -llibvorbis -llibogg
-LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
-HEADERS  +=  outs/dsound.h
-SOURCES += outs/dsound.cpp
+LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
+
 }
 
 TRANSLATIONS += vrok_si.ts

@@ -6,7 +6,6 @@
   See LICENSE for details.
 */
 
-#include <unistd.h>
 #include "vrok.h"
 #include "ao.h"
 
@@ -45,7 +44,14 @@ void VPOutPluginAO::worker_run(VPOutPluginAO *self)
 
 }
 
-void __attribute__((optimize("O0"))) VPOutPluginAO::rewind()
+#if defined(_MSC_VER)
+#pragma optimize("",off)
+#elif defined(__gnuc__)
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+#endif
+
+void VPOutPluginAO::rewind()
 {
     if (!ATOMIC_CAS(&paused,false,false) ){
         m_pause.lock();
@@ -54,7 +60,7 @@ void __attribute__((optimize("O0"))) VPOutPluginAO::rewind()
     }
 }
 
-void __attribute__((optimize("O0"))) VPOutPluginAO::resume()
+void VPOutPluginAO::resume()
 {
 
     if (ATOMIC_CAS(&paused,false,false) ){
@@ -63,7 +69,7 @@ void __attribute__((optimize("O0"))) VPOutPluginAO::resume()
         while (ATOMIC_CAS(&paused,false,false)) {}
     }
 }
-void __attribute__((optimize("O0"))) VPOutPluginAO::pause()
+void VPOutPluginAO::pause()
 {
     if (!ATOMIC_CAS(&paused,false,false) ){
         m_pause.lock();
@@ -71,6 +77,12 @@ void __attribute__((optimize("O0"))) VPOutPluginAO::pause()
         while (!ATOMIC_CAS(&paused,false,false)) {}
     }
 }
+
+#if defined(_MSC_VER)
+#pragma optimize("",on)
+#elif defined(__gnuc__)
+#pragma GCC pop_options
+#endif
 
 int VPOutPluginAO::init(VPlayer *v, VPBuffer *in)
 {

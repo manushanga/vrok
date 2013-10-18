@@ -140,7 +140,7 @@ void VPOutPluginDSound::rewind()
 {
 
     if (!ATOMIC_CAS(&paused,false,false) ){
-        m_pause.lock();     
+        m_pause.lock();
         ATOMIC_CAS(&pause_check,false,true);
         while (!ATOMIC_CAS(&paused,false,false)) {}
         first_half=1;

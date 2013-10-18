@@ -2,16 +2,14 @@
 
 #if defined(VPOUT_DUMMY)
 #include "outs/dummy.h"
-#elif defined(_WIN32)
+#elif defined(VPOUT_DSOUND)
 #include "outs/dsound.h"
-#elif defined(__linux__)
-#if defined(VPOUT_ALSA)
+#elif defined(VPOUT_ALSA)
 #include "outs/alsa.h"
 #elif defined(VPOUT_AO)
 #include "outs/ao.h"
 #elif defined(VPOUT_PULSE)
 #include "outs/pulse.h"
-#endif
 #endif
 
 VPOutFactory::VPOutFactory()
@@ -21,14 +19,12 @@ VPOutFactory::VPOutFactory()
     { (vpout_creator_t)VPOutPluginDummy::VPOutPluginDummy_new, VPBUFFER_PERIOD };
     creators.insert(std::pair<std::string, vpout_entry_t> ("Dummy",def));
     currentOut = "Dummy";
-#elif defined(_WIN32)
+#elif defined(VPOUT_DSOUND)
     vpout_entry_t def=
     { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*6};
     creators.insert(std::pair<std::string, vpout_entry_t> ("DSound",def));
     currentOut = "DSound";
-#elif defined(__linux__)
-
-#if defined(VPOUT_ALSA)
+#elif defined(VPOUT_ALSA)
     vpout_entry_t def=
     { (vpout_creator_t)VPOutPluginAlsa::VPOutPluginAlsa_new, VPBUFFER_PERIOD*4 };
     creators.insert(std::pair<std::string, vpout_entry_t> ("ALSA",def));
@@ -45,7 +41,6 @@ VPOutFactory::VPOutFactory()
     currentOut = "AO";
 #endif
 
-#endif
     currentOut=VSettings::getSingleton()->readString("outplugin",currentOut);
 
 }
