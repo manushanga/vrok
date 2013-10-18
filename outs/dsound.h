@@ -37,6 +37,7 @@ public:
     volatile bool work;
     volatile bool paused;
     volatile bool pause_check;
+    volatile int first_half;
     volatile unsigned half_buffer_size;
     short *wbuffer;
     virtual int init(VPlayer *v, VPBuffer *in);

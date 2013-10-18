@@ -63,10 +63,8 @@ VPOutPlugin* VPOutPluginDSound::VPOutPluginDSound_new()
 void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 {
     LPVOID lpvWrite;
-    DWORD play_at;
-    DWORD half_at =self->half_buffer_size*sizeof(short)-1;
     DWORD  dwLength;
-    int firstHalf=1;
+
     HRESULT hr;
 
     hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
@@ -99,7 +97,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 
         self->owner->mutex[1].lock();
 
-        if (firstHalf){
+        if (self->first_half){
             WaitForSingleObject(NotifyEvent[0], INFINITE);
             hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
 
@@ -109,7 +107,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
-            firstHalf=0;
+            self->first_half=0;
         } else {
             WaitForSingleObject(NotifyEvent[1], INFINITE);
 
@@ -122,7 +120,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
 
-            firstHalf=1;
+            self->first_half=1;
         }
 
         self->owner->mutex[0].unlock();
@@ -142,9 +140,10 @@ void VPOutPluginDSound::rewind()
 {
 
     if (!ATOMIC_CAS(&paused,false,false) ){
-        m_pause.lock();
+        m_pause.lock();     
         ATOMIC_CAS(&pause_check,false,true);
         while (!ATOMIC_CAS(&paused,false,false)) {}
+        first_half=1;
         idle();
     }
 }
@@ -195,6 +194,7 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
     bin = in;
 
     half_buffer_size = VPBUFFER_FRAMES*in->chans;
+    first_half=1;
 
     HRESULT hr;
     createSoundObject();
