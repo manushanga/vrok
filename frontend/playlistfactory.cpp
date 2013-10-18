@@ -1,6 +1,13 @@
 
 #include "playlistfactory.h"
 
+#if defined(WIN32)
+#define VROK_QUEUE "/.vrok.queue.win."
+#elif defined(__linux__)
+#define VROK_QUEUE "/.vrok.queue.lin."
+#elif defined(__apple__)
+#endif
+
 PlaylistFactory::PlaylistFactory()
 {
 
@@ -9,7 +16,7 @@ PlaylistFactory::PlaylistFactory()
 int PlaylistFactory::loadQueue(QStandardItemModel *m, int idx)
 {
     m->clear();
-    QFile f(root + QDir::separator() + ".vrok." +QString::number(idx) + ".queue");
+    QFile f(root + VROK_QUEUE + QString::number(idx));
 
     f.open(QFile::Text | QFile::ReadOnly);
     if (f.exists()) {
@@ -34,7 +41,7 @@ int PlaylistFactory::loadQueue(QStandardItemModel *m, int idx)
 
 int PlaylistFactory::saveQueue(QStandardItemModel *m, int idx)
 {
-    QFile f(root + QDir::separator() + ".vrok." +QString::number(idx) + ".queue");
+    QFile f(root + VROK_QUEUE + QString::number(idx));
     f.open(QFile::Text | QFile::WriteOnly);
     f.setTextModeEnabled(true);
     QTextStream ts(&f);

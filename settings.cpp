@@ -101,12 +101,22 @@ std::string VSettings::readString(std::string field, std::string def)
 {
     if (settings.find(field)!=settings.end()){
         std::vector<int>& list = settings[field];
-        char buffer[list.size()+1];
+        int n=list.size() +1;
+#ifdef _MSC_VER
+        char *buffer=new char[n];
+#else
+        char buffer[n];
+#endif
         memset(buffer,'\0',list.size()+1);
         for (size_t i=0;i<list.size();i++){
             buffer[i] = (char)list[i];
         }
-        return std::string(buffer);
+
+        std::string ss(buffer);
+#ifdef _MSC_VER
+        delete buffer;
+#endif
+        return ss;
     }  else {
         std::vector<int> list;
         unsigned char *ptr = (unsigned char *) def.c_str();

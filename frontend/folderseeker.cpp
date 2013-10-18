@@ -3,6 +3,13 @@
 #include <QDirIterator>
 #include <QTextStream>
 
+#if defined(WIN32)
+#define VROK_CACHE "/.vrok.cache.win"
+#elif defined(__linux__)
+#define VROK_CACHE "/.vrok.cache.lin"
+#elif defined(__apple__)
+#endif
+
 FolderSeeker *FolderSeeker::getSingleton()
 {
     static FolderSeeker fs;
@@ -21,19 +28,20 @@ void FolderSeeker::setExtensionList(QStringList _extensions)
 void FolderSeeker::setSeekPath(QString path)
 {
     currentPath = path;
-    QFile f(currentPath + QDir::separator() + ".vrok.cache");
+    QFile f(currentPath + VROK_CACHE);
+    dirs.clear();
+
     if (f.exists()) {
         f.open(QFile::Text | QFile::ReadOnly);
         f.setTextModeEnabled(true);
         QTextStream ts(&f);
         int i=0;
         ts.setCodec("UTF-8");
-        dirs.clear();
         while (!ts.atEnd()) {
             dirs.append(ts.readLine());
         }
         f.close();
-    } else {
+    } else {        
         folderSeekSweep();
     }
 }
@@ -42,7 +50,7 @@ QString FolderSeeker::getQueue(QStandardItemModel *m, int idx)
 {
     if (!dirs.empty()) {
 
-        QDirIterator iterator(dirs[idx],extensions,QDir::Files);
+        QDirIterator iterator(dirs[idx],extensions,QDir::NoDotAndDotDot | QDir::Files);
 
         int i=0;
         //m->removeRows(0,model->rowCount());
@@ -62,7 +70,7 @@ QString FolderSeeker::getQueue(QStandardItemModel *m, int idx)
 
 FolderSeeker::~FolderSeeker()
 {
-    QFile f(currentPath + QDir::separator() + ".vrok.cache");
+    QFile f(currentPath + VROK_CACHE);
     f.open(QFile::Text | QFile::WriteOnly);
     f.setTextModeEnabled(true);
     QTextStream ts(&f);
@@ -78,16 +86,18 @@ FolderSeeker::~FolderSeeker()
 void FolderSeeker::folderSeekSweep()
 {
     QDirIterator iterator(currentPath, QDirIterator::Subdirectories );
-    QDirIterator iteratorSubRoot(currentPath,extensions,QDir::Files);
+    QDirIterator iteratorSubRoot(currentPath,extensions, QDir::NoDotAndDotDot | QDir::Files);
     if (iteratorSubRoot.hasNext())
         dirs.append(currentPath);
 
     while (iterator.hasNext()) {
        iterator.next();
-       if (iterator.fileInfo().isDir() && (iterator.fileName()!="..") && (iterator.fileName() != ".")) {
+       if (iterator.fileInfo().isDir()) {
            QDirIterator iteratorSub(iterator.filePath(),extensions,QDir::Files);
-           if (iteratorSub.hasNext())
+           if (iteratorSub.hasNext()){
+               DBG(iterator.filePath().toStdString());
                dirs.append(iterator.filePath());
+           }
        }
     }
     dirs.sort();

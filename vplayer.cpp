@@ -27,7 +27,12 @@ void VPlayer::playWork(VPlayer *self)
     self->vpout->wakeup();
     while (1) {
         self->vpdecode->reader();
+
         ATOMIC_CAS(&self->active,true,false);
+        DBG("waiting for output writing to finish");
+        self->mutex[0].lock();
+        self->mutex[0].unlock();
+        DBG("done");
         self->nextTrack[0]='\0';
 
 

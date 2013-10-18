@@ -13,12 +13,17 @@
 extern std::shared_mutex __m_console;
 
 #define DEBUG
+#if defined(_MSC_VER)
+    #define FUNCTION_NAME __FUNCTION__
+#else
+    #define FUNCTION_NAME __PRETTY_FUNCTION__
+#endif
 
 #ifdef DEBUG
     #include <iostream>
     #define DBG(...) \
     __m_console.lock(); \
-    std::cout<<__VA_ARGS__<<" at "<<__PRETTY_FUNCTION__<<std::endl; \
+    std::cout<<__VA_ARGS__<<" at "<<FUNCTION_NAME<<std::endl; \
     __m_console.unlock();
 #else
     #define DBG(...)

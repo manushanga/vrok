@@ -1,6 +1,8 @@
 #ifndef FOLDERSEEKER_H
 #define FOLDERSEEKER_H
 
+#include "vrok.h"
+
 #include <QDir>
 #include <QStandardItemModel>
 #include <QString>

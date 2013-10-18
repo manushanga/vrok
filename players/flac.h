@@ -9,6 +9,8 @@
 #ifndef PLAYER_FLAC_H
 #define PLAYER_FLAC_H
 
+#define FLAC__NO_DLL
+
 #include <FLAC/stream_decoder.h>
 
 #include "vplayer.h"

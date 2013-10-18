@@ -17,10 +17,17 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+#ifdef __cplusplus
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cassert>
+#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#endif
 #include "paramlist.hpp"
 #include "Equ.h"
 
@@ -53,7 +60,7 @@ void rfft(int n,int isign,REAL *x)
     n = 1 << n;
 
 
-    newipsize = 2+sqrt(n/2);
+    newipsize = 2+sqrt((double)n/2);
     if (newipsize > ipsize) {
         ipsize = newipsize;
         ip = (int *)realloc(ip,sizeof(int)*ipsize);
@@ -98,7 +105,7 @@ static REAL bands[] = {
 static REAL alpha(REAL a)
 {
   if (a <= 21) return 0;
-  if (a <= 50) return 0.5842*pow(a-21,0.4)+0.07886*(a-21);
+  if (a <= 50) return 0.5842*pow(a-21.0,0.4)+0.07886*(a-21.0);
   return 0.1102*(a-8.7);
 }
 

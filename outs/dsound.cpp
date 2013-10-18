@@ -21,7 +21,7 @@ HRESULT VPOutPluginDSound::createSoundObject(void){
 
     hr = DirectSoundCreate(NULL,&lpds,NULL);
     hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    hr = lpds->SetCooperativeLevel(GetForegroundWindow(),DSSCL_NORMAL);
+    hr = lpds->SetCooperativeLevel(GetForegroundWindow(),DSSCL_PRIORITY);
     return hr;
 }
 
@@ -125,7 +125,15 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
     }
     lpdsbuffer->Stop();
 }
-void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
+
+#if defined(_MSC_VER)
+#pragma optimize("",off)
+#elif defined(__gnuc__)
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+#endif
+
+void VPOutPluginDSound::rewind()
 {
 
     if (!ATOMIC_CAS(&paused,false,false) ){
@@ -136,7 +144,7 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::rewind()
     }
 }
 
-void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
+void VPOutPluginDSound::resume()
 {
     if (ATOMIC_CAS(&paused,false,false) ){
         m_pause.unlock();
@@ -144,7 +152,7 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::resume()
         wakeup();
     }
 }
-void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
+void VPOutPluginDSound::pause()
 {
     if (!ATOMIC_CAS(&paused,false,false) ){
         m_pause.lock();
@@ -153,6 +161,13 @@ void __attribute__((optimize("O0"))) VPOutPluginDSound::pause()
         idle();
     }
 }
+
+#if defined(_MSC_VER)
+#pragma optimize("",on)
+#elif defined(__gnuc__)
+#pragma GCC pop_options
+#endif
+
 void VPOutPluginDSound::wakeup()
 {
     if (!wake){

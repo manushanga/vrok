@@ -41,13 +41,13 @@ private:
     SuperEqState sb_state;
     float sb_preamp;
     void *sb_paramsroot;
-    float sb_bands[BAR_COUNT] __attribute__ ((aligned(16)));
-    float target[BAR_COUNT] __attribute__ ((aligned(16)));
+    float sb_bands[BAR_COUNT];// __attribute__ ((aligned(16)));
+    float target[BAR_COUNT] ;//__attribute__ ((aligned(16)));
     bool sched_recalc;
-    float *trig[2][BAR_COUNT] __attribute__ ((aligned(16)));
-    float mids[BAR_COUNT] __attribute__ ((aligned(16)));
+    float *trig[2][BAR_COUNT];// __attribute__ ((aligned(16)));
+    float mids[BAR_COUNT];// __attribute__ ((aligned(16)));
     float limit;
-    float knowledge[BAR_COUNT] __attribute__ ((aligned(16)));
+    float knowledge[BAR_COUNT];// __attribute__ ((aligned(16)));
     float freq_p[BAR_COUNT];
     unsigned period_count;
     bool initd;

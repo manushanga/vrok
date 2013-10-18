@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
-LIBS     += -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
+
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -84,7 +84,7 @@ FORMS    += frontend/vrokmain.ui \
 OTHER_FILES += README.md \
     LICENSE
 
-QMAKE_CXXFLAGS += -Wall -O4 -msse4.2 -ffast-math
+#QMAKE_CXXFLAGS += -Wall -O4 -msse4.2 -ffast-math
 
 linux-clang {
     QMAKE_CXXFLAGS_DEBUG += -fno-omit-frame-pointer \
@@ -98,6 +98,7 @@ linux-clang {
 }
 
 linux* {
+LIBS     += -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
 LIBS += -lpthread
 
 PulseAudio {
@@ -130,8 +131,16 @@ Ao {
 }
 
 win32 {
-QMAKE_CXXFLAGS += -march=i686
-LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound -lshlwapi
+QMAKE_CXXFLAGS += /TP
+debug {
+QMAKE_CXXFLAGS += /INCREMENTAL:NO
+}
+
+INCLUDEPATH += ./libs/include \
+                .
+LIBS    += -L"C:\Users\madura\Desktop\vrok-master\libs\static\release"
+LIBS     += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -llibvorbis -llibogg
+LIBS    +=  -lws2_32  -lole32 -ldxguid -ldsound -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
 HEADERS  +=  outs/dsound.h
 SOURCES += outs/dsound.cpp
 }

@@ -12,7 +12,10 @@
 #include <QLabel>
 #include <QKeyEvent>
 #include <QMessageBox>
+
+#ifdef __linux__
 #include <unistd.h>
+#endif
 
 #include "vrokmain.h"
 #include "ui_vrokmain.h"
@@ -378,18 +381,20 @@ void VrokMain::on_btnOpenDir_clicked()
                                                   QString(VSettings::getSingleton()->readString("lastopen","").c_str()),
                                                   0);
 
-    VSettings::getSingleton()->writeString("lastopen",d.toStdString());
-    dirFilesModel.clear();
-    lblDisplay->setText("Scanning...");
-    qApp->processEvents();
-    FolderSeeker::getSingleton()->setSeekPath(d);
-    lblDisplay->setText("Done.");
-    qApp->processEvents();
-    ui->sbFolderSeek->setMinimum(0);
-    ui->sbFolderSeek->setMaximum(FolderSeeker::getSingleton()->getFolderCount()-1);
-    FolderSeeker::getSingleton()->getQueue(&dirFilesModel,0);
-    on_sbFolderSeek_valueChanged(0);
-    PlaylistFactory::getSingleton()->setRoot(d);
+    if (!d.isEmpty()) {
+        VSettings::getSingleton()->writeString("lastopen",d.toStdString());
+        dirFilesModel.clear();
+        lblDisplay->setText("Scanning...");
+        qApp->processEvents();
+        FolderSeeker::getSingleton()->setSeekPath(d);
+        lblDisplay->setText("Done.");
+        qApp->processEvents();
+        ui->sbFolderSeek->setMinimum(0);
+        ui->sbFolderSeek->setMaximum(FolderSeeker::getSingleton()->getFolderCount()-1);
+        FolderSeeker::getSingleton()->getQueue(&dirFilesModel,0);
+        on_sbFolderSeek_valueChanged(0);
+        PlaylistFactory::getSingleton()->setRoot(d);
+    }
 }
 
 void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
@@ -442,7 +447,6 @@ VrokMain::~VrokMain()
 
 void VrokMain::on_sbFolderSeek_valueChanged(int value)
 {
-
     if (FolderSeeker::getSingleton()->getFolderCount() > 0) {
 
         QString dname=FolderSeeker::getSingleton()->getQueue(&dirFilesModel,value);

@@ -5,12 +5,18 @@
 
   See LICENSE for details.
 */
+
+#ifdef __linux__
 #include <unistd.h>
+#endif
+
+#include <limits>
+
 
 #include "vrok.h"
 #include "mpeg.h"
 
-#define SHORTTOFL (1.0f/__SHRT_MAX__)
+#define SHORTTOFL (1.0f/32768.0f)
 
 VPDecoderPlugin* MPEGDecoder::VPDecoderMPEG_new(VPlayer *v)
 {
