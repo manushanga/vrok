@@ -85,7 +85,8 @@ FolderSeeker::~FolderSeeker()
 
 void FolderSeeker::folderSeekSweep()
 {
-    QDirIterator iterator(currentPath, QDirIterator::Subdirectories );
+    DBG(currentPath.toStdString());
+    QDirIterator iterator(currentPath, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories );
     QDirIterator iteratorSubRoot(currentPath,extensions, QDir::NoDotAndDotDot | QDir::Files);
     if (iteratorSubRoot.hasNext())
         dirs.append(currentPath);
@@ -93,7 +94,7 @@ void FolderSeeker::folderSeekSweep()
     while (iterator.hasNext()) {
        iterator.next();
        if (iterator.fileInfo().isDir()) {
-           QDirIterator iteratorSub(iterator.filePath(),extensions,QDir::Files);
+           QDirIterator iteratorSub(iterator.filePath(),extensions, QDir::NoDotAndDotDot | QDir::Files);
            if (iteratorSub.hasNext()){
                DBG(iterator.filePath().toStdString());
                dirs.append(iterator.filePath());

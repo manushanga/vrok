@@ -20,7 +20,7 @@ HRESULT VPOutPluginDSound::createSoundObject(void){
     HRESULT hr;
 
     hr = DirectSoundCreate(NULL,&lpds,NULL);
-    hr = CoInitializeEx(NULL, COINIT_SPEED_OVER_MEMORY);
+    //hr = CoInitializeEx(NULL, COINIT_SPEED_OVER_MEMORY);
     hr = lpds->SetCooperativeLevel(GetForegroundWindow(),DSSCL_PRIORITY);
     return hr;
 }

@@ -9,7 +9,7 @@
 #ifndef PLAYER_MPEG_H
 #define PLAYER_MPEG_H
 
-#include <libmpg123/mpg123.h>
+#include <mpg123.h>
 
 #include "vplayer.h"
 #include "decoder.h"

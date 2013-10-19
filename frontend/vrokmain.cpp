@@ -44,8 +44,10 @@ void VrokMain::callback_next(char *mem, void *user)
     VrokMain *mm =(VrokMain *) user;
 
     if (mm->queueModel.rowCount() > 0){
+        QString name = mm->queueModel.item(0,0)->text();
         QString path = mm->queueModel.item(0,1)->text();
         mm->queueModel.removeRow(0);
+        mm->lblDisplay->setText(name);
         strcpy(mem,path.toUtf8().data());
     }
 
@@ -296,6 +298,7 @@ void VrokMain::fillQueue()
         }
         if (queueModel.rowCount()>0 && !vp->isPlaying()) {
             QString path = queueModel.item(0,1)->text();
+            lblDisplay->setText(queueModel.item(0,0)->text());
             queueModel.removeRow(0);
             vp->open(path.toUtf8().data());
         }
@@ -327,6 +330,7 @@ void VrokMain::fillQueue()
         }
         if (queueModel.rowCount()>0 && !vp->isPlaying()) {
             QString path = queueModel.item(0,1)->text();
+            lblDisplay->setText(queueModel.item(0,0)->text());
             queueModel.removeRow(0);
             vp->open(path.toUtf8().data());
         }
@@ -400,6 +404,7 @@ void VrokMain::on_btnOpenDir_clicked()
 void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 {
     vp->open(dirFilesModel.item(i.row(),1)->text().toUtf8().data());
+    lblDisplay->setText(dirFilesModel.item(i.row(),0)->text());
     if (ui->btnSpec->isChecked()) {
         tx.start();
     }
@@ -470,12 +475,7 @@ void VrokMain::actionQueueTriggered()
 void VrokMain::actionQueueRemove()
 {
     QModelIndexList selected=ui->lvQueue->selectionModel()->selectedIndexes();
-    int count=selected.size();
-    for (int i=0;i<count;i++) {
-        queueModel.removeRow(selected[i].row()-i);
-
-
-    }
+    queueModel.removeRows(selected.first().row(),selected.size());
 }
 
 void VrokMain::actionNewQueue()
