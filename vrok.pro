@@ -150,9 +150,12 @@ QMAKE_CXXFLAGS += /TP
 debug {
 QMAKE_CXXFLAGS += /INCREMENTAL
 }
-
+release {
+QMAKE_CXXFLAGS += /Ox
+}
 INCLUDEPATH += ./libs/include \
-                .
+               ./libs/include/libmpg123 \
+               .
 LIBS    += -L"C:\Users\madura\Desktop\vrok-master\libs\static\release"
 LIBS     += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -llibvorbis -llibogg
 LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
