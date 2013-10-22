@@ -42,7 +42,7 @@ DSBUFFERDESC VPOutPluginDSound::setBufferDescription(unsigned size){
     DSBUFFERDESC dsbdesc;
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
     dsbdesc.dwSize = sizeof(DSBUFFERDESC);
-    dsbdesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLVOLUME | DSBCAPS_GLOBALFOCUS ;
+    dsbdesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY  | DSBCAPS_GLOBALFOCUS ;
     dsbdesc.dwBufferBytes = size;
     dsbdesc.lpwfxFormat = &wfx;
     return dsbdesc;
@@ -94,12 +94,13 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
             }
 
         }
+        HRESULT hr = WaitForMultipleObjects(2, NotifyEvent, FALSE, INFINITE);
 
         self->owner->mutex[1].lock();
 
-        if (self->first_half){
-            WaitForSingleObject(NotifyEvent[0], INFINITE);
-            hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
+        if (hr == WAIT_OBJECT_0){
+            //WaitForSingleObject(NotifyEvent[0], INFINITE);
+            hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes/2,&lpvWrite,&dwLength,NULL,NULL,0);
 
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
@@ -107,20 +108,20 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
-            self->first_half=0;
-        } else {
-            WaitForSingleObject(NotifyEvent[1], INFINITE);
+        } else if (hr == WAIT_OBJECT_0 +1) {
+            //WaitForSingleObject(NotifyEvent[1], INFINITE);
 
-            hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes,&lpvWrite,&dwLength,NULL,NULL,DSBLOCK_ENTIREBUFFER);
+            hr = lpdsbuffer->Lock(dsbdesc.dwBufferBytes/2,dsbdesc.dwBufferBytes/2,&lpvWrite,&dwLength,NULL,NULL,0);
 
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[self->half_buffer_size+i]=(short)(self->bin->buffer[1-*self->bin->cursor][i]*32700.0f);
+                    ((short *)lpvWrite)[i]=(short)(self->bin->buffer[1-*self->bin->cursor][i]*32700.0f);
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
 
-            self->first_half=1;
+        } else  {
+            DBG("waiting for DSound events failed");
         }
 
         self->owner->mutex[0].unlock();
@@ -226,6 +227,7 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
     paused=false;
     pause_check=false;
     worker = new std::thread( (void(*)(void*))worker_run, this);
+    worker->high_priority();
     DBG("DSound thread made");
     return 0;
 }

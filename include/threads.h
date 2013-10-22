@@ -51,6 +51,10 @@ public:
     {
         WaitForSingleObject(th, INFINITE);
     }
+    void high_priority()
+    {
+        SetThreadPriority(th,THREAD_PRIORITY_ABOVE_NORMAL);
+    }
     ~thread()
     {
         CloseHandle(th);
