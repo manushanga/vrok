@@ -23,7 +23,8 @@ void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
     FLACDecoder *me = (FLACDecoder*) client_data;
 
     if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
-        me->to_fl = 1.0f/pow(2.0,metadata->data.stream_info.bits_per_sample*1.0);
+        me->to_fl = 2.0f/pow(2.0,metadata->data.stream_info.bits_per_sample*1.0);
+
         me->buffer_bytes = VPBUFFER_FRAMES*metadata->data.stream_info.channels*sizeof(float);
         me->buffer = new float[VPBUFFER_FRAMES*metadata->data.stream_info.channels];
 

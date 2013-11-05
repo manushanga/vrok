@@ -35,7 +35,8 @@
 #define QA_FILLRAN 1
 #define QA_FILLSEQ 2
 #define QA_FILLNON 3
-#define QA_NEW_QUEUE 4
+#define QA_FILLLIMITDIR 4
+#define QA_NEW_QUEUE 5
 
 #define QA_QUEUE 0
 
@@ -223,6 +224,7 @@ VrokMain::VrokMain(QWidget *parent) :
     contextMenuQueue.push_back(new QAction("Fill Random",this));
     contextMenuQueue.push_back(new QAction("Fill Sequential",this));
     contextMenuQueue.push_back(new QAction("Fill None",this));
+    contextMenuQueue.push_back(new QAction("Fill from directory",this));
     contextMenuQueue.push_back(new QAction("New Queue",this));
 
     queueToggleFillType = new QActionGroup(this);
@@ -232,7 +234,8 @@ VrokMain::VrokMain(QWidget *parent) :
     contextMenuQueue[QA_FILLSEQ]->setCheckable(true);
     contextMenuQueue[QA_FILLNON]->setActionGroup(queueToggleFillType);
     contextMenuQueue[QA_FILLNON]->setCheckable(true);
-
+    contextMenuQueue[QA_FILLLIMITDIR]->setActionGroup(queueToggleFillType);
+    contextMenuQueue[QA_FILLLIMITDIR]->setCheckable(true);
     ui->lvQueue->addActions(contextMenuQueue);
 
     ui->lvFiles->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -328,6 +331,34 @@ void VrokMain::fillQueue()
                 }
             }
         }
+        if (queueModel.rowCount()>0 && !vp->isPlaying()) {
+            QString path = queueModel.item(0,1)->text();
+            lblDisplay->setText(queueModel.item(0,0)->text());
+            queueModel.removeRow(0);
+            vp->open(path.toUtf8().data());
+        }
+    } else if (contextMenuQueue[QA_FILLLIMITDIR]->isChecked()) {
+        QStandardItemModel fileModel;
+        int j=0;
+        uint dbloom=0,drbloom;
+        FolderSeeker::getSingleton()->getQueue(&fileModel, ui->sbFolderSeek->value());
+
+        QSet<int> checker;
+        int selectMax=(fileModel.rowCount() < 100)? fileModel.rowCount():100;
+        for (int i=0;i<selectMax;i++) {
+            int rc = queueModel.rowCount();
+            int tr = abs(rand()*5+rand()+i) % (fileModel.rowCount());
+
+            if (checker.find(tr) == checker.end()) {
+
+                queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
+                queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
+
+                checker.insert(tr);
+            }
+        }
+
+
         if (queueModel.rowCount()>0 && !vp->isPlaying()) {
             QString path = queueModel.item(0,1)->text();
             lblDisplay->setText(queueModel.item(0,0)->text());
@@ -475,7 +506,9 @@ void VrokMain::actionQueueTriggered()
 void VrokMain::actionQueueRemove()
 {
     QModelIndexList selected=ui->lvQueue->selectionModel()->selectedIndexes();
-    queueModel.removeRows(selected.first().row(),selected.size());
+    if (selected.size()  > 0) {
+        queueModel.removeRows(selected.first().row(),selected.size());
+    }
 }
 
 void VrokMain::actionNewQueue()

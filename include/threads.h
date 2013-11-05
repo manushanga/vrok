@@ -136,6 +136,28 @@ public:
 
         pthread_create(&th,NULL,_std_thread_run, this);
     }
+    void high_priority()
+    {
+        int ret=0;
+        struct sched_param params;
+        params.sched_priority = sched_get_priority_max(SCHED_FIFO);
+
+        ret = pthread_setschedparam(th, SCHED_FIFO, &params);
+        if (ret != 0) {
+            cout<<"Thread can't set real-time priority."<<endl;
+        }
+        int policy = 0;
+        ret = pthread_getschedparam(th, &policy, &params);
+        if (ret != 0) {
+            cout << "Couldn't retrieve real-time scheduling paramers" << endl;
+            return;
+        }
+
+        if(policy != SCHED_FIFO) {
+            cout << "Scheduling is NOT SCHED_FIFO!" << endl;
+            return;
+        }
+    }
     inline void detach()
     {
         pthread_detach(th);

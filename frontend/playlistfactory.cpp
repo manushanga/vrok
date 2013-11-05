@@ -27,7 +27,7 @@ int PlaylistFactory::loadQueue(QStandardItemModel *m, int idx)
         ts.setCodec("UTF-8");
         while (!ts.atEnd()) {
             QString path = ts.readLine();
-            m->setItem(i,0,new QStandardItem(path.section(QDir::separator(),-1,-1)));
+            m->setItem(i,0,new QStandardItem(path.section('/',-1,-1)));
             m->setItem(i,1,new QStandardItem(path));
             i++;
         }

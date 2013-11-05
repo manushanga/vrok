@@ -156,6 +156,7 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
     pause_check = false;
 
     worker = new std::thread((void(*)(void*))worker_run, this);
+    worker->high_priority();
     DBG("alsa thread made");
     return 0;
 }
