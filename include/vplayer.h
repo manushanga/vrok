@@ -110,6 +110,8 @@ public:
     void stop();
     void setVolume(float vol);
     float getVolume();
+    void setPosition(float pos);
+    float getPosition();
     void addEffect(VPEffectPlugin *eff);
     bool isEffectActive(VPEffectPlugin *eff);
     void removeEffect(VPEffectPlugin *eff);

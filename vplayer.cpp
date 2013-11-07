@@ -390,6 +390,30 @@ float VPlayer::getVolume()
     return volume;
 }
 
+void VPlayer::setPosition(float pos)
+{
+    control.lock();
+    if (vpdecode) {
+        //pause();
+        vpdecode->setPosition((uint64_t)( pos*vpdecode->getLength() ) );
+        //play();
+    }
+    control.unlock();
+}
+
+float VPlayer::getPosition()
+{
+    float ret;
+    control.lock();
+    if (vpdecode) {
+        ret= (vpdecode->getPosition()*1.0f)/(vpdecode->getLength()*1.0f);
+    } else {
+        ret= 0.0f;
+    }
+    control.unlock();
+    return ret;
+}
+
 
 void VPlayer::postProcess(float *buffer)
 {

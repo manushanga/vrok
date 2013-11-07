@@ -66,16 +66,21 @@ public slots:
     void actionQueueRemove();
     void actionNewQueue();
     void startFillTimer();
+    void positionTick();
 private slots:
     void on_lvQueue_doubleClicked(const QModelIndex &index);
     void on_tbQueues_tabCloseRequested(int index);
 
     void on_tbQueues_currentChanged(int index);
 
+
+    void on_sbPosition_sliderReleased();
+
 private:
     void folderSeekSweep(QDir& root);
     // player funcs
     QTimer tcb;
+    QTimer tpos;
     VPlayer *vp;
     QStringList getExtentionsList();
     // effects

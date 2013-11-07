@@ -27,9 +27,9 @@ public:
     MPEGDecoder(VPlayer *v);
     int open(const char *url);
     void reader();
-    unsigned long getLength();
-    void setPosition(unsigned long t);
-    unsigned long getPosition();
+    uint64_t getLength();
+    void setPosition(uint64_t t);
+    uint64_t getPosition();
     ~MPEGDecoder();
 };
 

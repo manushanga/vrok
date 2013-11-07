@@ -31,7 +31,7 @@ static const char *sb_bandnames[] = { "55 Hz", "77 Hz", "110 Hz",
     "1.8 kHz", "2.5 kHz", "3.5 kHz", "5 kHz", "7 kHz", "10 kHz", "14 kHz",
     "20 kHz" };
 
-static const float freqs[] = { 30.0f, 60.0f, 90.0f, 156.0f, 220.0f, 311.0f, 440.0f, 622.0f, 880.0f,
+static const float freqs[] = { 55.0f, 77.0f, 110.0f, 156.0f, 220.0f, 311.0f, 440.0f, 622.0f, 880.0f,
                                1200.0f, 1800.0f, 2500.0f, 3500.0f, 5000.0f, 7000.0f, 10000.0f, 14000.0f,
                                20000.0f };
 
@@ -61,18 +61,20 @@ public:
     inline const float *getTargetBands() const {  return target; }
     inline const float *getMids() const { return mids; }
     inline void setTargetBand(int i, float val) {
-        sb_bands[i]=val;
-        target[i]=val;
+
+        sb_bands[i]=(val);
+        target[i]=(val);
         knowledge[i]=0.99f;
-        mids[i]=val;
+        mids[i]=(val);
         float next=knowledge[i]*mids[i]*0.6f + sb_bands[i]*0.4f;
         if (next<target[i] && next>target[i]-3.0f){
-           sb_bands[i] = next;
+            sb_bands[i] = next;
         } else {
             knowledge[i]*=0.5f;
         }
+        sched_recalc=true;
     }
-    inline void setBand(int i, float val) { sb_bands[i]=val; sched_recalc=true; }
+    inline void setBand(int i, float val) { sb_bands[i]=(val); sched_recalc=true; }
     inline void setPreamp(float val) { sb_preamp = val; sched_recalc=true; }
     inline float getPreamp() const { return sb_preamp; }
     inline unsigned getBarCount() const { return BAR_COUNT; }

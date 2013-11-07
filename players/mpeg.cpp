@@ -110,19 +110,18 @@ int MPEGDecoder::open(const char *url)
     return 0;
 }
 
-unsigned long MPEGDecoder::getLength()
+uint64_t MPEGDecoder::getLength()
 {
-    mpg123_seek(mh, (off_t) 0, SEEK_END);
-    off_t pos=mpg123_tell(mh);
-    return (unsigned long)pos;
+    return (uint64_t)mpg123_length(mh);
 }
-void MPEGDecoder::setPosition(unsigned long t)
+void MPEGDecoder::setPosition(uint64_t t)
 {
     mpg123_seek(mh, (off_t) t, SEEK_SET);
+
 }
-unsigned long MPEGDecoder::getPosition()
+uint64_t MPEGDecoder::getPosition()
 {
-    return (unsigned long)mpg123_tell(mh);
+    return (uint64_t)mpg123_tell(mh);
 }
 MPEGDecoder::~MPEGDecoder()
 {

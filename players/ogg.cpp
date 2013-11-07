@@ -81,19 +81,19 @@ void OGGDecoder::reader()
     }
 }
 
-unsigned long OGGDecoder::getLength()
+uint64_t OGGDecoder::getLength()
 {
     return ov_pcm_total(&vf,-1);
 }
 
-void OGGDecoder::setPosition(unsigned long t)
+void OGGDecoder::setPosition(uint64_t t)
 {
     if (ov_seekable(&vf))
         ov_pcm_seek(&vf,(ogg_int64_t)t);
 }
-unsigned long OGGDecoder::getPosition()
+uint64_t OGGDecoder::getPosition()
 {
-    return (unsigned long)ov_pcm_tell(&vf);
+    return (uint64_t)ov_pcm_tell(&vf);
 }
 OGGDecoder::~OGGDecoder()
 {

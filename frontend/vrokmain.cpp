@@ -154,6 +154,10 @@ VrokMain::VrokMain(QWidget *parent) :
     tcb.setInterval(0);
     tcb.stop();
 
+    tpos.setSingleShot(false);
+    tpos.setInterval(1000);
+    tpos.start();
+
     curdir.setFilter(QDir::Files|QDir::Hidden);
     curdir.setNameFilters(getExtentionsList());
     cursweep.setFilter(QDir::Files);
@@ -250,6 +254,7 @@ VrokMain::VrokMain(QWidget *parent) :
 
     connect(&tx, SIGNAL(timeout()), this, SLOT(process()));
     connect(&tcb,SIGNAL(timeout()), this, SLOT(fillQueue()));
+    connect(&tpos,SIGNAL(timeout()),this,SLOT(positionTick()));
 
     lblDisplay->setText(" *smoke* ... V r o k ... *some more smoke* ");
     // temp stuff until settings are written
@@ -259,6 +264,12 @@ VrokMain::VrokMain(QWidget *parent) :
 void VrokMain::startFillTimer()
 {
     tcb.start();
+}
+
+void VrokMain::positionTick()
+{
+    if (vp->isPlaying())
+        ui->sbPosition->setValue(vp->getPosition()*1000);
 }
 void VrokMain::fillQueue()
 {
@@ -558,4 +569,10 @@ void VrokMain::on_tbQueues_currentChanged(int index)
     PlaylistFactory::getSingleton()->loadQueue(&queueModel,index);
     lastTab = index;
 
+}
+
+void VrokMain::on_sbPosition_sliderReleased()
+{
+    if (vp->isPlaying())
+        vp->setPosition(ui->sbPosition->value()/1000.0f);
 }

@@ -174,6 +174,8 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
             i++;
         }
         selfp->buffer_write=j;
+
+        //FLAC__stream_decoder_process_single(selfp->decoder);
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
     }
 }
@@ -215,27 +217,26 @@ void FLACDecoder::reader()
 {
     if (init_status==FLAC__STREAM_DECODER_INIT_STATUS_OK) {
         FLAC__stream_decoder_process_until_end_of_stream(decoder);
+        //FLAC__stream_decoder_process_single(decoder);
     } else {
         DBG("Error "<<FLAC__StreamDecoderInitStatusString[init_status]);
     }
 
 }
 
-unsigned long FLACDecoder::getLength()
-{
-    return (unsigned long)FLAC__stream_decoder_get_total_samples(decoder);
+uint64_t FLACDecoder::getLength()
+{// TODO: check if decoder is started
+    return (uint64_t)FLAC__stream_decoder_get_total_samples(decoder);
 }
 
-void FLACDecoder::setPosition(unsigned long t)
+void FLACDecoder::setPosition(uint64_t t)
 {
-    // worst seeking evaar!
-    FLAC__stream_decoder_skip_single_frame(decoder);
     FLAC__stream_decoder_seek_absolute(decoder, (uint64_t)t);
 
 }
-unsigned long FLACDecoder::getPosition()
+uint64_t FLACDecoder::getPosition()
 {
     uint64_t pos=0;
     FLAC__stream_decoder_get_decode_position(decoder, &pos);
-    return (unsigned long) pos;
+    return (uint64_t) ((pos*8) / FLAC__stream_decoder_get_bits_per_sample(decoder));
 }
