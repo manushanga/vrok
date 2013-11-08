@@ -183,7 +183,7 @@ extern "C" void equ_init(SuperEqState *state, int wb, int channels)
   state->chg_ires = 1;
 
   for(i=0;i<DITHERLEN;i++)
-	state->ditherbuf[i] = (float(rand())/RAND_MAX-0.5);
+    state->ditherbuf[i] = (REAL(rand())/RAND_MAX-0.5);
 
   if (fact[0] < 1) {
       for(i=0;i<=M;i++)
@@ -397,11 +397,11 @@ extern "C" int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamp
 		for(i=0;i<(state->winlen-state->nbufsamples)*nch;i++)
 			{
                 state->finbuf[state->nbufsamples*nch+i] = ((float *)buf)[i+p*nch];
-				float s = state->outbuf[state->nbufsamples*nch+i];
+                float s = state->outbuf[state->nbufsamples*nch+i];
 				//if (dither) s += ditherbuf[(ditherptr++) & (DITHERLEN-1)];
 				if (s < amin) s = amin;
 				if (amax < s) s = amax;
-				((float *)buf)[i+p*nch] = s;
+                ((float *)buf)[i+p*nch] = s;
 			}
 		for(i=state->winlen*nch;i<state->tabsize*nch;i++)
 			state->outbuf[i-state->winlen*nch] = state->outbuf[i];
@@ -452,21 +452,21 @@ extern "C" int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamp
 
 		for(i=0;i<nsamples*nch;i++)
 			{
-				state->finbuf[state->nbufsamples*nch+i] = ((float *)buf)[i+p*nch];
-				float s = state->outbuf[state->nbufsamples*nch+i];
+                state->finbuf[state->nbufsamples*nch+i] = ((float *)buf)[i+p*nch];
+                float s = state->outbuf[state->nbufsamples*nch+i];
 				if (state->dither) {
-					float u;
+                    float u;
 					s -= hm1;
 					u = s;
 //					s += ditherbuf[(ditherptr++) & (DITHERLEN-1)];
 					if (s < amin) s = amin;
 					if (amax < s) s = amax;
 					hm1 = s - u;
-					((float *)buf)[i+p*nch] = s;
+                    ((float *)buf)[i+p*nch] = s;
 				} else {
 					if (s < amin) s = amin;
 					if (amax < s) s = amax;
-					((float *)buf)[i+p*nch] = s;
+                    ((float *)buf)[i+p*nch] = s;
 				}
 			}
 

@@ -12,12 +12,14 @@
 #include "vrok.h"
 #include "ogg.h"
 
+#define SEEK_MAX 0xFFFFFFFFFFFFFFFFL
+
 VPDecoderPlugin* OGGDecoder::VPDecoderOGG_new(VPlayer *v)
 {
     return (VPDecoderPlugin *)new OGGDecoder(v);
 }
 
-OGGDecoder::OGGDecoder(VPlayer *v)
+OGGDecoder::OGGDecoder(VPlayer *v) : seek_to(SEEK_MAX)
 {
     owner = v;
 }
@@ -61,11 +63,18 @@ void OGGDecoder::reader()
         j=0;
         ret=1;
         done=0;
+
+        if (ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) != SEEK_MAX ){
+            if (ov_seekable(&vf))
+                ov_pcm_seek(&vf,(ogg_int64_t) seek_to);
+            seek_to = SEEK_MAX;
+        }
+
         while (done<VPBUFFER_FRAMES && ret > 0){
             ret = ov_read_float( &vf, &pcm, VPBUFFER_FRAMES - done,&bit );
             for (long i=0;i<ret;i++){
                 for (size_t ch=0;ch<bout->chans;ch++){
-                    buffer[j]=pcm[ch][i];
+                    buffer[j]=(float)pcm[ch][i];
                     j++;
                 }
             }
@@ -88,8 +97,9 @@ uint64_t OGGDecoder::getLength()
 
 void OGGDecoder::setPosition(uint64_t t)
 {
-    if (ov_seekable(&vf))
-        ov_pcm_seek(&vf,(ogg_int64_t)t);
+    if ( ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) == SEEK_MAX){
+        seek_to = t;
+    }
 }
 uint64_t OGGDecoder::getPosition()
 {

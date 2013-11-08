@@ -12,14 +12,14 @@
 
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
-    sb_preamp = (float) VSettings::getSingleton()->readFloat("eqpre",1.0f);
+    sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",1.0f);
     sb_paramsroot = NULL;
     sched_recalc = false;
     owner=NULL;
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
         band.append(std::to_string(i));
-        target[i]=VSettings::getSingleton()->readFloat(band,1.0f);
+        target[i]=VSettings::getSingleton()->readfloat(band,1.0f);
     }
     memset(&sb_state, 0, sizeof(SuperEqState));
 
@@ -32,7 +32,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eqk");
         band.append(std::to_string(i));
-        knowledge[i]=VSettings::getSingleton()->readFloat(band,1.0f);
+        knowledge[i]=VSettings::getSingleton()->readfloat(band,1.0f);
     }
 
     limit= cap;
@@ -112,7 +112,7 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
         }
     }
 
-    equ_init (&sb_state, 10.0f, bin->chans);
+    equ_init (&sb_state, 14, bin->chans);
     sb_recalc_table();
     initd = true;
 
@@ -195,14 +195,14 @@ int VPEffectPluginEQ::finit()
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
         band.append(std::to_string(i));
-        VSettings::getSingleton()->writeFloat(band,target[i]);
+        VSettings::getSingleton()->writefloat(band,target[i]);
     }
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eqk");
         band.append(std::to_string(i));
-        VSettings::getSingleton()->writeFloat(band,knowledge[i]);
+        VSettings::getSingleton()->writefloat(band,knowledge[i]);
     }
-    VSettings::getSingleton()->writeFloat("eqpre",sb_preamp);
+    VSettings::getSingleton()->writefloat("eqpre",sb_preamp);
 
     equ_quit(&sb_state);
     memset(&sb_state, 0, sizeof(SuperEqState));

@@ -10,6 +10,21 @@
 #define VPUTILS_H
 #include <sstream>
 #include "threads.h"
+
+#if __WORDSIZE == 64
+#define CPU64
+#elif __WORDSIZE == 32
+#define CPU32
+#else
+
+#ifdef _WIN64
+#define CPU64
+#elif defined(_WIN32)
+#define CPU32
+#endif
+
+#endif
+
 extern std::shared_mutex __m_console;
 
 #define DEBUG

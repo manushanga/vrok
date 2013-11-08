@@ -22,7 +22,6 @@ SOURCES += \
     cli/main.cpp \
     vplayer.cpp \
     effects/shibatch/Equ.cpp \
-    effects/shibatch/Fftsg_fl.c \
     effects/eq.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
@@ -52,7 +51,6 @@ SOURCES += \
     frontend/eqwidget.cpp \
     vplayer.cpp \
     effects/shibatch/Equ.cpp \
-    effects/shibatch/Fftsg_fl.c \
     effects/eq.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
@@ -171,7 +169,8 @@ SOURCES += \
     settings.cpp \
     frontend/playlistfactory.cpp \
     frontend/displayticker.cpp \
-    frontend/folderseeker.cpp
+    frontend/folderseeker.cpp \
+    effects/shibatch/Fftsg_fl.c
 
 HEADERS += \
     frontend/playlistfactory.h \

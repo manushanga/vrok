@@ -12,6 +12,8 @@
 #include "vrok.h"
 #include "flac.h"
 
+#define SEEK_MAX 0xFFFFFFFFFFFFFFFFL
+
 VPDecoderPlugin* FLACDecoder::VPDecoderFLAC_new(VPlayer *v)
 {
     return (VPDecoderPlugin *)new FLACDecoder(v);
@@ -65,6 +67,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
     FLACDecoder *selfp = (FLACDecoder*) client_data;
 
     // general overview
+    // seek if requested
     // fill buffer if not full
     // return ok
     // if full
@@ -77,6 +80,15 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
     //  write full buffers to buffer buffer2
     //  write remaining to buffer
     //  return ok
+
+
+
+    if (ATOMIC_CAS(&selfp->seek_to,SEEK_MAX,SEEK_MAX) != SEEK_MAX ){
+        uint64_t p= selfp->seek_to;
+        selfp->seek_to =SEEK_MAX;
+        FLAC__stream_decoder_seek_absolute(selfp->decoder, (FLAC__uint64)p);
+        return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
+    }
 
     if (!ATOMIC_CAS(&self->work,false,false))
         return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
@@ -178,9 +190,11 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
         //FLAC__stream_decoder_process_single(selfp->decoder);
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
     }
+
+
 }
 
-FLACDecoder::FLACDecoder(VPlayer *v)
+FLACDecoder::FLACDecoder(VPlayer *v) : seek_to(SEEK_MAX)
 {
     buffer = NULL;
     decoder = NULL;
@@ -226,13 +240,16 @@ void FLACDecoder::reader()
 
 uint64_t FLACDecoder::getLength()
 {// TODO: check if decoder is started
+    DBG(FLAC__stream_decoder_get_total_samples(decoder));
     return (uint64_t)FLAC__stream_decoder_get_total_samples(decoder);
 }
 
 void FLACDecoder::setPosition(uint64_t t)
 {
-    FLAC__stream_decoder_seek_absolute(decoder, (uint64_t)t);
-
+    DBG("set"<<t);
+    if ( ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) == SEEK_MAX){
+        seek_to = t;
+    }
 }
 uint64_t FLACDecoder::getPosition()
 {

@@ -25,11 +25,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "vputils.h"
+
 class paramlistelm {
 public:
 	class paramlistelm *next;
 
-	float lower,upper,gain,gain2;
+    float lower,upper,gain,gain2;
 	int sortindex;
 
 	paramlistelm(void) {

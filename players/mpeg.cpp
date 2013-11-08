@@ -9,21 +9,18 @@
 #ifdef __linux__
 #include <unistd.h>
 #endif
-
-#include <limits>
-
-
 #include "vrok.h"
 #include "mpeg.h"
 
 #define SHORTTOFL (1.0f/32768.0f)
+#define SEEK_MAX 0xFFFFFFFFFFFFFFFFL
 
 VPDecoderPlugin* MPEGDecoder::VPDecoderMPEG_new(VPlayer *v)
 {
     return (VPDecoderPlugin *)new MPEGDecoder(v);
 }
 
-MPEGDecoder::MPEGDecoder(VPlayer *v)
+MPEGDecoder::MPEGDecoder(VPlayer *v) : seek_to(SEEK_MAX)
 {
     int err;
 
@@ -44,6 +41,12 @@ void MPEGDecoder::reader()
     size_t count = VPBUFFER_FRAMES*bout->chans;
 
     while (ATOMIC_CAS(&owner->work,true,true)) {
+
+        if (ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) != SEEK_MAX ){
+            mpg123_seek(mh, (off_t) seek_to,SEEK_SET);
+            seek_to = SEEK_MAX;
+        }
+
         while (done<count*sizeof(short) && err != MPG123_DONE){
             err = mpg123_read( mh, ((unsigned char *) buffer)+done, count*sizeof(short)-done, &done );
         }
@@ -116,7 +119,9 @@ uint64_t MPEGDecoder::getLength()
 }
 void MPEGDecoder::setPosition(uint64_t t)
 {
-    mpg123_seek(mh, (off_t) t, SEEK_SET);
+    if ( ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) == SEEK_MAX){
+        seek_to = t;
+    }
 
 }
 uint64_t MPEGDecoder::getPosition()

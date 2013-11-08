@@ -6,7 +6,6 @@
   Please refer to this package when you modify this code.
 */
 #include <stdlib.h>
-
 typedef float REAL;
 
 /*

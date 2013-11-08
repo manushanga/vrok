@@ -23,11 +23,14 @@
 #ifndef __EQU_H
 #define __EQU_H
 
+#include "vputils.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef float REAL;
+
 typedef struct {
     REAL *lires,*lires1,*lires2;
     REAL *irest;

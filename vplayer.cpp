@@ -392,13 +392,13 @@ float VPlayer::getVolume()
 
 void VPlayer::setPosition(float pos)
 {
-    control.lock();
+   // control.lock();
     if (vpdecode) {
         //pause();
         vpdecode->setPosition((uint64_t)( pos*vpdecode->getLength() ) );
         //play();
     }
-    control.unlock();
+    //control.unlock();
 }
 
 float VPlayer::getPosition()

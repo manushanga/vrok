@@ -36,7 +36,7 @@ public:
     unsigned buffer_write;
     unsigned buffer_bytes;
     int ret_vpout_open;
-
+    uint64_t seek_to;
     FLACDecoder(VPlayer *v);
     int open(const char *url);
     void reader();

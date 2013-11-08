@@ -23,6 +23,7 @@ public:
     mpg123_handle *mh;
     short *buffer;
     VPlayer *owner;
+    uint64_t seek_to;
 
     MPEGDecoder(VPlayer *v);
     int open(const char *url);
