@@ -7,8 +7,8 @@
 VSWidget::VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent) :
     ManagedDockWidget(manager, this, parent),
     plugin(vis),
-    type(VPEffectPluginVis::SPECTRUM),
-    disp(VPEffectPluginVis::SPECTRUM,vis->getBars()),
+    type(VPEffectPluginVis::SCOPE),
+    disp(VPEffectPluginVis::SCOPE,vis->getBars()),
     ui(new Ui::VSWidget)
 {
     ui->setupUi(this);
@@ -50,23 +50,23 @@ void VSWidget::dispDoubleClicked()
 
 void VDisplay::resizeEvent(QResizeEvent *e)
 {
-    padw=width()/2 - VPBUFFER_FRAMES/8 ;
-    padh=height()/2;
+    padw=width()/2.0 - VPBUFFER_PERIOD/2.0;
+    padh=height()/2.0;
 }
 
 void VDisplay::paintEvent(QPaintEvent *e)
 {
     QPainter pp(this);
-
+    int x=(VPBUFFER_FRAMES /(4*VPBUFFER_PERIOD))*8;
     pp.fillRect(e->rect(),QColor(255,255,255));
     if (type == VPEffectPluginVis::SCOPE) {
-        for (int i=0,j=0;i<(VPBUFFER_FRAMES-8);i+=8,j+=2){
-            pp.drawLine(padw +j,padh+bars[i]*50,padw+ j+2,padh+bars[i+8]*50);
+        for (int i=0,j=0;i<(VPBUFFER_FRAMES-x);i+=x,j+=2){
+            pp.drawLine(padw +j,padh+bars[i]*50,padw+ j+2,padh+bars[i+x]*50);
         }
     } else {
         float p=0.01f;
-        for (int i=0,j=0;i<(VPBUFFER_FRAMES-8);i+=8,j+=2){
-            pp.drawLine(padw +j,padh+bars[i]*2*log10(p),padw+ j+2,padh+bars[i+8]*2*log10(p));
+        for (int i=0,j=0;i<(VPBUFFER_FRAMES-x);i+=x,j+=2){
+            pp.drawLine(padw +j,padh+bars[i]*log(p),padw+ j+2,padh+bars[i+x]*log(p));
             p+=5.0f;
         }
     }

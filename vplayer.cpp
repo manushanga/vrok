@@ -21,9 +21,16 @@
 #include "decoder.h"
 #include "effect.h"
 
+#ifdef _WIN32
+#include <crtdbg.h>
+#endif
 
 void VPlayer::playWork(VPlayer *self)
 {
+
+#ifdef _WIN32
+    assert(_CrtCheckMemory());
+#endif
     self->vpout->wakeup();
     while (1) {
         self->vpdecode->reader();
@@ -99,7 +106,6 @@ void VPlayer::addEffect(VPEffectPlugin *eff)
 {
     control.lock();
     stop();
-    control.unlock();
 
     dsp[dspCount].in = NULL;
     dsp[dspCount].out = NULL;
@@ -116,6 +122,10 @@ void VPlayer::addEffect(VPEffectPlugin *eff)
         strcpy(copy,currentTrack);
         open(copy);
     }
+
+    control.unlock();
+
+
 }
 bool VPlayer::isEffectActive(VPEffectPlugin *eff)
 {

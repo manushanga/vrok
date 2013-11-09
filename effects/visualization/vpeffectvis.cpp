@@ -1,7 +1,7 @@
 #include "vpeffectvis.h"
 #include "ooura_fft.h"
 
-VPEffectPluginVis::VPEffectPluginVis() : type(SPECTRUM), bars(NULL), wstate(false)
+VPEffectPluginVis::VPEffectPluginVis() : type(SCOPE), bars(NULL), wstate(false)
 {
 }
 
@@ -10,7 +10,7 @@ int VPEffectPluginVis::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 {
     bin = in;
     bars = new float[VPBUFFER_FRAMES*bin->chans];
-    ip= new int[int (sqrt(VPBUFFER_FRAMES*bin->chans/2) ) +2];
+    ip= new int[int (sqrt(VPBUFFER_FRAMES*bin->chans/2.0f) ) +2];
     ip[0]=0;
     w = new float[VPBUFFER_FRAMES*bin->chans/2];
     for (int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) { bars[i]=0.0f; }

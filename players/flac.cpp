@@ -36,7 +36,7 @@ void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
         bin.buffer[0] = NULL;
         bin.buffer[1] = NULL;
         me->owner->setOutBuffers(&bin,&me->bout);
-
+        me->bps = metadata->data.stream_info.bits_per_sample;
 
         for (unsigned i=0;i<VPBUFFER_FRAMES*me->bout->chans;i++){
             me->bout->buffer[0][i]=0.0f;
@@ -223,7 +223,6 @@ int FLACDecoder::open(const char *url)
     } else {
         FLAC__stream_decoder_process_until_end_of_metadata(decoder);
     }
-
     return ret_vpout_open;
 }
 
@@ -240,18 +239,25 @@ void FLACDecoder::reader()
 
 uint64_t FLACDecoder::getLength()
 {// TODO: check if decoder is started
-    return (uint64_t)FLAC__stream_decoder_get_total_samples(decoder);
+    if (ATOMIC_CAS(&owner->work,true,true))
+        return (uint64_t)FLAC__stream_decoder_get_total_samples(decoder);
+    else
+        return 0;
 }
 
 void FLACDecoder::setPosition(uint64_t t)
 {
-    if ( ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) == SEEK_MAX){
+    if ( ATOMIC_CAS(&owner->work,true,true) && ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) == SEEK_MAX){
         seek_to = t;
     }
 }
 uint64_t FLACDecoder::getPosition()
 {
-    uint64_t pos=0;
-    FLAC__stream_decoder_get_decode_position(decoder, &pos);
-    return (uint64_t) ((pos*8) / FLAC__stream_decoder_get_bits_per_sample(decoder));
+    if (ATOMIC_CAS(&owner->work,true,true)) {
+        uint64_t pos=0;
+        FLAC__stream_decoder_get_decode_position(decoder, &pos);
+        return (uint64_t) ((pos*8) / bps);
+    } else {
+        return 0;
+    }
 }

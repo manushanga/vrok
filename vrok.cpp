@@ -14,6 +14,8 @@
 
 VPOutFactory::VPOutFactory()
 {
+
+    // NOTE: Keep buffer sizes 2^n for FFT
 #if defined(VPOUT_DUMMY)
     vpout_entry_t def=
     { (vpout_creator_t)VPOutPluginDummy::VPOutPluginDummy_new, VPBUFFER_PERIOD };
@@ -21,7 +23,7 @@ VPOutFactory::VPOutFactory()
     currentOut = "Dummy";
 #elif defined(VPOUT_DSOUND)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*10};
+    { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*8};
     creators.insert(std::pair<std::string, vpout_entry_t> ("DSound",def));
     currentOut = "DSound";
 #elif defined(VPOUT_ALSA)
