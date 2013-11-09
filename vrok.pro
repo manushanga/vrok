@@ -84,7 +84,7 @@ FORMS    += frontend/vrokmain.ui \
 OTHER_FILES += README.md \
     LICENSE
 
-#QMAKE_CXXFLAGS += -Wall -O4 -msse4.2 -ffast-math
+QMAKE_CXXFLAGS_RELEASE += -Wall -O4 -msse4.2 -ffast-math
 
 linux-clang {
     QMAKE_CXXFLAGS_DEBUG += -fno-omit-frame-pointer \
