@@ -4,13 +4,13 @@
 #include <QPainter>
 #include <QTextStream>
 
-EQWidget::EQWidget(VPEffectPluginEQ *eq, QWidget *parent) :
-    QDockWidget(parent),
-    ui(new Ui::EQWidget)
+EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) :
+    plugin(eq),
+    ui(new Ui::EQWidget),
+    ManagedDockWidget(manager, this, parent)
 {
     ui->setupUi(this);
 
-    plugin = eq;
     target_sliders[0] = new QSlider();
     target_sliders[0]->setMaximum(64);
     target_sliders[0]->setMinimum(0);
@@ -44,12 +44,11 @@ EQWidget::EQWidget(VPEffectPluginEQ *eq, QWidget *parent) :
             labelsBottom[i].setFont(f);
 
             labelsBottom[i].setFixedHeight(fm.height());
-            labelsBottom[i].setText(QString(eq->getBandNames()[i-1]));
+            labelsBottom[i].setText(QString(plugin->getBandNames()[i-1]));
         }
 
 
     }
-
 
 }
 
@@ -83,8 +82,8 @@ void EQWidget::on_pbReset_clicked()
 
 void EQWidget::on_pbLoad_clicked()
 {
-    QString p = QFileDialog::getOpenFileName(this,"Select Preset",".","Vrok EQ (*.veq)");
-    if (p.size()) {
+    QString p = QFileDialog::getOpenFileName(this,"Select Preset",".","All Supported EQ Presets(*.veq *.feq);;Vrok EQ (*.veq);;Foobar2000 EQ (*.feq)");
+    if (p.toLower().endsWith("veq")) {
         QFile f(p);
         f.open(QFile::ReadOnly);
         QTextStream ts(&f);
@@ -93,6 +92,17 @@ void EQWidget::on_pbLoad_clicked()
             ts>>x;
             target_sliders[i]->setValue(x);
         }
+        f.close();
+    } else if (p.toLower().endsWith("feq")) {
+        QFile f(p);
+        f.open(QFile::ReadOnly);
+        QTextStream ts(&f);
+        for (int i=1;i<19;i++){
+            int x;
+            ts>>x;
+            target_sliders[i]->setValue( (1.0f+x/20.0f)*48 );
+        }
+        target_sliders[0]->setValue(32);
         f.close();
     }
 }

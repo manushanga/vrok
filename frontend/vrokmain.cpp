@@ -21,11 +21,13 @@
 #include "ui_vrokmain.h"
 #include "vputils.h"
 #include "vplayer.h"
+#include "vswidget.h"
 
 #include "players/flac.h"
 #include "players/mpeg.h"
 #include "players/ogg.h"
-#include "effects/eq.h"
+#include "effects/shibatch/eq.h"
+
 #include "playlistfactory.h"
 
 #include <cstring>
@@ -92,6 +94,7 @@ void VrokMain::resizeEvent(QResizeEvent *event)
 {
 
 }
+
 void VrokMain::on_btnAbout_clicked()
 {
     QDialog d(this);
@@ -126,6 +129,7 @@ void VrokMain::on_btnAbout_clicked()
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VrokMain),
+    dockManager(this),
     lastTab(0)
 {
     ui->setupUi(this);
@@ -135,12 +139,25 @@ VrokMain::VrokMain(QWidget *parent) :
 
     vp=NULL;
     ew=NULL;
+    vw=NULL;
 
     setWindowIcon(QIcon(":icon/vrok.png"));
 
     vp = new VPlayer(callback_next, this);
     eq = new VPEffectPluginEQ(100);
+    /*
+    VSWidget *vs = new VSWidget();
+    setDockOptions(QMainWindow::ForceTabbedDocks);
+    VSWidget *u=new VSWidget();
+    VSWidget *xx=new VSWidget();
 
+    addDockWidget(Qt::BottomDockWidgetArea,vs);
+    addDockWidget(Qt::BottomDockWidgetArea,u);
+    addDockWidget(Qt::BottomDockWidgetArea,xx);
+
+    tabifyDockWidget(vs, u);
+    tabifyDockWidget(vs,xx);
+*/
     if (VSettings::getSingleton()->readInt("eqon",1) ){
         vp->addEffect((VPEffectPlugin *)eq);
         ui->btnEQt->setChecked(true);
@@ -199,7 +216,7 @@ VrokMain::VrokMain(QWidget *parent) :
 
         bar_vals[i]=0.0f;
     }
-    ui->gvDisplay->setScene(gs);
+    //ui->gvDisplay->setScene(gs);
 
     FolderSeeker::getSingleton()->setExtensionList(getExtentionsList());
     if (( VSettings::getSingleton()->readString("lastopen","") ).size()>0) {
@@ -456,8 +473,11 @@ void VrokMain::on_btnEQ_clicked()
 {
     if (ew)
         delete ew;
-    ew = new EQWidget(eq);
-    this->addDockWidget(Qt::BottomDockWidgetArea,ew);
+    ew = new EQWidget(&dockManager,eq);
+    ew->registerUi();
+ // this->addDockWidget(Qt::BottomDockWidgetArea,ew);
+
+
 }
 void VrokMain::on_btnEQt_clicked()
 {
@@ -471,13 +491,22 @@ void VrokMain::on_btnEQt_clicked()
 }
 void VrokMain::on_btnSpec_clicked()
 {
+    if (vw)
+        delete vw;
+    vw = new VSWidget(&dockManager,NULL);
+    vw->registerUi();
+   // this->addDockWidget(Qt::BottomDockWidgetArea,vw);
+
+
+   // dockManager.tabify();
+    /*
     if (vp->isEffectActive((VPEffectPlugin *)eq)){
         if (ui->btnSpec->isChecked())
             tx.start();
         else
             tx.stop();
     }
-
+*/
 }
 VrokMain::~VrokMain()
 {

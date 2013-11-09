@@ -24,6 +24,7 @@
 #define __EQU_H
 
 #include "vputils.h"
+#include "ooura_fft.h"
 
 #ifdef __cplusplus
 extern "C" {

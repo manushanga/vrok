@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include "effect.h"
-#include "shibatch/Equ.h"
+#include "equ.h"
 
 #include "vrok.h"
 

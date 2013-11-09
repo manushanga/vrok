@@ -143,7 +143,7 @@ void VPEffectPluginEQ::process(float *buffer)
     //assert(buffer == bin->buffer);
 
     equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, bin->chans);
-
+/*
     float mid,xre,xim,newb;
     unsigned step=0,chans=2,ichans;
     float *bar_array_w=bar_array;
@@ -187,7 +187,7 @@ void VPEffectPluginEQ::process(float *buffer)
         applyKnowledge();
     }
     period_count = (period_count + BAR_SETS) % 100;
-
+*/
 }
 
 int VPEffectPluginEQ::finit()

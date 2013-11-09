@@ -259,28 +259,6 @@
       <item>
        <layout class="QVBoxLayout" name="vlColumn2">
         <item>
-         <widget class="QGraphicsView" name="gvDisplay">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>130</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>130</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QListView" name="lvFiles">
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>

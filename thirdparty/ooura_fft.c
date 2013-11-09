@@ -6,7 +6,7 @@
   Please refer to this package when you modify this code.
 */
 #include <stdlib.h>
-typedef float REAL;
+#include "ooura_fft.h"
 
 /*
 Fast Fourier/Cosine/Sine Transform

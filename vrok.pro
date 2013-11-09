@@ -21,13 +21,14 @@ console {
 SOURCES += \
     cli/main.cpp \
     vplayer.cpp \
-    effects/shibatch/Equ.cpp \
-    effects/eq.cpp \
+    effects/shibach/eq.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
     util/utils.cpp \
-    util/cpplib.cpp
+    util/cpplib.cpp \
+    thirdparty/ooura_fft.c
+
 HEADERS  += \
     include/vplayer.h \
     include/decoder.h \
@@ -37,9 +38,9 @@ HEADERS  += \
     include/out.h \
     include/vputils.h \
     include/cpplib.h \
+    include/ooura_fft.h \
     effects/shibatch/paramlist.hpp \
-    effects/shibatch/Equ.h \
-    effects/eq.h \
+    effects/shibatch/eq.h \
     players/flac.h \
     players/mpeg.h \
     players/ogg.h
@@ -50,13 +51,14 @@ SOURCES += \
     frontend/vrokmain.cpp \
     frontend/eqwidget.cpp \
     vplayer.cpp \
-    effects/shibatch/Equ.cpp \
-    effects/eq.cpp \
+    effects/shibatch/eq.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
     util/utils.cpp \
-    util/cpplib.cpp
+    util/cpplib.cpp \
+    thirdparty/ooura_fft.c
+
 HEADERS  += \
     include/vplayer.h \
     include/decoder.h \
@@ -65,10 +67,10 @@ HEADERS  += \
     include/threads.h \
     include/vrok.h \
     include/cpplib.h \
+    include/ooura_fft.h \
     frontend/vrokmain.h \
     frontend/eqwidget.h \
     effects/shibatch/paramlist.hpp \
-    effects/shibatch/Equ.h \
     effects/eq.h \
     players/flac.h \
     players/mpeg.h \
@@ -170,12 +172,23 @@ SOURCES += \
     frontend/playlistfactory.cpp \
     frontend/displayticker.cpp \
     frontend/folderseeker.cpp \
-    effects/shibatch/Fftsg_fl.c
+    frontend/vswidget.cpp \
+    frontend/dockmanager.cpp \
+    effects/shibatch/equ.cpp \
+    effects/visualization/vpeffectvis.cpp
 
 HEADERS += \
     frontend/playlistfactory.h \
     frontend/displayticker.h \
-    frontend/folderseeker.h
+    frontend/folderseeker.h \
+    frontend/vswidget.h \
+    frontend/dockmanager.h \
+    frontend/manageddockwidget.h \
+    effects/shibatch/equ.h \
+    effects/visualization/vpeffectvis.h
+
+FORMS += \
+    frontend/vswidget.ui
 
 
 

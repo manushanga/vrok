@@ -9,25 +9,25 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
-#include "../effects/eq.h"
+#include "../effects/shibatch/eq.h"
+
+#include "manageddockwidget.h"
 
 namespace Ui {
 class EQWidget;
 }
 
-
-
-class EQWidget : public QDockWidget
+class EQWidget : public ManagedDockWidget
 {
     Q_OBJECT
     
 public:
-    explicit EQWidget(VPEffectPluginEQ *eq, QWidget *parent = 0);
+    explicit EQWidget(DockManager *manager, VPEffectPluginEQ *effectPlugin, QWidget *parent = 0);
     ~EQWidget();
     
 private:
-    Ui::EQWidget *ui;
     VPEffectPluginEQ *plugin;
+    Ui::EQWidget *ui;
     QSlider *target_sliders[19];
     QWidget *empty;
     QLabel labelsBottom[19];

@@ -26,7 +26,6 @@
 #define VP_SWAP_BUFFERS(v) \
     *(v->cursor) = 1-*(v->cursor);
 
-
 enum VPStatus {
     VP_STATUS_OPEN,
     VP_STATUS_PLAYING,
@@ -45,6 +44,8 @@ struct VPBuffer {
     unsigned chans;
     int *cursor;
     float *buffer[2];
+    VPBuffer(): srate(0), chans(0), cursor(NULL)
+    { buffer[0]=NULL; buffer[1]=NULL; }
 };
 
 struct VPEffect {
@@ -52,6 +53,7 @@ struct VPEffect {
     bool active;
     VPBuffer *in;
     VPBuffer *out;
+    VPEffect(): eff(NULL), active(false), in(NULL), out(NULL) {}
 };
 
 class VPlayer

@@ -11,7 +11,7 @@
 #include <QMainWindow>
 
 #include "vplayer.h"
-#include "../effects/eq.h"
+#include "../effects/shibatch/eq.h"
 
 
 #include <QGraphicsScene>
@@ -32,6 +32,8 @@
 #include "eqwidget.h"
 #include "displayticker.h"
 #include "folderseeker.h"
+#include "dockmanager.h"
+#include "vswidget.h"
 namespace Ui {
 class VrokMain;
 }
@@ -47,6 +49,7 @@ public:
     static void callback_next(char *next, void *user);
     bool eventFilter(QObject *target, QEvent *event);
     void resizeEvent(QResizeEvent *event);
+
     ~VrokMain();
 
 
@@ -70,24 +73,25 @@ public slots:
 private slots:
     void on_lvQueue_doubleClicked(const QModelIndex &index);
     void on_tbQueues_tabCloseRequested(int index);
-
     void on_tbQueues_currentChanged(int index);
-
-
     void on_sbPosition_sliderReleased();
 
 private:
     void folderSeekSweep(QDir& root);
+    // dock manager
+    DockManager dockManager;
     // player funcs
     QTimer tcb;
     QTimer tpos;
     VPlayer *vp;
     QStringList getExtentionsList();
+
     // effects
     EQWidget *ew;
     VPEffectPluginEQ *eq;
 
     // visuals
+    VSWidget *vw;
     DisplayTicker *lblDisplay;
     QTimer tx;
     unsigned vis_counter;

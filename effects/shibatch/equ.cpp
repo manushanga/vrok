@@ -29,7 +29,7 @@
 #include <assert.h>
 #endif
 #include "paramlist.hpp"
-#include "Equ.h"
+#include "equ.h"
 
 int _Unwind_Resume_or_Rethrow;
 int _Unwind_RaiseException;
