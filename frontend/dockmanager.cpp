@@ -29,11 +29,5 @@ bool DockManager::registerDockWidget(QDockWidget *widget)
 bool DockManager::unregisterDockWidget(QDockWidget *widget)
 {
     DBG("revmoed"<<widget);
-    if (widgets.find(widget) != widgets.end()){
- //       mainWin.removeDockWidget((QDockWidget *)(widget));
-        widgets.remove(widget);
-        return true;
-    } else {
-        return false;
-    }
+    return widgets.remove(widget);
 }

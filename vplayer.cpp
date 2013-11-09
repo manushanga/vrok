@@ -348,6 +348,7 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         }
 
         vpout =VPOutFactory::getSingleton()->create();
+        DBG(VPBUFFER_FRAMES);
         assert(vpout);
 
         outprop->buffer[0] = new float[VPBUFFER_FRAMES*outprop->chans];
@@ -366,6 +367,7 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         DBG("track rate: "<<bout.srate);
 
         VPBuffer *tmp=&bout;
+        DBG(dspCount);
         for (int i=0;i<dspCount;i++){
             dsp[i].in = tmp;
             dsp[i].eff->init(this, tmp, &tmp);

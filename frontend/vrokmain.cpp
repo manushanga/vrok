@@ -39,6 +39,8 @@
 #define QA_FILLNON 3
 #define QA_FILLLIMITDIR 4
 #define QA_NEW_QUEUE 5
+#define QA_CLEAR 6
+#define QA_LOADPL 7
 
 #define QA_QUEUE 0
 
@@ -61,6 +63,11 @@ void VrokMain::callback_next(char *mem, void *user)
 
 bool VrokMain::eventFilter(QObject *target, QEvent *event)
 {
+
+    if (event->type() == QEvent::WindowStateChange) {
+        vz->minimized (windowState() == Qt::WindowMinimized);
+        return true;
+    }
     if ( event->type() == QEvent::MouseButtonPress ){
         return true;
     }
@@ -129,7 +136,7 @@ void VrokMain::on_btnAbout_clicked()
 VrokMain::VrokMain(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VrokMain),
-    dockManager(this),
+    dockManager(new DockManager(this)),
     lastTab(0)
 {
     ui->setupUi(this);
@@ -145,27 +152,16 @@ VrokMain::VrokMain(QWidget *parent) :
 
     vp = new VPlayer(callback_next, this);
     eq = new VPEffectPluginEQ(100);
-    /*
-    VSWidget *vs = new VSWidget();
-    setDockOptions(QMainWindow::ForceTabbedDocks);
-    VSWidget *u=new VSWidget();
-    VSWidget *xx=new VSWidget();
+    vz = new VPEffectPluginVis();
 
-    addDockWidget(Qt::BottomDockWidgetArea,vs);
-    addDockWidget(Qt::BottomDockWidgetArea,u);
-    addDockWidget(Qt::BottomDockWidgetArea,xx);
 
-    tabifyDockWidget(vs, u);
-    tabifyDockWidget(vs,xx);
-*/
+
+
     if (VSettings::getSingleton()->readInt("eqon",1) ){
         vp->addEffect((VPEffectPlugin *)eq);
         ui->btnEQt->setChecked(true);
     }
-
-    tx.setSingleShot(false);
-    tx.setInterval(40);
-    tx.stop();
+    vp->addEffect((VPEffectPlugin *)vz);
 
     tcb.setSingleShot(true);
     tcb.setInterval(0);
@@ -180,43 +176,6 @@ VrokMain::VrokMain(QWidget *parent) :
     cursweep.setFilter(QDir::Files);
     cursweep.setNameFilters(getExtentionsList());
 
-    gs = new QGraphicsScene();
-    QLinearGradient gr(0,-100,0,100);
-    gr.setColorAt(0,QColor(255,0,0));
-    gr.setColorAt(0.15,QColor(200,190,5));
-    gr.setColorAt(0.5,QColor(0,150,0));
-    gr.setInterpolationMode(QGradient::ColorInterpolation);
-
-    QLinearGradient gr2(0,-100,0,100);
-    gr2.setColorAt(0,QColor(100,0,0));
-    gr2.setColorAt(0.15,QColor(50,95,2));
-    gr2.setColorAt(0.5,QColor(0,75,0));
-    gr2.setInterpolationMode(QGradient::ColorInterpolation);
-
-    QBrush z(gr);
-    QBrush y(gr2);
-    QPen x(Qt::transparent);
-
-    for (unsigned i=0;i<BAR_COUNT;i++){
-        gbars[i] = new QGraphicsRectItem(i*11,0,10,0);
-        gbars[i]->setBrush(z);
-        gbars[i]->setPen(x);
-        gs->addItem(gbars[i]);
-
-        gmbars[i] = new QGraphicsRectItem(i*12,1,2,0);
-        gmbars[i]->setBrush(y);
-        gmbars[i]->setPen(x);
-        gs->addItem(gmbars[i]);
-
-        gbbars[i] = new QGraphicsRectItem(i*12,1,2,0);
-        gbbars[i]->setBrush(QBrush(QColor(255,0,50)));
-        gbbars[i]->setPen(x);
-
-        gs->addItem(gbbars[i]);
-
-        bar_vals[i]=0.0f;
-    }
-    //ui->gvDisplay->setScene(gs);
 
     FolderSeeker::getSingleton()->setExtensionList(getExtentionsList());
     if (( VSettings::getSingleton()->readString("lastopen","") ).size()>0) {
@@ -247,6 +206,8 @@ VrokMain::VrokMain(QWidget *parent) :
     contextMenuQueue.push_back(new QAction("Fill None",this));
     contextMenuQueue.push_back(new QAction("Fill from directory",this));
     contextMenuQueue.push_back(new QAction("New Queue",this));
+    contextMenuQueue.push_back(new QAction("Clear",this));
+    contextMenuQueue.push_back(new QAction("Load Playlist",this));
 
     queueToggleFillType = new QActionGroup(this);
     contextMenuQueue[QA_FILLRAN]->setActionGroup(queueToggleFillType);
@@ -268,8 +229,10 @@ VrokMain::VrokMain(QWidget *parent) :
     connect(contextMenuFiles[QA_QUEUE],SIGNAL(triggered()),this,SLOT(actionQueueTriggered()));
     connect(contextMenuQueue[QA_REMOVE],SIGNAL(triggered()),this,SLOT(actionQueueRemove()));
     connect(contextMenuQueue[QA_NEW_QUEUE],SIGNAL(triggered()),this,SLOT(actionNewQueue()));
+    connect(contextMenuQueue[QA_CLEAR],SIGNAL(triggered()),this,SLOT(actionClear()));
+    connect(contextMenuQueue[QA_LOADPL],SIGNAL(triggered()),this,SLOT(actionNewPlaylist()));
 
-    connect(&tx, SIGNAL(timeout()), this, SLOT(process()));
+
     connect(&tcb,SIGNAL(timeout()), this, SLOT(fillQueue()));
     connect(&tpos,SIGNAL(timeout()),this,SLOT(positionTick()));
 
@@ -396,35 +359,7 @@ void VrokMain::fillQueue()
     }
 }
 
-void VrokMain::process()
-{
-    if (eq->bar_array==NULL)
-        return;
 
-    if (vis_counter==eq->getBarSetCount()){
-        vis_counter=0;
-    }
-
-    float *bars = eq->bar_array + eq->getBarCount()*vis_counter;
-    for (unsigned b=0;b<eq->getBarCount();b++){
-        if (bar_vals[b] > 100.0f)
-            bar_vals[b]= 100.0f;
-        else if (bar_vals[b] < bars[b])
-            bar_vals[b] = bars[b];
-        else if (bar_vals[b] < 10.0f)
-            bar_vals[b] = 0.0f;
-        else
-            bar_vals[b] -= 8.0f;
-        float gmhigh=eq->getMids()[b];
-        float gbhigh=(eq->getBands()[b]-1.0f)*20.f+50.f;
-        gmbars[b]->setRect(b*14,gmhigh*-1.0f,10, 1);
-        gbbars[b]->setRect(b*14,gbhigh*-1.0f,10, 1);
-        gbars[b]->setRect(b*14,0,10,bar_vals[b] *-1.0f);
-    }
-    gs->update();
-
-    vis_counter++;
-}
 void VrokMain::on_btnPause_clicked()
 {
     if (ui->btnSpec->isChecked())
@@ -473,7 +408,7 @@ void VrokMain::on_btnEQ_clicked()
 {
     if (ew)
         delete ew;
-    ew = new EQWidget(&dockManager,eq);
+    ew = new EQWidget(dockManager,eq);
     ew->registerUi();
  // this->addDockWidget(Qt::BottomDockWidgetArea,ew);
 
@@ -493,7 +428,7 @@ void VrokMain::on_btnSpec_clicked()
 {
     if (vw)
         delete vw;
-    vw = new VSWidget(&dockManager,NULL);
+    vw = new VSWidget(dockManager,vz);
     vw->registerUi();
    // this->addDockWidget(Qt::BottomDockWidgetArea,vw);
 
@@ -515,8 +450,7 @@ VrokMain::~VrokMain()
         delete vp;
     if (eq)
         delete eq;
-    if (gs)
-        delete gs;
+
 
     delete ui;
 }
@@ -554,6 +488,34 @@ void VrokMain::actionQueueRemove()
 void VrokMain::actionNewQueue()
 {
     ui->tbQueues->addTab( new QWidget(),"Queue " + QString::number(ui->tbQueues->count()+1));
+}
+
+void VrokMain::actionClear()
+{
+    queueModel.clear();
+}
+
+void VrokMain::actionNewPlaylist()
+{
+    QString p = QFileDialog::getOpenFileName(this,"Select Playlist","","M3U (*.m3u)");
+    if (p.endsWith("m3u",Qt::CaseInsensitive)) {
+        QFile f(p);
+        f.open(QFile::ReadOnly);
+        QTextStream ts(&f);
+        while (!ts.atEnd()){
+            QString line = ts.readLine();
+
+            if (line.startsWith("#EXTINF:")) {
+
+                QStringList g= line.split(',');
+                int row=queueModel.rowCount();
+                queueModel.setItem(row,0,new QStandardItem(g[1]));
+                queueModel.setItem(row,1,new QStandardItem(ts.readLine()));
+
+            }
+        }
+        f.close();
+    }
 }
 
 

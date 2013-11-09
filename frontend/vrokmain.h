@@ -12,7 +12,7 @@
 
 #include "vplayer.h"
 #include "../effects/shibatch/eq.h"
-
+#include "../effects/visualization/vpeffectvis.h"
 
 #include <QGraphicsScene>
 #include <QStringListModel>
@@ -62,12 +62,13 @@ public slots:
     void on_btnOpenDir_clicked();
     void on_lvFiles_doubleClicked(QModelIndex i);
     void on_btnAbout_clicked();
-    void process();
     void fillQueue();
     void on_sbFolderSeek_valueChanged(int value);
     void actionQueueTriggered();
     void actionQueueRemove();
     void actionNewQueue();
+    void actionClear();
+    void actionNewPlaylist();
     void startFillTimer();
     void positionTick();
 private slots:
@@ -79,7 +80,7 @@ private slots:
 private:
     void folderSeekSweep(QDir& root);
     // dock manager
-    DockManager dockManager;
+    DockManager *dockManager;
     // player funcs
     QTimer tcb;
     QTimer tpos;
@@ -91,13 +92,13 @@ private:
     VPEffectPluginEQ *eq;
 
     // visuals
+    VPEffectPluginVis *vz;
     VSWidget *vw;
     DisplayTicker *lblDisplay;
     QTimer tx;
     unsigned vis_counter;
     float bar_vals[BAR_COUNT];
     bool visuals;
-    QGraphicsScene *gs;
     QGraphicsRectItem *gbars[BAR_COUNT];
     QGraphicsRectItem *gmbars[BAR_COUNT];
     QGraphicsRectItem *gbbars[BAR_COUNT];

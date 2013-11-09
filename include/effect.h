@@ -10,7 +10,7 @@
 #define EFFECT_H
 
 #include "vplayer.h"
-
+#include "vrok.h"
 class VPEffectPlugin
 {
 protected:
@@ -20,6 +20,7 @@ public:
     virtual void process(float *buffer) = 0;
     virtual void statusChange(VPStatus status) { status; }
     virtual int finit() = 0;
+    virtual void minimized(bool state) { state; } // for use for visual plugins
     virtual ~VPEffectPlugin() {}
 };
 #endif // EFFECT_H

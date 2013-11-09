@@ -14,8 +14,6 @@
 #include "effect.h"
 #include "equ.h"
 
-#include "vrok.h"
-
 #define BACK_LOG 18
 #define BAR_COUNT 18
 #ifndef M_PI
@@ -23,7 +21,7 @@
 #endif
 
 #define PI M_PI
-#define fFRAMES VPBUFFER_PERIOD*1.0f
+#define fFRAMES VPBUFFER_FRAMES*1.0f
 #define BAR_SETS VPBUFFER_FRAMES/VPBUFFER_PERIOD
 
 static const char *sb_bandnames[] = { "55 Hz", "77 Hz", "110 Hz",

@@ -240,13 +240,11 @@ void FLACDecoder::reader()
 
 uint64_t FLACDecoder::getLength()
 {// TODO: check if decoder is started
-    DBG(FLAC__stream_decoder_get_total_samples(decoder));
     return (uint64_t)FLAC__stream_decoder_get_total_samples(decoder);
 }
 
 void FLACDecoder::setPosition(uint64_t t)
 {
-    DBG("set"<<t);
     if ( ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) == SEEK_MAX){
         seek_to = t;
     }

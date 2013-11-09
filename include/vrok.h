@@ -1,4 +1,4 @@
-#ifndef CONFIG_OUT_H
+﻿#ifndef CONFIG_OUT_H
 #define CONFIG_OUT_H
 
 #include <map>
@@ -15,6 +15,8 @@
 #include "players/ogg.h"
 
 #include "cpplib.h"
+
+#define VERSION 2
 
 class VPlayer;
 
@@ -99,6 +101,8 @@ struct vpdecoder_entry_t{
 
 class VPDecoderFactory{
 private:
+
+
     std::map<std::string, vpdecoder_entry_t> creators;
 public:
     static VPDecoderFactory *getSingleton()

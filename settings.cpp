@@ -94,7 +94,13 @@ VSettings::VSettings()
         fclose(f);
 
     }
-
+    if ( readInt("version", -1) <  VERSION)
+    {
+        first=true;
+        DBG("older version detected, overwriting settings");
+        settings.clear();
+        writeInt("version",2);
+    }
 }
 
 std::string VSettings::readString(std::string field, std::string def)
