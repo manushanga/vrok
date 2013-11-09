@@ -95,7 +95,7 @@ private:
     VPEffectPluginVis *vz;
     VSWidget *vw;
     DisplayTicker *lblDisplay;
-    QTimer tx;
+
     unsigned vis_counter;
     float bar_vals[BAR_COUNT];
     bool visuals;

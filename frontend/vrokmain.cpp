@@ -362,15 +362,12 @@ void VrokMain::fillQueue()
 
 void VrokMain::on_btnPause_clicked()
 {
-    if (ui->btnSpec->isChecked())
-        tx.stop();
     vp->pause();
 }
 void VrokMain::on_btnPlay_clicked()
 {
     vp->play();
-    if (ui->btnSpec->isChecked())
-        tx.start();
+
 }
 
 void VrokMain::on_btnOpenDir_clicked()
@@ -399,9 +396,7 @@ void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 {
     vp->open(dirFilesModel.item(i.row(),1)->text().toUtf8().data());
     lblDisplay->setText(dirFilesModel.item(i.row(),0)->text());
-    if (ui->btnSpec->isChecked()) {
-        tx.start();
-    }
+
 }
 
 void VrokMain::on_btnEQ_clicked()
@@ -410,8 +405,6 @@ void VrokMain::on_btnEQ_clicked()
         delete ew;
     ew = new EQWidget(dockManager,eq);
     ew->registerUi();
- // this->addDockWidget(Qt::BottomDockWidgetArea,ew);
-
 
 }
 void VrokMain::on_btnEQt_clicked()
@@ -430,18 +423,7 @@ void VrokMain::on_btnSpec_clicked()
         delete vw;
     vw = new VSWidget(dockManager,vz);
     vw->registerUi();
-   // this->addDockWidget(Qt::BottomDockWidgetArea,vw);
 
-
-   // dockManager.tabify();
-    /*
-    if (vp->isEffectActive((VPEffectPlugin *)eq)){
-        if (ui->btnSpec->isChecked())
-            tx.start();
-        else
-            tx.stop();
-    }
-*/
 }
 VrokMain::~VrokMain()
 {
