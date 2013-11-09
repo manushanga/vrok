@@ -17,8 +17,7 @@ class VDisplay : public QWidget
 
 public:
 
-    enum vis_t{SCOPE, SPECTRUM};
-    VDisplay(vis_t vis_type, float *data,QWidget *parent=0) :
+    VDisplay(VPEffectPluginVis::vis_t vis_type, float *data,QWidget *parent=0) :
         QWidget(parent),
         bars(data),
         type(vis_type),
@@ -30,6 +29,7 @@ public:
         setAttribute(Qt::WA_OpaquePaintEvent, true);
         setAttribute(Qt::WA_NoSystemBackground, true);
     }
+    void setType(VPEffectPluginVis::vis_t  vis_type){ type = vis_type; }
     void resizeEvent(QResizeEvent *e);
     void paintEvent(QPaintEvent *e);
     void mouseDoubleClickEvent(QMouseEvent *e);
@@ -37,7 +37,7 @@ public:
 signals:
     void doubleClicked();
 private:
-    vis_t type;
+    VPEffectPluginVis::vis_t  type;
     QImage *ii;
     float *bars;
     float padw, padh;
@@ -53,6 +53,7 @@ public slots:
     void process();
     void dispDoubleClicked();
 private:
+    VPEffectPluginVis::vis_t type;
     VDisplay disp;
     VPEffectPluginVis *plugin;
     QTimer q;

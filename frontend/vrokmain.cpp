@@ -480,8 +480,12 @@ void VrokMain::actionQueueTriggered()
 void VrokMain::actionQueueRemove()
 {
     QModelIndexList selected=ui->lvQueue->selectionModel()->selectedIndexes();
+
     if (selected.size()  > 0) {
-        queueModel.removeRows(selected.first().row(),selected.size());
+        int rows=selected.size();
+        if (rows> queueModel.rowCount())
+            rows /= 2;
+        queueModel.removeRows(selected.first().row(),rows);
     }
 }
 

@@ -5,8 +5,9 @@
 
 class VPEffectPluginVis : public VPEffectPlugin
 {
-private:
+public:
     enum vis_t{SCOPE, SPECTRUM};
+private:
     float *bars;
     int *ip;
     float *w;
@@ -14,13 +15,14 @@ private:
     VPBuffer *bin;
 public:
 
+
     bool wstate;
 
     VPEffectPluginVis();
     inline float *getBars(){ return bars; }
     int init(VPlayer *v, VPBuffer *in, VPBuffer **out) ;
     void process(float *buffer) ;
-    void toggleType() { if (type == SPECTRUM) type = SCOPE; else type=SPECTRUM; }
+    void setType(vis_t t) { type=t; }
     void statusChange(VPStatus status) {status;}
     void minimized(bool state) { wstate = state; }
     int finit() ;
