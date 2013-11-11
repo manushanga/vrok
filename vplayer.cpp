@@ -248,6 +248,7 @@ int VPlayer::open(const char *url)
 
     if (!playWorker){
         playWorker = new std::thread((void(*)(void*))VPlayer::playWork, this);
+        playWorker->high_priority();
         paused = false;
         DBG("make play worker");    
     }

@@ -71,7 +71,7 @@ HEADERS  += \
     frontend/vrokmain.h \
     frontend/eqwidget.h \
     effects/shibatch/paramlist.hpp \
-    effects/eq.h \
+    effects/shibatch/eq.h \
     players/flac.h \
     players/mpeg.h \
     players/ogg.h
@@ -146,19 +146,24 @@ Ao {
     SOURCES += outs/ao.cpp
 }
 
-QMAKE_CXXFLAGS += /TP
-debug {
-QMAKE_CXXFLAGS += /INCREMENTAL
-}
-release {
-QMAKE_CXXFLAGS += /Ox
-}
 INCLUDEPATH += ./libs/include \
                ./libs/include/libmpg123 \
                .
-LIBS    += -L"C:/Users/madura/Desktop/vrok-master/libs/static/release"
+
 LIBS     += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -llibvorbis -llibogg
 LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
+
+QMAKE_CXXFLAGS += /TP
+debug {
+LIBS    += -L"C:/src/vrok/libs/static/debug"
+LIBS    += msvcrtd.lib
+QMAKE_LFLAGS += /INCREMENTAL
+}
+release {
+LIBS    += -L"C:/src/vrok/libs/static/release"
+QMAKE_LFLAGS += /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRTD
+QMAKE_CXXFLAGS +=  /Ox /fp:fast
+}
 
 }
 
@@ -190,5 +195,5 @@ HEADERS += \
 FORMS += \
     frontend/vswidget.ui
 
-
-
+RC_FILE += \
+    vrok.rc

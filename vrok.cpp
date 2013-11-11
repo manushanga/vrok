@@ -23,7 +23,7 @@ VPOutFactory::VPOutFactory()
     currentOut = "Dummy";
 #elif defined(VPOUT_DSOUND)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*8};
+    { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*16};
     creators.insert(std::pair<std::string, vpout_entry_t> ("DSound",def));
     currentOut = "DSound";
 #elif defined(VPOUT_ALSA)

@@ -5,7 +5,6 @@ VPEffectPluginVis::VPEffectPluginVis() : type(SCOPE), bars(NULL), wstate(false)
 {
 }
 
-
 int VPEffectPluginVis::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 {
     bin = in;

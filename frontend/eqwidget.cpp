@@ -12,7 +12,7 @@ EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) 
     ui->setupUi(this);
 
     target_sliders[0] = new QSlider();
-    target_sliders[0]->setMaximum(64);
+    target_sliders[0]->setMaximum(200);
     target_sliders[0]->setMinimum(0);
     target_sliders[0]->setValue(plugin->getPreamp());
     target_sliders[0]->setProperty("index",QVariant(0));
@@ -73,7 +73,7 @@ EQWidget::~EQWidget()
 
 void EQWidget::on_pbReset_clicked()
 {
-    target_sliders[0]->setValue(32);
+    target_sliders[0]->setValue(200);
     for (int i=0;i<18;i++){
         target_sliders[i+1]->setValue(48);
 //        plugin->setTargetBand(i,pow(10,48/-20.0)) ;
@@ -102,7 +102,7 @@ void EQWidget::on_pbLoad_clicked()
             ts>>x;
             target_sliders[i]->setValue( (1.0f+x/20.0f)*48 );
         }
-        target_sliders[0]->setValue(32);
+        target_sliders[0]->setValue(100);
         f.close();
     }
 }

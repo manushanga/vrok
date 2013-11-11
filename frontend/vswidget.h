@@ -17,9 +17,9 @@ class VDisplay : public QWidget
 
 public:
 
-    VDisplay(VPEffectPluginVis::vis_t vis_type, float *data,QWidget *parent=0) :
+    VDisplay(VPEffectPluginVis::vis_t vis_type, VPEffectPluginVis *eff, QWidget *parent=0) :
         QWidget(parent),
-        bars(data),
+        plugin(eff),
         type(vis_type),
         ii(new QImage(width(),height(),QImage::Format_ARGB32))
     {
@@ -39,7 +39,7 @@ signals:
 private:
     VPEffectPluginVis::vis_t  type;
     QImage *ii;
-    float *bars;
+    VPEffectPluginVis *plugin;
     float padw, padh;
 };
 class VSWidget : public ManagedDockWidget

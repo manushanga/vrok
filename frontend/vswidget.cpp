@@ -8,7 +8,7 @@ VSWidget::VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent
     ManagedDockWidget(manager, this, parent),
     plugin(vis),
     type(VPEffectPluginVis::SCOPE),
-    disp(VPEffectPluginVis::SCOPE,vis->getBars()),
+    disp(VPEffectPluginVis::SCOPE,vis),
     ui(new Ui::VSWidget)
 {
     ui->setupUi(this);
@@ -56,9 +56,15 @@ void VDisplay::resizeEvent(QResizeEvent *e)
 
 void VDisplay::paintEvent(QPaintEvent *e)
 {
+    float *bars=plugin->getBars();
     QPainter pp(this);
-    int x=(VPBUFFER_FRAMES /(4*VPBUFFER_PERIOD))*8;
     pp.fillRect(e->rect(),QColor(255,255,255));
+    if (!bars){
+        pp.end();
+        return;
+    }
+    int x=(VPBUFFER_FRAMES /(4*VPBUFFER_PERIOD))*8;
+
     if (type == VPEffectPluginVis::SCOPE) {
         for (int i=0,j=0;i<(VPBUFFER_FRAMES-x);i+=x,j+=2){
             pp.drawLine(padw +j,padh+bars[i]*50,padw+ j+2,padh+bars[i+x]*50);
