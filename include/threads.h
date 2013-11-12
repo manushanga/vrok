@@ -112,7 +112,6 @@ public:
 #include <iostream>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <linux/futex.h>
 #include <sys/syscall.h>
 #define SPIN_MAX 10000
 
@@ -175,56 +174,56 @@ public:
 class shared_mutex
 {
 private:
-    pthread_mutex_t mMutex;
-    pthread_cond_t mCond;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
 
     bool signal;
 public:
     shared_mutex():
         signal(true)
     {
-        pthread_mutex_init(&mMutex,NULL);
-        pthread_cond_init(&mCond,NULL);
+        pthread_mutex_init(&mutex,NULL);
+        pthread_cond_init(&cond,NULL);
 
     }
 
     ~shared_mutex()
     {
-        pthread_mutex_destroy(&mMutex);
-        pthread_cond_destroy(&mCond);
+        pthread_mutex_destroy(&mutex);
+        pthread_cond_destroy(&cond);
 
     }
 
     inline void lock()
     {
-        pthread_mutex_lock(&mMutex);
+        pthread_mutex_lock(&mutex);
         while (!signal)
-            pthread_cond_wait(&mCond,&mMutex);
+            pthread_cond_wait(&cond,&mutex);
         signal=false;
-        pthread_mutex_unlock(&mMutex);
+        pthread_mutex_unlock(&mutex);
 
     }
 
     inline void unlock()
     {
-        pthread_mutex_lock(&mMutex);
+        pthread_mutex_lock(&mutex);
 
         if (!signal){
-            pthread_cond_signal(&mCond);
+            pthread_cond_signal(&cond);
         }
         signal=true;
-        pthread_mutex_unlock(&mMutex);
+        pthread_mutex_unlock(&mutex);
 
     }
     inline bool try_lock()
     {
-        pthread_mutex_lock(&mMutex);
+        pthread_mutex_lock(&mutex);
         if (signal) {
             signal=false;
-            pthread_mutex_unlock(&mMutex);
+            pthread_mutex_unlock(&mutex);
             return true;
         } else {
-            pthread_mutex_unlock(&mMutex);
+            pthread_mutex_unlock(&mutex);
             return false;
         }
     }

@@ -82,6 +82,9 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
     //  return ok
 
 
+    if (!ATOMIC_CAS(&self->work,false,false))
+        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+
 
     if (ATOMIC_CAS(&selfp->seek_to,SEEK_MAX,SEEK_MAX) != SEEK_MAX ){
         uint64_t p= selfp->seek_to;
@@ -89,9 +92,6 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
         FLAC__stream_decoder_seek_absolute(selfp->decoder, (FLAC__uint64)p);
         return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
     }
-
-    if (!ATOMIC_CAS(&self->work,false,false))
-        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
     if (selfp->buffer_write+frame->header.blocksize*selfp->bout->chans + 1 < VPBUFFER_FRAMES*selfp->bout->chans){
         size_t i=0,j=0;

@@ -63,13 +63,7 @@ public:
         sb_bands[i]=(val);
         target[i]=(val);
         knowledge[i]=0.99f;
-        mids[i]=(val);
-        float next=knowledge[i]*mids[i]*0.6f + sb_bands[i]*0.4f;
-        if (next<target[i] && next>target[i]-3.0f){
-            sb_bands[i] = next;
-        } else {
-            knowledge[i]*=0.5f;
-        }
+
         sched_recalc=true;
     }
     inline void setBand(int i, float val) { sb_bands[i]=(val); sched_recalc=true; }
