@@ -38,7 +38,8 @@ void VPEffectPluginVis::process(float *buffer)
 
 int VPEffectPluginVis::finit()
 {
-  //  delete bars;
+    if (bars)
+        delete bars;
     return 0;
 }
 

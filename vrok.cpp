@@ -16,9 +16,11 @@ VPOutFactory::VPOutFactory()
 {
 
     // NOTE: Keep buffer sizes 2^n for FFT
+    // TODO: Resolve visualization needing PERIOD*4 frames better to have full
+    //       freedom here
 #if defined(VPOUT_DUMMY)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginDummy::VPOutPluginDummy_new, VPBUFFER_PERIOD };
+    { (vpout_creator_t)VPOutPluginDummy::VPOutPluginDummy_new, VPBUFFER_PERIOD*4 };
     creators.insert(std::pair<std::string, vpout_entry_t> ("Dummy",def));
     currentOut = "Dummy";
 #elif defined(VPOUT_DSOUND)
@@ -33,12 +35,12 @@ VPOutFactory::VPOutFactory()
     currentOut = "ALSA";
 #elif defined(VPOUT_PULSE)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginPulse::VPOutPluginPulse_new, VPBUFFER_PERIOD };
+    { (vpout_creator_t)VPOutPluginPulse::VPOutPluginPulse_new, VPBUFFER_PERIOD*4 };
     creators.insert(std::pair<std::string, vpout_entry_t> ("PulseAudio",def));
     currentOut = "PulseAudio";
 #elif defined(VPOUT_AO)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginAO::VPOutPluginAO_new, VPBUFFER_PERIOD };
+    { (vpout_creator_t)VPOutPluginAO::VPOutPluginAO_new, VPBUFFER_PERIOD*4 };
     creators.insert(std::pair<std::string, vpout_entry_t> ("AO",def));
     currentOut = "AO";
 #endif

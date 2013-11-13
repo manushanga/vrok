@@ -12,7 +12,7 @@
 
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
-    sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",32.0f);
+    sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",64.0f);
     sb_paramsroot = NULL;
     sched_recalc = false;
     owner=NULL;
