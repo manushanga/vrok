@@ -6,7 +6,7 @@
 #include "players/flac.h"
 #include "players/mpeg.h"
 #include "players/ogg.h"
-#include "effects/eq.h"
+#include "effects/shibatch/eq.h"
 
 char **gargv;
 int gargc;

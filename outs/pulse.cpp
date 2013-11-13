@@ -78,7 +78,7 @@ int VPOutPluginPulse::init(VPlayer *v, VPBuffer *in)
     pa_sample_spec ss;
     ss.channels = in->chans;
     ss.rate = in->srate;
-    ss.format = PA_SAMPLE_float32LE;
+    ss.format = PA_SAMPLE_FLOAT32LE;
     handle = pa_simple_new(NULL,"Vrok",PA_STREAM_PLAYBACK,NULL,"Music",(const pa_sample_spec *)&ss,NULL,NULL,&error);
     if (!handle){
         DBG("Pulse:init: failed to open pcm");

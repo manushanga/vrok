@@ -175,7 +175,6 @@ SOURCES += \
     vrok.cpp \
     settings.cpp \
     frontend/playlistfactory.cpp \
-    frontend/displayticker.cpp \
     frontend/folderseeker.cpp \
     frontend/vswidget.cpp \
     frontend/dockmanager.cpp \
