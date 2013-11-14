@@ -212,6 +212,13 @@ void VPlayer::getSupportedFileTypeExtensions(std::vector<std::string>& exts)
 {
     VPDecoderFactory::getSingleton()->getExtensionsList(exts);
 }
+
+void VPlayer::uiStateChanged(VPWindowState state)
+{
+    for (int i=0;i<dspCount;i++){
+        dsp[i].eff->minimized(state == VPMINIMIZED);
+    }
+}
 int VPlayer::open(const char *url)
 {
 

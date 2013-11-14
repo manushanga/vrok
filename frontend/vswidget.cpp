@@ -7,25 +7,27 @@
 VSWidget::VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent) :
     ManagedDockWidget(manager, this, parent),
     plugin(vis),
-    type(VPEffectPluginVis::SCOPE),
-    disp(VPEffectPluginVis::SCOPE,vis),
+    disp(vis),
     ui(new Ui::VSWidget)
 {
     ui->setupUi(this);
 
-    plugin->setType(type);
-
     ui->verticalLayout->addWidget(&disp);
     connect(&q,SIGNAL(timeout()),this,SLOT(process()));
     connect(&disp,SIGNAL(doubleClicked()),this,SLOT(dispDoubleClicked()));
+    plugin->minimized(false);
+
     q.setSingleShot(false);
-    q.setInterval(40);
+    q.setInterval(50);
     q.start();
 }
 
 VSWidget::~VSWidget()
 {
     q.stop();
+
+    plugin->minimized(true);
+
     delete ui;
 }
 
@@ -38,54 +40,79 @@ void VSWidget::process()
 
 void VSWidget::dispDoubleClicked()
 {
-    if (type == VPEffectPluginVis::SPECTRUM)
-        type = VPEffectPluginVis::SCOPE;
+    if (plugin->getType() == VPEffectPluginVis::SPECTRUM)
+        plugin->setType(VPEffectPluginVis::SCOPE);
     else
-        type = VPEffectPluginVis::SPECTRUM;
+        plugin->setType(VPEffectPluginVis::SPECTRUM);
 
-    plugin->setType(type);
-    disp.setType(type);
 }
 
 
 void VDisplay::resizeEvent(QResizeEvent *e)
 {
-    padw=width()/2.0 - VPBUFFER_PERIOD/2.0;
-    padh=height()/2.0;
+    padw=width()/2.0 - VISBUFFER_FRAMES/2;
+
+    if (plugin->getType() == VPEffectPluginVis::SCOPE) {
+        padh=height()/2.0;
+    } else  {
+        padh=height();
+    }
 }
 
 void VDisplay::paintEvent(QPaintEvent *e)
 {
-    float *bars=plugin->getBars();
+    ATOMIC_CAS(&plugin->filled,true,true);
+    float *pbars=plugin->getBars();
     QPainter pp(this);
     pp.fillRect(e->rect(),QColor(255,255,255));
-    if (!bars){
+    if (!pbars){
         pp.end();
         return;
     }
-    int x=(VPBUFFER_FRAMES /(4*VPBUFFER_PERIOD))*8;
+    register int x=(VPBUFFER_FRAMES /(4*VPBUFFER_PERIOD));
+    register int y=x*8;
+    register int z=current*VISBUFFER_FRAMES;
+    if (plugin->getType() == VPEffectPluginVis::SCOPE) {
+        for (register int i=0;i<(VISBUFFER_FRAMES)-1;i+=1){
+            pp.drawLine(padw +i*1,padh+pbars[i+z]*padh,padw+ i+1,padh+pbars[i+z+1]*padh);
 
-    if (type == VPEffectPluginVis::SCOPE) {
-        for (int i=0,j=0;i<(VPBUFFER_FRAMES-x);i+=x,j+=2){
-            pp.drawLine(padw +j,padh+bars[i]*50,padw+ j+2,padh+bars[i+x]*50);
         }
     } else {
-        float p=0.01f;
-        for (int i=0,j=0;i<(VPBUFFER_FRAMES-x);i+=x,j+=2){
-            pp.drawLine(padw +j,padh+bars[i]*log(p),padw+ j+2,padh+bars[i+x]*log(p));
-            p+=5.0f;
+        QPolygon a;
+
+        a.append(QPoint(padw,padh));
+        for (register int i=0;i<VISBUFFER_FRAMES;i++){
+            bars[i]=pbars[i+z];
         }
+        rdft(VISBUFFER_FRAMES,1,bars,ip,w);
+
+        register int j=0;
+
+        for (register int f=0;f<(VISBUFFER_FRAMES);f=f+1+f/115,j+=2){
+            bars_cumm[f]=(bars_cumm[f]+log10(1.0f+fabs(bars[f])))/2.0f;
+            a.append(QPoint(padw+j,padh*(1.0f-bars_cumm[f])));
+        }
+        pp.setBrush(*brush);
+        a.append(QPoint(padw+j,padh));
+        pp.drawPolygon(a);
     }
 
     pp.end();
+
+    current++;
+
+    if (current == subbuffers){
+        ATOMIC_CAS(&plugin->filled,true,false);
+        current=0;
+    }
 }
 
 void VDisplay::mouseDoubleClickEvent(QMouseEvent *e)
 {
-    if (type==VPEffectPluginVis::SPECTRUM)
-        type=VPEffectPluginVis::SCOPE;
-    else
-        type=VPEffectPluginVis::SPECTRUM;
-
     emit doubleClicked();
+    if (plugin->getType() == VPEffectPluginVis::SCOPE) {
+        padh=height()/2.0;
+    } else  {
+        padh=height();
+    }
 }

@@ -7,13 +7,10 @@ VPEffectPluginVis::VPEffectPluginVis() : type(SCOPE), bars(NULL), wstate(false)
 
 int VPEffectPluginVis::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 {
+    bars = new float[VPBUFFER_FRAMES];
     bin = in;
-    bars = new float[VPBUFFER_FRAMES*bin->chans];
-    ip= new int[int (sqrt(VPBUFFER_FRAMES*bin->chans/2.0f) ) +2];
-    ip[0]=0;
-    w = new float[VPBUFFER_FRAMES*bin->chans/2];
-    for (int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) { bars[i]=0.0f; }
     *out = in;
+    filled=false;
     return 0;
 }
 
@@ -22,18 +19,18 @@ void VPEffectPluginVis::process(float *buffer)
 
     if (wstate)
         return;
+    if (ATOMIC_CAS(&filled,true,true))
+        return;
 
-    memcpy(bars,buffer,sizeof(float)*VPBUFFER_FRAMES*bin->chans);
-    switch (type){
-    case SCOPE:
-        break;
-    case SPECTRUM:
-        rdft(VPBUFFER_FRAMES*bin->chans,1,bars,ip,w);
-        break;
-    default:
-        break;
+    for (int i=0;i<VPBUFFER_FRAMES;i++) {
+        float mid=0.0f;
+        for (int j=0;j<bin->chans;j++) {
+            mid = (mid + buffer[i*bin->chans + j])/2.0f;
+        }
+        bars[i]=mid;
     }
 
+    ATOMIC_CAS(&filled,false,true);
 }
 
 int VPEffectPluginVis::finit()

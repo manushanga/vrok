@@ -65,7 +65,12 @@ bool VrokMain::eventFilter(QObject *target, QEvent *event)
 {
 
     if (event->type() == QEvent::WindowStateChange) {
-        vz->minimized (windowState() == Qt::WindowMinimized);
+        if (windowState() == Qt::WindowMinimized) {
+            vp->uiStateChanged(VPMINIMIZED);
+        } else if (windowState() == Qt::WindowMaximized) {
+            vp->uiStateChanged(VPMAXIMIZED);
+        }
+
         return true;
     }
     if ( event->type() == QEvent::MouseButtonPress ){
@@ -401,10 +406,14 @@ void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 
 void VrokMain::on_btnEQ_clicked()
 {
-    if (ew)
+    if (ew) {
         delete ew;
-    ew = new EQWidget(dockManager,eq);
-    ew->registerUi();
+
+        ew = NULL;
+    } else {
+        ew = new EQWidget(dockManager,eq);
+        ew->registerUi();
+    }
 
 }
 void VrokMain::on_btnEQt_clicked()
@@ -419,10 +428,14 @@ void VrokMain::on_btnEQt_clicked()
 }
 void VrokMain::on_btnSpec_clicked()
 {
-    if (vw)
+    if (vw) {
         delete vw;
-    vw = new VSWidget(dockManager,vz);
-    vw->registerUi();
+
+        vw = NULL;
+    } else {
+        vw = new VSWidget(dockManager,vz);
+        vw->registerUi();
+    }
 
 }
 VrokMain::~VrokMain()

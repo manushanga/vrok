@@ -56,6 +56,12 @@ struct VPEffect {
     VPEffect(): eff(NULL), active(false), in(NULL), out(NULL) {}
 };
 
+enum VPWindowState {
+    VPMINIMIZED,
+    VPMAXIMIZED,
+    VPNORMAL
+};
+
 class VPlayer
 {
 private:
@@ -120,6 +126,7 @@ public:
     bool isPlaying();
     int getSupportedFileTypeCount();
     void getSupportedFileTypeExtensions(std::vector<std::string>& exts);
+    void uiStateChanged(VPWindowState state);
     ~VPlayer() ;
 };
 
