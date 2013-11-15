@@ -104,15 +104,16 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 
 void VPlayer::addEffect(VPEffectPlugin *eff)
 {
+
     control.lock();
     stop();
-
     dsp[dspCount].in = NULL;
     dsp[dspCount].out = NULL;
     dsp[dspCount].eff = eff;
     dsp[dspCount].active = true;
     dspCount++;
 
+    control.unlock();
     // we initialize DSP, this might be reinitialized if the srate and chans
     // are different in the new track, for this function this never happens
     if (currentTrack[0]!='\0') {
@@ -123,7 +124,6 @@ void VPlayer::addEffect(VPEffectPlugin *eff)
         open(copy);
     }
 
-    control.unlock();
 
 
 }
@@ -142,10 +142,11 @@ void VPlayer::removeEffect(VPEffectPlugin *eff)
     // STHAP!
     bool wasPlaying=active;
     DBG(wasPlaying);
+    DBG(dspCount);
     stop();
 
-    if (eff) {
-        if (eff == dsp[0].eff) {
+    if (eff && dspCount > 0) {
+        if (dspCount == 1 && eff == dsp[0].eff ) {
             memcpy(&bin,&bout,sizeof(VPBuffer));
             eff->finit();
             dspCount--;
@@ -154,12 +155,32 @@ void VPlayer::removeEffect(VPEffectPlugin *eff)
             eff->finit();
             dspCount--;
         } else {
+
+            DBG("dsp removed");
             for (int i=0;i<dspCount-1;i++){
                 if (dsp[i].eff==eff) {
                     eff->finit();
+
                     for (int j=i+1;j<dspCount-1;j++) {
                         memcpy(&dsp[j-1],&dsp[j],sizeof(VPBuffer));
                     }
+
+                    int k=0;
+
+                    VPBuffer *tmp;
+                    tmp=&bout;
+                    while (k<dspCount-1) {
+                        dsp[k].eff->finit();
+                        dsp[k].eff->init(this, tmp, &tmp);
+                        k++;
+                    }
+
+
+                    memcpy(&bin,tmp,sizeof(VPBuffer));
+                    delete vpout;
+
+                    vpout =VPOutFactory::getSingleton()->create();
+                    vpout->init(this,&bin);
                     dspCount--;
 
                     break;
@@ -168,17 +189,17 @@ void VPlayer::removeEffect(VPEffectPlugin *eff)
         }
     }
 
+
     // we initialize DSP, this might be reinitialized if the srate and chans
     // are different in the new track, for this function this never happens
     if (wasPlaying && currentTrack[0]!='\0') {
-        initializeEffects();
+        //initializeEffects();
 
         char copy[256];
         strcpy(copy,currentTrack);
         open(copy);
         announce(VP_STATUS_OPEN);
     }
-
 }
 void VPlayer::initializeEffects()
 {
@@ -380,9 +401,11 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
 
         bout.cursor = &bufferCursor;
 
-
         DBG("track chs: "<<bout.chans);
         DBG("track rate: "<<bout.srate);
+
+        // bout - source to first dsp, output of input plugin
+        // bin - source to vpout
 
         VPBuffer *tmp=&bout;
         DBG(dspCount);

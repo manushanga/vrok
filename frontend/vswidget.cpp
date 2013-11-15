@@ -18,7 +18,7 @@ VSWidget::VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent
     plugin->minimized(false);
 
     q.setSingleShot(false);
-    q.setInterval(50);
+    q.setInterval(40);
     q.start();
 }
 
@@ -64,6 +64,7 @@ void VDisplay::paintEvent(QPaintEvent *e)
     ATOMIC_CAS(&plugin->filled,true,true);
     float *pbars=plugin->getBars();
     QPainter pp(this);
+    pp.setRenderHints(QPainter::Antialiasing, true);
     pp.fillRect(e->rect(),QColor(255,255,255));
     if (!pbars){
         pp.end();

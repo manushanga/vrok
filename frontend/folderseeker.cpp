@@ -85,9 +85,14 @@ FolderSeeker::~FolderSeeker()
 
 void FolderSeeker::folderSeekSweep()
 {
+
+    // TODO: MSVC gets all weird with QString toStdString()
     DBG(currentPath.toStdString());
+    DBG("zz");
+
     QDirIterator iterator(currentPath, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories );
     QDirIterator iteratorSubRoot(currentPath,extensions, QDir::NoDotAndDotDot | QDir::Files);
+
     if (iteratorSubRoot.hasNext())
         dirs.append(currentPath);
 
@@ -102,4 +107,5 @@ void FolderSeeker::folderSeekSweep()
        }
     }
     dirs.sort();
+
 }

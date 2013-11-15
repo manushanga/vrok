@@ -154,15 +154,17 @@ LIBS     += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -l
 LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
 
 QMAKE_CXXFLAGS += /TP
+
+
 debug {
 LIBS    += -L"C:/src/vrok/libs/static/debug"
 LIBS    += msvcrtd.lib
-QMAKE_LFLAGS += /INCREMENTAL
+QMAKE_LFLAGS += /MD /INCREMENTAL
 }
 release {
 LIBS    += -L"C:/src/vrok/libs/static/release"
-QMAKE_LFLAGS += /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRTD
-QMAKE_CXXFLAGS +=  /Ox /fp:fast
+QMAKE_CXXFLAGS += /Ox /fp:fast
+QMAKE_LFLAGS += /MD /INCREMENTAL /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRTD
 }
 
 }

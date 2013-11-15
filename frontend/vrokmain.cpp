@@ -335,8 +335,7 @@ void VrokMain::fillQueue()
         }
     } else if (contextMenuQueue[QA_FILLLIMITDIR]->isChecked()) {
         QStandardItemModel fileModel;
-        int j=0;
-        uint dbloom=0,drbloom;
+
         FolderSeeker::getSingleton()->getQueue(&fileModel, ui->sbFolderSeek->value());
 
         QSet<int> checker;
