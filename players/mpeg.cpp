@@ -86,7 +86,7 @@ int MPEGDecoder::open(const char *url)
         return -1;
     }
 
-    buffer = new short[VPBUFFER_FRAMES*channels];
+    buffer =(short *) ALIGNED_ALLOC(sizeof(short)*VPBUFFER_FRAMES*channels);
 
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
@@ -136,6 +136,6 @@ MPEGDecoder::~MPEGDecoder()
 
     fclose(fcurrent);
 
-    delete[] buffer;
+    ALIGNED_FREE(buffer);
 }
 

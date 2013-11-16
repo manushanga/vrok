@@ -125,9 +125,10 @@ void VrokMain::on_btnAbout_clicked()
              "<a href=\"http://mega-nerd.com/SRC/\">libsamplerate</a>: Samplerate convertor(ALSA only)<br/>"
              "<a href=\"http://pulseaudio.org\">libpulse-simple</a>: PulseAudio Synchronous API<br/>"
              "<a href=\"http://msdn.microsoft.com/en-us/library/windows/desktop/ee416960%28v=vs.85%29.aspx\">DSound</a>: Windows sound output<br/>"
+             "<a href=\"http://xiph.org/ao/\">libao</a>: Audio Output on supported systems<br/>"
              "<br/>Decoders<br/>"
              "<a href=\"http://flac.sourceforge.net/\">libFLAC</a>: FLAC Decoder<br/>"
-             "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>: OGG Vorbis Decoder<br/>"
+             "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>, <a href=\"http://xiph.org/ogg/\">libogg</a>: OGG Vorbis Decoder<br/>"
              "<a href=\"http://www.mpg123.de/\">libmpg123</a>: MPEG Layer 1,2,3 Decoder<br/>"
              "<br/>DSP<br/>"
              "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br/>"
@@ -242,8 +243,8 @@ VrokMain::VrokMain(QWidget *parent) :
     connect(&tpos,SIGNAL(timeout()),this,SLOT(positionTick()));
 
     lblDisplay->setText(" *smoke* ... V r o k ... *some more smoke* ");
-    // temp stuff until settings are written
-    contextMenuQueue[QA_FILLRAN]->setChecked(true);
+    int sel=VSettings::getSingleton()->readInt("queue_menu", QA_FILLLIMITDIR);
+    contextMenuQueue[sel]->setChecked(true);
 
 }
 void VrokMain::startFillTimer()
@@ -364,14 +365,15 @@ void VrokMain::fillQueue()
 }
 
 
-void VrokMain::on_btnPause_clicked()
-{
-    vp->pause();
-}
 void VrokMain::on_btnPlay_clicked()
 {
-    vp->play();
+    if (vp->isPlaying()){
+        vp->pause();
 
+    } else {
+        vp->play();
+
+    }
 }
 
 void VrokMain::on_btnOpenDir_clicked()

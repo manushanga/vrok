@@ -39,30 +39,22 @@ private:
     SuperEqState sb_state;
     float sb_preamp;
     void *sb_paramsroot;
-    float sb_bands[BAR_COUNT];// __attribute__ ((aligned(16)));
-    float target[BAR_COUNT] ;//__attribute__ ((aligned(16)));
+    float sb_bands[BAR_COUNT] ALIGNAUTO; // __attribute__ ((aligned(16)));
+    float target[BAR_COUNT] ALIGNAUTO;//__attribute__ ((aligned(16)));
     bool sched_recalc;
-    float *trig[2][BAR_COUNT];// __attribute__ ((aligned(16)));
-    float mids[BAR_COUNT];// __attribute__ ((aligned(16)));
     float limit;
-    float knowledge[BAR_COUNT];// __attribute__ ((aligned(16)));
-    float freq_p[BAR_COUNT];
-    unsigned period_count;
     bool initd;
     void sb_recalc_table();
 public:
-    float *bar_array;
     VPEffectPluginEQ(float cap);
     void applyKnowledge();
     inline const char **getBandNames() const { return sb_bandnames; }
     inline const float *getBands() const { return sb_bands; }
     inline const float *getTargetBands() const {  return target; }
-    inline const float *getMids() const { return mids; }
     inline void setTargetBand(int i, float val) {
 
         sb_bands[i]=(val);
         target[i]=(val);
-        knowledge[i]=0.99f;
 
         sched_recalc=true;
     }

@@ -12,7 +12,7 @@
 
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
-    sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",64.0f);
+    sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",96.0f);
     sb_paramsroot = NULL;
     sched_recalc = false;
     owner=NULL;
@@ -23,22 +23,9 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     }
     memset(&sb_state, 0, sizeof(SuperEqState));
 
-    bar_array = NULL;
-    for (size_t i=0;i<BAR_COUNT;i++){
-        trig[0][i]=(float *)new float[VPBUFFER_PERIOD*sizeof(float)];
-        trig[1][i]=(float *)new float[VPBUFFER_PERIOD*sizeof(float)];
-    }
-
-    for (int i=0;i<BAR_COUNT;i++) {
-        std::string band("eqk");
-        band.append(std::to_string(i));
-        knowledge[i]=VSettings::getSingleton()->readfloat(band,1.0f);
-    }
-
     limit= cap;
     initd=false;
 
-    period_count = 0;
 }
 
 void VPEffectPluginEQ::statusChange(VPStatus status){
@@ -55,11 +42,6 @@ VPEffectPluginEQ::~VPEffectPluginEQ()
 {
     if (initd)
         finit();
-
-    for (size_t i=0;i<BAR_COUNT;i++){
-        delete[] trig[0][i];
-        delete[] trig[1][i];
-    }
 }
 void VPEffectPluginEQ::sb_recalc_table()
 {
@@ -81,15 +63,7 @@ void VPEffectPluginEQ::sb_recalc_table()
 int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 {
 
-    if (bar_array)
-        delete[] bar_array;
-    bar_array = new float[BAR_COUNT*BAR_SETS];
-
-    for (size_t i=0;i<BAR_COUNT*BAR_SETS;i++){
-        bar_array[i] = 0.0f;
-    }
     for (unsigned i=0;i<BAR_COUNT;i++){
-        mids[i] = 20.0f;
         sb_bands[i] = target[i];
     }
 
@@ -97,20 +71,6 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
     bin = in;
     bout = in;
     *out = in;
-
-    float fn=0.0f, fi;
-    for (size_t b=0;b<BAR_COUNT;b++){
-        // lets just ASSUME that our buffer frame count is 44100
-
-        fn = (2*freqs[b])/(bin->srate);
-        freq_p[b]=fn;
-
-        fi = PI*fn;
-        for (size_t i=0;i<VPBUFFER_PERIOD;i++){
-            trig[0][b][i]=cosf(fi*i);
-            trig[1][b][i]=sinf(fi*i);
-        }
-    }
 
     equ_init (&sb_state, 14, bin->chans);
     sb_recalc_table();
@@ -122,7 +82,7 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 void VPEffectPluginEQ::applyKnowledge()
 {
 
-    for (unsigned i=0;i<BAR_COUNT;i++){
+/*    for (unsigned i=0;i<BAR_COUNT;i++){
         float next=knowledge[i]*mids[i]*0.6f + sb_bands[i]*0.4f;
         if (next<target[i] && next>target[i]-3.0f){
             sb_bands[i] = next;
@@ -131,7 +91,7 @@ void VPEffectPluginEQ::applyKnowledge()
         }
     }
     sched_recalc=true;
-
+*/
 }
 void VPEffectPluginEQ::process(float *buffer)
 {
@@ -197,11 +157,7 @@ int VPEffectPluginEQ::finit()
         band.append(std::to_string(i));
         VSettings::getSingleton()->writefloat(band,target[i]);
     }
-    for (int i=0;i<BAR_COUNT;i++) {
-        std::string band("eqk");
-        band.append(std::to_string(i));
-        VSettings::getSingleton()->writefloat(band,knowledge[i]);
-    }
+
     VSettings::getSingleton()->writefloat("eqpre",sb_preamp);
 
     equ_quit(&sb_state);
@@ -210,10 +166,6 @@ int VPEffectPluginEQ::finit()
     if (sb_paramsroot)
         paramlist_free (sb_paramsroot);
     sb_paramsroot = NULL;
-
-    if (bar_array)
-        delete[] bar_array;
-    bar_array = NULL;
 
     initd = false;
 

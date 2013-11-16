@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>676</width>
+    <width>660</width>
     <height>452</height>
    </rect>
   </property>
@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,1,1,1,1,1">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,1,0,0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
       </property>
@@ -75,7 +75,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>90</width>
           <height>23</height>
          </size>
         </property>
@@ -86,7 +86,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Play </string>
+         <string>Play/Pause</string>
         </property>
         <property name="flat">
          <bool>false</bool>
@@ -94,27 +94,21 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnPause">
+       <widget class="QSlider" name="sbPosition">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>100</width>
-          <height>23</height>
-         </size>
+        <property name="maximum">
+         <number>1000</number>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>16777215</height>
-         </size>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <property name="text">
-         <string>Pause</string>
+        <property name="tickPosition">
+         <enum>QSlider::NoTicks</enum>
         </property>
        </widget>
       </item>
@@ -163,19 +157,6 @@
        </widget>
       </item>
      </layout>
-    </item>
-    <item>
-     <widget class="QSlider" name="sbPosition">
-      <property name="maximum">
-       <number>1000</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="tickPosition">
-       <enum>QSlider::NoTicks</enum>
-      </property>
-     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">

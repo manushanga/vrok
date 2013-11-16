@@ -33,7 +33,7 @@ int OGGDecoder::open(const char *url)
         return -1;
     }
 
-    buffer = new float[VPBUFFER_FRAMES*ov_info(&vf,0)->channels];
+    buffer = (float *) ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*ov_info(&vf,0)->channels);
     half_buffer_size = VPBUFFER_FRAMES*ov_info(&vf,0)->channels*sizeof(float);
 
     VPBuffer bin;
@@ -108,5 +108,5 @@ uint64_t OGGDecoder::getPosition()
 OGGDecoder::~OGGDecoder()
 {
     ov_clear(&vf);
-    delete[] buffer;
+    ALIGNED_FREE(buffer);
 }

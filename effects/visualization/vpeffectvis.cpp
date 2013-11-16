@@ -7,7 +7,7 @@ VPEffectPluginVis::VPEffectPluginVis() : type(SCOPE), bars(NULL), wstate(false)
 
 int VPEffectPluginVis::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 {
-    bars = new float[VPBUFFER_FRAMES];
+    bars = (float*) ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES);
     bin = in;
     *out = in;
     filled=false;
@@ -35,8 +35,7 @@ void VPEffectPluginVis::process(float *buffer)
 
 int VPEffectPluginVis::finit()
 {
-    if (bars)
-        delete bars;
+    ALIGNED_FREE(bars);
     return 0;
 }
 

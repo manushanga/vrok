@@ -55,7 +55,6 @@ public:
 
 public slots:
     void on_btnPlay_clicked();
-    void on_btnPause_clicked();
     void on_btnEQt_clicked();
     void on_btnSpec_clicked();
     void on_btnEQ_clicked();

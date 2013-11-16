@@ -28,7 +28,7 @@ void FLACDecoder::metadata_callback(const FLAC__StreamDecoder *decoder,
         me->to_fl = 2.0f/pow(2.0,metadata->data.stream_info.bits_per_sample*1.0);
 
         me->buffer_bytes = VPBUFFER_FRAMES*metadata->data.stream_info.channels*sizeof(float);
-        me->buffer = new float[VPBUFFER_FRAMES*metadata->data.stream_info.channels];
+        me->buffer = (float *) ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*metadata->data.stream_info.channels);
 
         VPBuffer bin;
         bin.srate = metadata->data.stream_info.sample_rate;
@@ -210,7 +210,7 @@ FLACDecoder::~FLACDecoder()
 {
     FLAC__stream_decoder_finish(decoder);
     FLAC__stream_decoder_delete(decoder);
-    delete[] buffer;
+    ALIGNED_FREE(buffer);
 }
 
 int FLACDecoder::open(const char *url)

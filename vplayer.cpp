@@ -363,8 +363,8 @@ VPlayer::~VPlayer()
         vpout=NULL;
     }
     if (bout.buffer[0]) {
-        delete[] bout.buffer[0];
-        delete[] bout.buffer[1];
+        ALIGNED_FREE(bout.buffer[0]);
+        ALIGNED_FREE(bout.buffer[1]);
     }
 }
 
@@ -380,9 +380,9 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         }
 
         if (bout.buffer[0]) {
-            delete[] bout.buffer[0];
+            ALIGNED_FREE(bout.buffer[0]);
             bout.buffer[0] = NULL;
-            delete[] bout.buffer[1];
+            ALIGNED_FREE(bout.buffer[1]);
             bout.buffer[1] = NULL;
         }
 
@@ -390,9 +390,11 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         DBG(VPBUFFER_FRAMES);
         assert(vpout);
 
-        outprop->buffer[0] = new float[VPBUFFER_FRAMES*outprop->chans];
-        outprop->buffer[1] = new float[VPBUFFER_FRAMES*outprop->chans];
+        outprop->buffer[0] = (float*)ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*outprop->chans);
+        outprop->buffer[1] = (float*)ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*outprop->chans);
         outprop->cursor = &bufferCursor;
+
+        assert(outprop->buffer[0] && outprop->buffer[1]);
 
         bout.chans = outprop->chans;
         bout.srate = outprop->srate;
