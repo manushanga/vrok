@@ -33,7 +33,7 @@ static const float freqs[] = { 55.0f, 77.0f, 110.0f, 156.0f, 220.0f, 311.0f, 440
                                1200.0f, 1800.0f, 2500.0f, 3500.0f, 5000.0f, 7000.0f, 10000.0f, 14000.0f,
                                20000.0f };
 
-class VPEffectPluginEQ : VPEffectPlugin {
+class VPEffectPluginEQ : public VPEffectPlugin {
 private:
     VPlayer *owner;
     SuperEqState sb_state;
