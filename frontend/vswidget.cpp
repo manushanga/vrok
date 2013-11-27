@@ -61,7 +61,7 @@ void VDisplay::resizeEvent(QResizeEvent *e)
 
 void VDisplay::paintEvent(QPaintEvent *e)
 {
-    ATOMIC_CAS(&plugin->filled,true,true);
+    //ATOMIC_CAS(&plugin->filled,true,true);
     float *pbars=plugin->getBars();
     QPainter pp(this);
     pp.setRenderHints(QPainter::Antialiasing, true);
@@ -70,8 +70,16 @@ void VDisplay::paintEvent(QPaintEvent *e)
         pp.end();
         return;
     }
-    register int x=(VPBUFFER_FRAMES /(4*VPBUFFER_PERIOD));
-    register int y=x*8;
+    pp.save();
+    pp.setBrush(Qt::red);
+    for (register int i=0;i<VISBUFFER_FRAMES;i++) {
+        if (pbars[i]>0.8f)
+        {
+            pp.drawRect(padw-12,height()-12,10,10);
+            break;
+        }
+    }
+    pp.restore();
     register int z=current*VISBUFFER_FRAMES;
     if (plugin->getType() == VPEffectPluginVis::SCOPE) {
         for (register int i=0;i<(VISBUFFER_FRAMES)-1;i+=1){
@@ -83,14 +91,36 @@ void VDisplay::paintEvent(QPaintEvent *e)
 
         a.append(QPoint(padw,padh));
         for (register int i=0;i<VISBUFFER_FRAMES;i++){
-            bars[i]=pbars[i+z];
+            bars[i]=(0.54-0.46*cos(i*(2*M_PI/VISBUFFER_FRAMES)))*(pbars[i+z]);
         }
         rdft(VISBUFFER_FRAMES,1,bars,ip,w);
-
         register int j=0;
+        /*
+        for (register int i=0;i<VISBUFFER_FRAMES;i++){
+            diff[i]=(log10(1.0f+fabs(bars[i])) - diff[i])/2.0f;
+            diff1[i]=(diff[i] - diff1[i])/2.0f;
+            diff2[i]=(diff1[i] - diff2[i])/2.0f;
+        }*/
+        /*
+        for (register int i=0;i<VISBUFFER_FRAMES;i++){
 
+        }
+        for (register int i=0;i<VISBUFFER_FRAMES;i++){
+            for (register int k=0;k<VISBUFFER_FRAMES;k++){
+                if (bins[i*VISBUFFER_FRAMES+k])
+                    pp.drawPoint(padw+j,2+i);
+                j+=2;
+            }
+
+            j=0;
+        }*/
         for (register int f=0;f<(VISBUFFER_FRAMES);f=f+1+f/115,j+=2){
+            QColor xx(int((fabs(diff1[f]))*255.0f)%254,0,0);
+            pp.setPen(xx);
+
             bars_cumm[f]=(bars_cumm[f]+log10(1.0f+fabs(bars[f])))/2.0f;
+            //bars_cumm[f]=(bars_cumm[f]+diff1[f])/2.0f;
+            //pp.drawPoint(QPoint(padw+j,padh*(1.0f-bars_cumm[f])-2.0f));
             a.append(QPoint(padw+j,padh*(1.0f-bars_cumm[f])));
         }
         pp.setBrush(*brush);
@@ -103,7 +133,7 @@ void VDisplay::paintEvent(QPaintEvent *e)
     current++;
 
     if (current == subbuffers){
-        ATOMIC_CAS(&plugin->filled,true,false);
+     //   ATOMIC_CAS(&plugin->filled,true,false);
         current=0;
     }
 }

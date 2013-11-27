@@ -19,8 +19,8 @@ void VPEffectPluginVis::process(float *buffer)
 
     if (wstate)
         return;
-    if (ATOMIC_CAS(&filled,true,true))
-        return;
+   // if (ATOMIC_CAS(&filled,true,true))
+   //     return;
 
     for (int i=0;i<VPBUFFER_FRAMES;i++) {
         float mid=0.0f;
@@ -30,7 +30,7 @@ void VPEffectPluginVis::process(float *buffer)
         bars[i]=mid;
     }
 
-    ATOMIC_CAS(&filled,false,true);
+   // ATOMIC_CAS(&filled,false,true);
 }
 
 int VPEffectPluginVis::finit()

@@ -13,6 +13,7 @@
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
     sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",96.0f);
+    autopreamp = (bool) VSettings::getSingleton()->readInt("autopreamp",0);
     sb_paramsroot = NULL;
     sched_recalc = false;
     owner=NULL;
@@ -22,7 +23,6 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
         target[i]=VSettings::getSingleton()->readfloat(band,pow(10,48.0f/-20));
     }
     memset(&sb_state, 0, sizeof(SuperEqState));
-
     limit= cap;
     initd=false;
 
@@ -47,13 +47,8 @@ void VPEffectPluginEQ::sb_recalc_table()
 {
     void *params = paramlist_alloc ();
 
-    float bands_copy[BAR_COUNT];
-    memcpy (bands_copy, sb_bands, sizeof (sb_bands));
-    for (int i = 0; i < BAR_COUNT; i++) {
-        bands_copy[i] *= sb_preamp;
-    }
 
-    equ_makeTable (&sb_state, bands_copy, params, bin->srate);
+    equ_makeTable (&sb_state, sb_bands, params, bin->srate);
     if (sb_paramsroot)
         paramlist_free (sb_paramsroot);
     sb_paramsroot = params;
@@ -103,6 +98,29 @@ void VPEffectPluginEQ::process(float *buffer)
     //assert(buffer == bin->buffer);
 
     equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, bin->chans);
+
+    if (autopreamp) {
+        bool ff=true, xx=true;
+        for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++){
+            float tmp=buffer[i]*sb_preamp;
+            if (tmp > 0.95f && sb_preamp > 32.0f) {
+                sb_preamp*=0.999f;
+                tmp*=0.999f;
+                ff=false;
+            }
+            if (tmp > 0.2f || tmp < -0.2f) {
+                xx=false;
+            }
+            buffer[i]=tmp;
+        }
+        if (ff && xx && sb_preamp < 64.0f) {
+            sb_preamp*=1.01f;
+        }
+    } else {
+        for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++){
+            buffer[i]*=sb_preamp;
+        }
+    }
 /*
     float mid,xre,xim,newb;
     unsigned step=0,chans=2,ichans;

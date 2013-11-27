@@ -161,13 +161,13 @@ VrokMain::VrokMain(QWidget *parent) :
     vz = new VPEffectPluginVis();
 
 
-
-
+    std::vector<VPEffectPlugin *> effects;
     if (VSettings::getSingleton()->readInt("eqon",1) ){
-        vp->addEffect((VPEffectPlugin *)eq);
+        effects.push_back(eq);
         ui->btnEQt->setChecked(true);
     }
-    vp->addEffect((VPEffectPlugin *)vz);
+    effects.push_back(vz);
+    vp->setEffectList(effects);
 
     tcb.setSingleShot(true);
     tcb.setInterval(0);
@@ -419,13 +419,16 @@ void VrokMain::on_btnEQ_clicked()
 }
 void VrokMain::on_btnEQt_clicked()
 {
+    std::vector<VPEffectPlugin *> effects;
     if (vp->isEffectActive((VPEffectPlugin *)eq)){
         VSettings::getSingleton()->writeInt("eqon",0);
-        vp->removeEffect((VPEffectPlugin *)eq);
     } else {
-        vp->addEffect((VPEffectPlugin *)eq);
+        effects.push_back(eq);
         VSettings::getSingleton()->writeInt("eqon",1);
     }
+    effects.push_back(vz);
+    vp->setEffectList(effects);
+
 }
 void VrokMain::on_btnSpec_clicked()
 {

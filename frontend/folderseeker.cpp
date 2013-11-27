@@ -86,7 +86,6 @@ FolderSeeker::~FolderSeeker()
 void FolderSeeker::folderSeekSweep()
 {
 
-    // TODO: MSVC gets all weird with QString toStdString()
     DBG(currentPath.toStdString());
     DBG("zz");
 

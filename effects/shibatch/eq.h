@@ -44,6 +44,7 @@ private:
     bool sched_recalc;
     float limit;
     bool initd;
+    bool autopreamp;
     void sb_recalc_table();
 public:
     VPEffectPluginEQ(float cap);
@@ -58,8 +59,10 @@ public:
 
         sched_recalc=true;
     }
+    inline void setAutoPreamp(bool yes){ autopreamp = yes; }
+    inline bool getAutoPreamp() { return autopreamp; }
     inline void setBand(int i, float val) { sb_bands[i]=(val); sched_recalc=true; }
-    inline void setPreamp(float val) { sb_preamp = val; sched_recalc=true; }
+    inline void setPreamp(float val) { sb_preamp = val; }
     inline float getPreamp() const { return sb_preamp; }
     inline unsigned getBarCount() const { return BAR_COUNT; }
     inline unsigned getBarSetCount() const { return BAR_SETS; }

@@ -50,7 +50,7 @@ EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) 
 
 
     }
-
+    ui->pbAuto->setChecked(plugin->getAutoPreamp());
 }
 
 void EQWidget::target_changed(int)
@@ -121,4 +121,10 @@ void EQWidget::on_pbSave_clicked()
         ts<<"\n";
         f.close();
     }
+}
+
+void EQWidget::on_pbAuto_toggled(bool checked)
+{
+    if (plugin)
+        plugin->setAutoPreamp(checked);
 }

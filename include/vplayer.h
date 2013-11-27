@@ -66,8 +66,8 @@ class VPlayer
 {
 private:
     next_track_cb_t nextTrackCallback;
-    VPEffect dsp[VP_MAX_EFFECTS];
-    int dspCount;
+    VPEffect effects[VP_MAX_EFFECTS];
+    int eff_count;
 
     bool active;
     void *nextCallbackUser;
@@ -120,9 +120,8 @@ public:
     float getVolume();
     void setPosition(float pos);
     float getPosition();
-    void addEffect(VPEffectPlugin *eff);
+    void setEffectList(std::vector<VPEffectPlugin *> list);
     bool isEffectActive(VPEffectPlugin *eff);
-    void removeEffect(VPEffectPlugin *eff);
     bool isPlaying();
     int getSupportedFileTypeCount();
     void getSupportedFileTypeExtensions(std::vector<std::string>& exts);
