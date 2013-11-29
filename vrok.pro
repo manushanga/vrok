@@ -183,7 +183,8 @@ SOURCES += \
     frontend/vswidget.cpp \
     frontend/dockmanager.cpp \
     effects/shibatch/equ.cpp \
-    effects/visualization/vpeffectvis.cpp
+    effects/visualization/vpeffectvis.cpp \
+    frontend/reverbwidget.cpp
 
 HEADERS += \
     frontend/playlistfactory.h \
@@ -193,10 +194,12 @@ HEADERS += \
     frontend/dockmanager.h \
     frontend/manageddockwidget.h \
     effects/shibatch/equ.h \
-    effects/visualization/vpeffectvis.h
+    effects/visualization/vpeffectvis.h \
+    frontend/reverbwidget.h
 
 FORMS += \
-    frontend/vswidget.ui
+    frontend/vswidget.ui \
+    frontend/reverbwidget.ui
 
 RC_FILE += \
     vrok.rc

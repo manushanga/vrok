@@ -18,6 +18,7 @@ FolderSeeker *FolderSeeker::getSingleton()
 
 FolderSeeker::FolderSeeker()
 {
+
 }
 
 void FolderSeeker::setExtensionList(QStringList _extensions)

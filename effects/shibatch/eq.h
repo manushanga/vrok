@@ -41,10 +41,16 @@ private:
     void *sb_paramsroot;
     float sb_bands[BAR_COUNT] ALIGNAUTO; // __attribute__ ((aligned(16)));
     float target[BAR_COUNT] ALIGNAUTO;//__attribute__ ((aligned(16)));
+    float *reverb_buffer;
     bool sched_recalc;
     float limit;
     bool initd;
     bool autopreamp;
+    int reverb_length;
+    int reverb_start;
+    int reverb_write;
+    int reverb_read,reverb_read_;
+    bool reverb_buffer_filled;
     void sb_recalc_table();
 public:
     VPEffectPluginEQ(float cap);

@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QStandardItemModel>
 #include <QString>
+#include <QThread>
 
 class FolderSeeker
 {
@@ -22,8 +23,10 @@ public:
         return currentPath;
     }
     ~FolderSeeker();
-
+public slots:
+    void work();
 private:
+    QThread th;
     void folderSeekSweep();
     QStringList extensions;
     QString currentPath;

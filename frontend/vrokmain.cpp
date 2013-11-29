@@ -570,3 +570,16 @@ void VrokMain::on_sbPosition_sliderReleased()
     if (vp->isPlaying())
         vp->setPosition(ui->sbPosition->value()/1000.0f);
 }
+
+void VrokMain::on_pbReverb_toggled(bool checked)
+{
+    if (rw) {
+        delete rw;
+
+        rw = NULL;
+    } else {
+        rw = new ReverbWidget(dockManager,vz);
+        rw->registerUi();
+    }
+
+}
