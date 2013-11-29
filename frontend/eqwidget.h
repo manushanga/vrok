@@ -31,12 +31,15 @@ private:
     QSlider *target_sliders[19];
     QWidget *empty;
     QLabel labelsBottom[19];
+    float preampHistory;
 public slots:
     void target_changed(int);
 private slots:
     void on_pbReset_clicked();
     void on_pbLoad_clicked();
     void on_pbSave_clicked();
+    void on_pbAuto_toggled(bool checked);
+
 };
 
 #endif // EQWIDGET_H

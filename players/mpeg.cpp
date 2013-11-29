@@ -20,17 +20,14 @@ VPDecoderPlugin* MPEGDecoder::VPDecoderMPEG_new(VPlayer *v)
     return (VPDecoderPlugin *)new MPEGDecoder(v);
 }
 
-MPEGDecoder::MPEGDecoder(VPlayer *v) : seek_to(SEEK_MAX)
+MPEGDecoder::MPEGDecoder(VPlayer *v) : seek_to(SEEK_MAX) ,buffer(NULL)
 {
     int err;
-
     owner = v;
     mpg123_init();
     if ((mh = mpg123_new(NULL, &err)) == NULL){
         DBG("init fail");
     }
-    buffer = NULL;
-
 }
 
 void MPEGDecoder::reader()
@@ -86,7 +83,7 @@ int MPEGDecoder::open(const char *url)
         return -1;
     }
 
-    buffer = new short[VPBUFFER_FRAMES*channels];
+    buffer =(short *) ALIGNED_ALLOC(sizeof(short)*VPBUFFER_FRAMES*channels);
 
     mpg123_format_none(mh);
     mpg123_format(mh, rate, channels, encoding);
@@ -136,6 +133,6 @@ MPEGDecoder::~MPEGDecoder()
 
     fclose(fcurrent);
 
-    delete[] buffer;
+    ALIGNED_FREE(buffer);
 }
 

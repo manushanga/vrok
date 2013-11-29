@@ -7,7 +7,7 @@ VPEffectPluginVis::VPEffectPluginVis() : type(SCOPE), bars(NULL), wstate(false)
 
 int VPEffectPluginVis::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 {
-    bars = new float[VPBUFFER_FRAMES];
+    bars = (float*) ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES);
     bin = in;
     *out = in;
     filled=false;
@@ -19,8 +19,8 @@ void VPEffectPluginVis::process(float *buffer)
 
     if (wstate)
         return;
-    if (ATOMIC_CAS(&filled,true,true))
-        return;
+   // if (ATOMIC_CAS(&filled,true,true))
+   //     return;
 
     for (int i=0;i<VPBUFFER_FRAMES;i++) {
         float mid=0.0f;
@@ -30,13 +30,12 @@ void VPEffectPluginVis::process(float *buffer)
         bars[i]=mid;
     }
 
-    ATOMIC_CAS(&filled,false,true);
+   // ATOMIC_CAS(&filled,false,true);
 }
 
 int VPEffectPluginVis::finit()
 {
-    if (bars)
-        delete bars;
+    ALIGNED_FREE(bars);
     return 0;
 }
 

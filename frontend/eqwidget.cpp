@@ -3,7 +3,7 @@
 #include <QFileDialog>
 #include <QPainter>
 #include <QTextStream>
-#define PREAMPMAX 128
+#define PREAMPMAX 192
 
 EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) :
     plugin(eq),
@@ -50,7 +50,7 @@ EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) 
 
 
     }
-
+    ui->pbAuto->setChecked(plugin->getAutoPreamp());
 }
 
 void EQWidget::target_changed(int)
@@ -121,4 +121,17 @@ void EQWidget::on_pbSave_clicked()
         ts<<"\n";
         f.close();
     }
+}
+
+void EQWidget::on_pbAuto_toggled(bool checked)
+{
+
+    if (checked) {
+        preampHistory = plugin->getPreamp();
+        plugin->setAutoPreamp(checked);
+    } else {
+        plugin->setAutoPreamp(checked);
+        plugin->setPreamp(preampHistory);
+    }
+
 }

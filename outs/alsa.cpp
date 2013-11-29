@@ -149,7 +149,8 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
 
     rd.src_ratio = (out_srate*1.0)/(in_srate*1.0);
     out_frames = (VPBUFFER_FRAMES*rd.src_ratio)*2;
-    out_buf = (float *)malloc(out_frames*sizeof(float)*bin->chans);
+    out_buf = (float *)ALIGNED_ALLOC(sizeof(float)*out_frames*bin->chans);
+
     DBG("target rate "<<out_srate);
     work = true;
     paused = false;
@@ -178,7 +179,7 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
 
     snd_pcm_close(handle);
 
-    free(out_buf);
+    ALIGNED_FREE(out_buf);
     src_delete(rs);
 
 }

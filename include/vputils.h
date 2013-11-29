@@ -9,17 +9,22 @@
 #ifndef VPUTILS_H
 #define VPUTILS_H
 #include <sstream>
+#include <cstdlib>
 #include "threads.h"
 
 #if __WORDSIZE == 64
 #define CPU64
+#define WORDSIZE 64
 #elif __WORDSIZE == 32
 #define CPU32
+#define WORDSIZE 32
 #else
 
-#ifdef _WIN64
+#if _WIN64
+#define WORDSIZE 64
 #define CPU64
-#elif defined(_WIN32)
+#elif _WIN32
+#define WORDSIZE 32
 #define CPU32
 #endif
 
@@ -27,14 +32,31 @@
 
 extern std::shared_mutex __m_console;
 
-#define DEBUG
-#if defined(_MSC_VER)
+// aligning
+#if defined(__GNUC__)
+#define ALIGNAUTO(x) x __attribute__((aligned(sizeof(void *)*2)))
+#define ALIGN(x,y) x __attribute__((aligned(y)))
+
+// x should be a multiple of sizeof(void *)*2, which is 16 or 8 in most known
+// systems; you are guaranteed that this holds if you allocate multiples of
+// VPBUFFER_FRAMES or VPBUFFER_PERIOD(==512)
+#define ALIGNED_ALLOC(x) aligned_alloc(sizeof(void *)*2, (x))
+#define ALIGNED_FREE(x) free(x)
+#elif _MSC_VER
+#define ALIGNAUTO(x) __declspec( align( 16 ) ) x
+#define ALIGN(x,y) __declspec( align( y ) ) x
+#define ALIGNED_ALLOC(x) _aligned_malloc((x),sizeof(void *)*2)
+#define ALIGNED_FREE(x) _aligned_free(x)
+#endif
+
+#if _MSC_VER
     #define FUNCTION_NAME __FUNCTION__
-#else
+#elif __GNUC__
     #define FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
 
-#ifdef DEBUG
+#define DEBUG 
+#if defined(DEBUG) || !defined(NDEBUG)
     #include <iostream>
     #define DBG(...) \
     __m_console.lock(); \
@@ -43,14 +65,27 @@ extern std::shared_mutex __m_console;
 #else
     #define DBG(...)
 #endif
+
+#if WIN32 || WIN64
+#include <WinUser.h>
+#include <sstream>
+#include <string>
+#define WARN(...)  \
+	{ \
+		std::stringstream ss; \
+		ss<<__VA_ARGS__; \
+		MessageBoxA(GetForegroundWindow(),ss.str().c_str(),"",MB_OK); \
+	}
+#else
 #define WARN(...) \
     __m_console.lock(); \
     std::cerr<<__VA_ARGS__<<std::endl; \
     __m_console.unlock();
 
+#endif
 
-#include <cstdio>
 #if defined(_WIN32) && defined(UNICODE)
+#include <cstdio>
 #include <winnls.h>
 inline FILE *fopenu(const char *path,const char *opt){
     DBG(path);

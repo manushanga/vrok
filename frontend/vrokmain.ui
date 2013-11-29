@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>676</width>
-    <height>452</height>
+    <width>630</width>
+    <height>365</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,1,1,1,1,1">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,1,0,0,0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
       </property>
@@ -27,6 +27,12 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>30</width>
+          <height>16777215</height>
+         </size>
         </property>
         <property name="text">
          <string>EQ</string>
@@ -47,6 +53,12 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Set EQ</string>
         </property>
@@ -59,6 +71,12 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>16777215</height>
+         </size>
         </property>
         <property name="text">
          <string>Open Dir</string>
@@ -75,7 +93,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>70</width>
           <height>23</height>
          </size>
         </property>
@@ -86,7 +104,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Play </string>
+         <string>Play/Pause</string>
         </property>
         <property name="flat">
          <bool>false</bool>
@@ -94,27 +112,21 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnPause">
+       <widget class="QSlider" name="sbPosition">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>100</width>
-          <height>23</height>
-         </size>
+        <property name="maximum">
+         <number>1000</number>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>16777215</height>
-         </size>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <property name="text">
-         <string>Pause</string>
+        <property name="tickPosition">
+         <enum>QSlider::NoTicks</enum>
         </property>
        </widget>
       </item>
@@ -128,7 +140,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>60</width>
           <height>23</height>
          </size>
         </property>
@@ -150,6 +162,28 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="pbReverb">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>23</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Reverb</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="btnAbout">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -157,25 +191,18 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>23</height>
+         </size>
+        </property>
         <property name="text">
          <string>About</string>
         </property>
        </widget>
       </item>
      </layout>
-    </item>
-    <item>
-     <widget class="QSlider" name="sbPosition">
-      <property name="maximum">
-       <number>1000</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="tickPosition">
-       <enum>QSlider::NoTicks</enum>
-      </property>
-     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">

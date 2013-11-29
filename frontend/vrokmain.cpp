@@ -26,7 +26,6 @@
 #include "players/flac.h"
 #include "players/mpeg.h"
 #include "players/ogg.h"
-#include "effects/shibatch/eq.h"
 
 #include "playlistfactory.h"
 
@@ -125,9 +124,10 @@ void VrokMain::on_btnAbout_clicked()
              "<a href=\"http://mega-nerd.com/SRC/\">libsamplerate</a>: Samplerate convertor(ALSA only)<br/>"
              "<a href=\"http://pulseaudio.org\">libpulse-simple</a>: PulseAudio Synchronous API<br/>"
              "<a href=\"http://msdn.microsoft.com/en-us/library/windows/desktop/ee416960%28v=vs.85%29.aspx\">DSound</a>: Windows sound output<br/>"
+             "<a href=\"http://xiph.org/ao/\">libao</a>: Audio Output on supported systems<br/>"
              "<br/>Decoders<br/>"
              "<a href=\"http://flac.sourceforge.net/\">libFLAC</a>: FLAC Decoder<br/>"
-             "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>: OGG Vorbis Decoder<br/>"
+             "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>, <a href=\"http://xiph.org/ogg/\">libogg</a>: OGG Vorbis Decoder<br/>"
              "<a href=\"http://www.mpg123.de/\">libmpg123</a>: MPEG Layer 1,2,3 Decoder<br/>"
              "<br/>DSP<br/>"
              "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br/>"
@@ -152,21 +152,23 @@ VrokMain::VrokMain(QWidget *parent) :
     vp=NULL;
     ew=NULL;
     vw=NULL;
+    rw=NULL;
 
     setWindowIcon(QIcon(":icon/vrok.png"));
 
     vp = new VPlayer(callback_next, this);
     eq = new VPEffectPluginEQ(100);
     vz = new VPEffectPluginVis();
+    rb = new VPEffectPluginReverb();
 
-
-
-
+    std::vector<VPEffectPlugin *> effects;
     if (VSettings::getSingleton()->readInt("eqon",1) ){
-        vp->addEffect((VPEffectPlugin *)eq);
+        effects.push_back(eq);
         ui->btnEQt->setChecked(true);
     }
-    vp->addEffect((VPEffectPlugin *)vz);
+    effects.push_back(vz);
+    effects.push_back(rb);
+    vp->setEffectList(effects);
 
     tcb.setSingleShot(true);
     tcb.setInterval(0);
@@ -242,8 +244,8 @@ VrokMain::VrokMain(QWidget *parent) :
     connect(&tpos,SIGNAL(timeout()),this,SLOT(positionTick()));
 
     lblDisplay->setText(" *smoke* ... V r o k ... *some more smoke* ");
-    // temp stuff until settings are written
-    contextMenuQueue[QA_FILLRAN]->setChecked(true);
+    int sel=VSettings::getSingleton()->readInt("queue_menu", QA_FILLLIMITDIR);
+    contextMenuQueue[sel]->setChecked(true);
 
 }
 void VrokMain::startFillTimer()
@@ -364,14 +366,15 @@ void VrokMain::fillQueue()
 }
 
 
-void VrokMain::on_btnPause_clicked()
-{
-    vp->pause();
-}
 void VrokMain::on_btnPlay_clicked()
 {
-    vp->play();
+    if (vp->isPlaying()){
+        vp->pause();
 
+    } else {
+        vp->play();
+
+    }
 }
 
 void VrokMain::on_btnOpenDir_clicked()
@@ -417,13 +420,16 @@ void VrokMain::on_btnEQ_clicked()
 }
 void VrokMain::on_btnEQt_clicked()
 {
+    std::vector<VPEffectPlugin *> effects;
     if (vp->isEffectActive((VPEffectPlugin *)eq)){
         VSettings::getSingleton()->writeInt("eqon",0);
-        vp->removeEffect((VPEffectPlugin *)eq);
     } else {
-        vp->addEffect((VPEffectPlugin *)eq);
+        effects.push_back(eq);
         VSettings::getSingleton()->writeInt("eqon",1);
     }
+    effects.push_back(vz);
+    vp->setEffectList(effects);
+
 }
 void VrokMain::on_btnSpec_clicked()
 {
@@ -565,3 +571,17 @@ void VrokMain::on_sbPosition_sliderReleased()
     if (vp->isPlaying())
         vp->setPosition(ui->sbPosition->value()/1000.0f);
 }
+
+void VrokMain::on_pbReverb_toggled(bool checked)
+{
+    if (rw) {
+        delete rw;
+
+        rw = NULL;
+    } else {
+        rw = new ReverbWidget(dockManager,rb);
+        rw->registerUi();
+    }
+
+}
+

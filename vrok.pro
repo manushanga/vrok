@@ -84,18 +84,6 @@ FORMS    += frontend/vrokmain.ui \
 OTHER_FILES += README.md \
     LICENSE
 
-QMAKE_CXXFLAGS_RELEASE += -Wall -O4 -msse4.2 -ffast-math
-
-linux-clang {
-    QMAKE_CXXFLAGS_DEBUG += -fno-omit-frame-pointer \
-                            -O2 #-pg
-    #QMAKE_LFLAGS_DEBUG += # -fsanitize=thread  #-pg
-}
-
-!linux-clang {
-    QMAKE_CXXFLAGS_DEBUG += -O0 #-pg
-    QMAKE_LFLAGS_DEBUG += -O0 #-pg
-}
 
 linux* {
 LIBS     += -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
@@ -128,9 +116,27 @@ Ao {
     SOURCES += outs/ao.cpp
 }
 
+linux-clang {
+    QMAKE_CXXFLAGS_RELEASE += -Wall -O4 -msse4.2 -ffast-math
+    QMAKE_CXXFLAGS_DEBUG += -fno-omit-frame-pointer \
+                            -O2 #-pg
+    #QMAKE_LFLAGS_DEBUG += # -fsanitize=thread  #-pg
+}
+
+linux-gcc {
+    QMAKE_CXXFLAGS_RELEASE += -Wall -O4 -msse4.2 -ffast-math
+}
+
+!linux-clang {
+    QMAKE_CXXFLAGS_DEBUG += -O0 #-pg
+    QMAKE_LFLAGS_DEBUG += -O0 #-pg
+}
+
 }
 
 win32* {
+
+DEFINES += _USE_MATH_DEFINES
 
 Dsound {
     LIBS += -lole32 -ldxguid -ldsound
@@ -155,18 +161,16 @@ LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut
 
 QMAKE_CXXFLAGS += /TP
 
-
 debug {
 LIBS    += -L"C:/src/vrok/libs/static/debug"
 LIBS    += msvcrtd.lib
-QMAKE_LFLAGS += /MD /INCREMENTAL
+QMAKE_LFLAGS = /INCREMENTAL
 }
 release {
 LIBS    += -L"C:/src/vrok/libs/static/release"
-QMAKE_CXXFLAGS += /Ox /fp:fast
-QMAKE_LFLAGS += /MD /INCREMENTAL /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRTD
+QMAKE_CXXFLAGS += /MD /GS /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
+QMAKE_LFLAGS = /INCREMENTAL /NODEFAULTLIB:"MSVCRTD" /NODEFAULTLIB:"LIBCMTD" /ALLOWISOLATION /TLBID:1 /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:QUEUE
 }
-
 }
 
 TRANSLATIONS += vrok_si.ts
@@ -181,7 +185,9 @@ SOURCES += \
     frontend/vswidget.cpp \
     frontend/dockmanager.cpp \
     effects/shibatch/equ.cpp \
-    effects/visualization/vpeffectvis.cpp
+    effects/visualization/vpeffectvis.cpp \
+    effects/reverb/reverb.cpp \
+    frontend/reverbwidget.cpp
 
 HEADERS += \
     frontend/playlistfactory.h \
@@ -191,10 +197,13 @@ HEADERS += \
     frontend/dockmanager.h \
     frontend/manageddockwidget.h \
     effects/shibatch/equ.h \
-    effects/visualization/vpeffectvis.h
+    effects/visualization/vpeffectvis.h \
+    effects/reverb/reverb.h \
+    frontend/reverbwidget.h
 
 FORMS += \
-    frontend/vswidget.ui
+    frontend/vswidget.ui \
+    frontend/reverbwidget.ui
 
 RC_FILE += \
     vrok.rc

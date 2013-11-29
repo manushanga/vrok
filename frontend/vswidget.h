@@ -25,7 +25,12 @@ public:
         plugin(eff),
         ii(new QImage(width(),height(),QImage::Format_ARGB32))
     {
-        bars = new float[VISBUFFER_FRAMES];
+        bars = (float*)ALIGNED_ALLOC(sizeof(float)*VISBUFFER_FRAMES);
+        diff = (float*)ALIGNED_ALLOC(sizeof(float)*VISBUFFER_FRAMES);
+        diff1 = (float*)ALIGNED_ALLOC(sizeof(float)*VISBUFFER_FRAMES);
+        diff2 = (float*)ALIGNED_ALLOC(sizeof(float)*VISBUFFER_FRAMES);
+        bins = (float*)ALIGNED_ALLOC(sizeof(float)*VISBUFFER_FRAMES*VISBUFFER_FRAMES);
+
         ip= new int[int (sqrt(VISBUFFER_FRAMES/2.0f) ) +2];
         ip[0]=0;
         w = new float[VISBUFFER_FRAMES/2];
@@ -40,7 +45,7 @@ public:
 
         brush = new QBrush(g);
         bars_cumm = new float[VISBUFFER_FRAMES];
-        for (int i=0;i<VISBUFFER_FRAMES;i++){ bars_cumm[i]=0.0f; }
+        for (int i=0;i<VISBUFFER_FRAMES;i++){ bars_cumm[i]=0.0f; diff[i]=0.0f; diff1[i]=0.0f; diff2[i]=0.0f; bins[i]=0.0f; }
         subbuffers = VPBUFFER_FRAMES / VISBUFFER_FRAMES;
         setBaseSize(100,100);
         ii->fill(QColor(255,255,255));
@@ -53,7 +58,9 @@ public:
     void resizeEvent(QResizeEvent *e);
     void paintEvent(QPaintEvent *e);
     void mouseDoubleClickEvent(QMouseEvent *e);
-    ~VDisplay(){ delete brush; delete ii; }
+    ~VDisplay(){ delete brush; delete ii;  ALIGNED_FREE(bars);
+                 ALIGNED_FREE(diff);  ALIGNED_FREE(diff1); ALIGNED_FREE(diff2);
+                 ALIGNED_FREE(bins); }
 signals:
     void doubleClicked();
 private:
@@ -61,7 +68,8 @@ private:
     int subbuffers;
     int current;
     QBrush *brush;
-    float *bars,*bars_cumm,*w;
+    //long *bins;
+    float *bars,*bars_cumm,*w,*diff,*diff1,*diff2,*bins;
     QImage *ii;
     VPEffectPluginVis *plugin;
     float padw, padh;

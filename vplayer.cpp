@@ -75,7 +75,7 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
     control.lock();
     nextCallbackUser = cb_user;
 
-    dspCount = 0;
+    eff_count = 0;
     playWorker = NULL;
     work=false;
     active=false;
@@ -102,16 +102,26 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 }
 
 
-void VPlayer::addEffect(VPEffectPlugin *eff)
+void VPlayer::setEffectList(std::vector<VPEffectPlugin *> list)
 {
 
     control.lock();
     stop();
-    dsp[dspCount].in = NULL;
-    dsp[dspCount].out = NULL;
-    dsp[dspCount].eff = eff;
-    dsp[dspCount].active = true;
-    dspCount++;
+    for (int i=0;i<eff_count;i++) {
+        effects[i].eff->finit();
+    }
+
+    if (list.size() > VP_MAX_EFFECTS) {
+        DBG("Too much effects!");
+        eff_count=0;
+        return;
+    }
+
+    eff_count=list.size();
+    for (int i=0;i<eff_count;i++) {
+        effects[i].eff = list[i];
+        effects[i].active = true;
+    }
 
     control.unlock();
     // we initialize DSP, this might be reinitialized if the srate and chans
@@ -124,92 +134,27 @@ void VPlayer::addEffect(VPEffectPlugin *eff)
         open(copy);
     }
 
-
-
 }
 bool VPlayer::isEffectActive(VPEffectPlugin *eff)
 {
     if (eff) {
-        for (int i=0;i<dspCount;i++){
-            if (dsp[i].eff==eff && dsp[i].active)
+        for (int i=0;i<eff_count;i++){
+            if (effects[i].eff==eff && effects[i].active)
                 return true;
         }
     }
     return false;
 }
-void VPlayer::removeEffect(VPEffectPlugin *eff)
-{
-    // STHAP!
-    bool wasPlaying=active;
-    DBG(wasPlaying);
-    DBG(dspCount);
-    stop();
 
-    if (eff && dspCount > 0) {
-        if (dspCount == 1 && eff == dsp[0].eff ) {
-            memcpy(&bin,&bout,sizeof(VPBuffer));
-            eff->finit();
-            dspCount--;
-        } else if (eff == dsp[dspCount-1].eff) {
-            memcpy(&bin,&dsp[dspCount-2].out,sizeof(VPBuffer));
-            eff->finit();
-            dspCount--;
-        } else {
-
-            DBG("dsp removed");
-            for (int i=0;i<dspCount-1;i++){
-                if (dsp[i].eff==eff) {
-                    eff->finit();
-
-                    for (int j=i+1;j<dspCount-1;j++) {
-                        memcpy(&dsp[j-1],&dsp[j],sizeof(VPBuffer));
-                    }
-
-                    int k=0;
-
-                    VPBuffer *tmp;
-                    tmp=&bout;
-                    while (k<dspCount-1) {
-                        dsp[k].eff->finit();
-                        dsp[k].eff->init(this, tmp, &tmp);
-                        k++;
-                    }
-
-
-                    memcpy(&bin,tmp,sizeof(VPBuffer));
-                    delete vpout;
-
-                    vpout =VPOutFactory::getSingleton()->create();
-                    vpout->init(this,&bin);
-                    dspCount--;
-
-                    break;
-                }
-            }
-        }
-    }
-
-
-    // we initialize DSP, this might be reinitialized if the srate and chans
-    // are different in the new track, for this function this never happens
-    if (wasPlaying && currentTrack[0]!='\0') {
-        //initializeEffects();
-
-        char copy[256];
-        strcpy(copy,currentTrack);
-        open(copy);
-        announce(VP_STATUS_OPEN);
-    }
-}
 void VPlayer::initializeEffects()
 {
     VPBuffer *tmp=&bout;
-    for (int i=0;i<dspCount;i++){
-        dsp[i].in = tmp;
-        dsp[i].eff->init(this, tmp, &tmp);
-        dsp[i].out = tmp;
-        if (!dsp[i].active){
-            dsp[i].eff->finit();
+    for (int i=0;i<eff_count;i++){
+        effects[i].in = tmp;
+        effects[i].eff->init(this, tmp, &tmp);
+        effects[i].out = tmp;
+        if (!effects[i].active){
+            effects[i].eff->finit();
         }
     }
     memcpy(&bin,tmp,sizeof(VPBuffer));
@@ -218,8 +163,8 @@ void VPlayer::initializeEffects()
 void VPlayer::announce(VPStatus status)
 {
     // pass status to all DSP plugins
-    for (int i=0;i<dspCount;i++){
-        dsp[i].eff->statusChange(status);
+    for (int i=0;i<eff_count;i++){
+        effects[i].eff->statusChange(status);
     }
 
 }
@@ -236,8 +181,8 @@ void VPlayer::getSupportedFileTypeExtensions(std::vector<std::string>& exts)
 
 void VPlayer::uiStateChanged(VPWindowState state)
 {
-    for (int i=0;i<dspCount;i++){
-        dsp[i].eff->minimized(state == VPMINIMIZED);
+    for (int i=0;i<eff_count;i++){
+        effects[i].eff->minimized(state == VPMINIMIZED);
     }
 }
 int VPlayer::open(const char *url)
@@ -351,10 +296,10 @@ VPlayer::~VPlayer()
     stop();
     control.unlock();
     // we do not free the effects plugins, their owners should free them
-    for (int i=0;i<dspCount;i++){
-        if (dsp[i].active){
-            dsp[i].active = false;
-            dsp[i].eff->finit();
+    for (int i=0;i<eff_count;i++){
+        if (effects[i].active){
+            effects[i].active = false;
+            effects[i].eff->finit();
         }
     }
 
@@ -363,8 +308,8 @@ VPlayer::~VPlayer()
         vpout=NULL;
     }
     if (bout.buffer[0]) {
-        delete[] bout.buffer[0];
-        delete[] bout.buffer[1];
+        ALIGNED_FREE(bout.buffer[0]);
+        ALIGNED_FREE(bout.buffer[1]);
     }
 }
 
@@ -380,9 +325,9 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         }
 
         if (bout.buffer[0]) {
-            delete[] bout.buffer[0];
+            ALIGNED_FREE(bout.buffer[0]);
             bout.buffer[0] = NULL;
-            delete[] bout.buffer[1];
+            ALIGNED_FREE(bout.buffer[1]);
             bout.buffer[1] = NULL;
         }
 
@@ -390,9 +335,11 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         DBG(VPBUFFER_FRAMES);
         assert(vpout);
 
-        outprop->buffer[0] = new float[VPBUFFER_FRAMES*outprop->chans];
-        outprop->buffer[1] = new float[VPBUFFER_FRAMES*outprop->chans];
+        outprop->buffer[0] = (float*)ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*outprop->chans);
+        outprop->buffer[1] = (float*)ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*outprop->chans);
         outprop->cursor = &bufferCursor;
+
+        assert(outprop->buffer[0] && outprop->buffer[1]);
 
         bout.chans = outprop->chans;
         bout.srate = outprop->srate;
@@ -408,13 +355,13 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         // bin - source to vpout
 
         VPBuffer *tmp=&bout;
-        DBG(dspCount);
-        for (int i=0;i<dspCount;i++){
-            dsp[i].in = tmp;
-            dsp[i].eff->init(this, tmp, &tmp);
-            dsp[i].out = tmp;
-            if (!dsp[i].active){
-                dsp[i].eff->finit();
+        DBG(eff_count);
+        for (int i=0;i<eff_count;i++){
+            effects[i].in = tmp;
+            effects[i].eff->init(this, tmp, &tmp);
+            effects[i].out = tmp;
+            if (!effects[i].active){
+                effects[i].eff->finit();
             }
         }
         memcpy(&bin,tmp,sizeof(VPBuffer));
@@ -461,9 +408,9 @@ float VPlayer::getPosition()
 void VPlayer::postProcess(float *buffer)
 {
     if (effectsActive){
-        for (int i=0;i<dspCount;i++){
-            if (dsp[i].active)
-                dsp[i].eff->process(buffer);
+        for (int i=0;i<eff_count;i++){
+            if (effects[i].active)
+                effects[i].eff->process(buffer);
         }
     }
 }

@@ -22,7 +22,6 @@ public:
     static VPDecoderPlugin* VPDecoderMPEG_new(VPlayer *v);
     mpg123_handle *mh;
     short *buffer;
-    VPlayer *owner;
     uint64_t seek_to;
 
     MPEGDecoder(VPlayer *v);
