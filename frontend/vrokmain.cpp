@@ -167,9 +167,7 @@ VrokMain::VrokMain(QWidget *parent) :
         ui->btnEQt->setChecked(true);
     }
     effects.push_back(vz);
-
     effects.push_back(rb);
-
     vp->setEffectList(effects);
 
     tcb.setSingleShot(true);
@@ -581,10 +579,9 @@ void VrokMain::on_pbReverb_toggled(bool checked)
 
         rw = NULL;
     } else {
-
         rw = new ReverbWidget(dockManager,rb);
-
         rw->registerUi();
     }
 
 }
+

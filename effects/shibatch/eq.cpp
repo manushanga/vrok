@@ -9,9 +9,11 @@
 #include <cstring>
 #include "vputils.h"
 #include "eq.h"
-
+#if defined(min) && defined(max)
 #define CLIP(x) max(min(x,1.0f),-1.0f)
-
+#else
+#define CLIP(x) std::max(std::min(x,1.0f),-1.0f)
+#endif
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
     sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",96.0f);

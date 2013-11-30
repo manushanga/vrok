@@ -133,4 +133,5 @@ void EQWidget::on_pbAuto_toggled(bool checked)
         plugin->setAutoPreamp(checked);
         plugin->setPreamp(preampHistory);
     }
+
 }

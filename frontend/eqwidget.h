@@ -39,6 +39,7 @@ private slots:
     void on_pbLoad_clicked();
     void on_pbSave_clicked();
     void on_pbAuto_toggled(bool checked);
+
 };
 
 #endif // EQWIDGET_H
