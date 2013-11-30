@@ -28,9 +28,7 @@
 void VPlayer::playWork(VPlayer *self)
 {
 
-#ifdef _WIN32
-    assert(_CrtCheckMemory());
-#endif
+
     self->vpout->wakeup();
     while (1) {
         self->vpdecode->reader();

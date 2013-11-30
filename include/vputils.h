@@ -55,8 +55,8 @@ extern std::shared_mutex __m_console;
     #define FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
 
-#define DEBUG 
-#if defined(DEBUG) || !defined(NDEBUG)
+#define DEBUG
+#if defined(DEBUG)
     #include <iostream>
     #define DBG(...) \
     __m_console.lock(); \

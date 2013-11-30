@@ -163,13 +163,11 @@ QMAKE_CXXFLAGS += /TP
 
 debug {
 LIBS    += -L"C:/src/vrok/libs/static/debug"
-LIBS    += msvcrtd.lib
-QMAKE_LFLAGS = /INCREMENTAL
 }
 release {
 LIBS    += -L"C:/src/vrok/libs/static/release"
-QMAKE_CXXFLAGS += /MD /GS /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
-QMAKE_LFLAGS = /INCREMENTAL /NODEFAULTLIB:"MSVCRTD" /NODEFAULTLIB:"LIBCMTD" /ALLOWISOLATION /TLBID:1 /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:QUEUE
+QMAKE_CXXFLAGS +=  /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
+QMAKE_LFLAGS += /NODEFAULTLIB:MSVCRTD
 }
 }
 
