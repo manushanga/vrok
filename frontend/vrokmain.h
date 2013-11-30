@@ -13,6 +13,7 @@
 #include "vplayer.h"
 #include "../effects/shibatch/eq.h"
 #include "../effects/visualization/vpeffectvis.h"
+#include "../effects/reverb/reverb.h"
 
 #include <QGraphicsScene>
 #include <QStringListModel>
@@ -34,6 +35,8 @@
 #include "folderseeker.h"
 #include "dockmanager.h"
 #include "vswidget.h"
+#include "reverbwidget.h"
+
 namespace Ui {
 class VrokMain;
 }
@@ -76,6 +79,9 @@ private slots:
     void on_tbQueues_currentChanged(int index);
     void on_sbPosition_sliderReleased();
 
+    void on_pbReverb_toggled(bool checked);
+
+
 private:
     void folderSeekSweep(QDir& root);
     // dock manager
@@ -95,6 +101,8 @@ private:
     VSWidget *vw;
     DisplayTicker *lblDisplay;
 
+    VPEffectPluginReverb *rb;
+    ReverbWidget *rw;
     unsigned vis_counter;
     float bar_vals[BAR_COUNT];
     bool visuals;

@@ -9,8 +9,9 @@
 #include <cstring>
 #include "vputils.h"
 #include "eq.h"
-#define CONV(x,y) (x+0.8*y)/1.8
-#define WRAPINC(x,max) (x+1) % max
+
+#define CLIP(x) max(min(x,1.0f),-1.0f)
+
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
     sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",96.0f);
@@ -26,8 +27,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     memset(&sb_state, 0, sizeof(SuperEqState));
     limit= cap;
     initd=false;
-    reverb_length=VPBUFFER_FRAMES;
-    reverb_start=VPBUFFER_FRAMES;
+
 }
 
 void VPEffectPluginEQ::statusChange(VPStatus status){
@@ -69,18 +69,10 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
     bout = in;
     *out = in;
 
-    reverb_buffer = (float*) ALIGNED_ALLOC(VPBUFFER_FRAMES*bin->chans*sizeof(float)*2);
-
-    for (int i=0;i<VPBUFFER_FRAMES*bin->chans*2;i++) { reverb_buffer[i] = 0.0f; }
-
     equ_init (&sb_state, 14, bin->chans);
     sb_recalc_table();
     initd = true;
 
-    reverb_read = 0;
-    reverb_read_ = 200*bin->chans;
-    reverb_write = 0;
-    reverb_buffer_filled=false;
     return 0;
 
 }
@@ -106,7 +98,6 @@ void VPEffectPluginEQ::process(float *buffer)
     }
 
     //assert(buffer == bin->buffer);
-    register int maxx=VPBUFFER_FRAMES*bin->chans*2;
 
     equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, bin->chans);
 
@@ -124,36 +115,23 @@ void VPEffectPluginEQ::process(float *buffer)
                 xx=false;
             }
             buffer[i]=tmp;
+
+			buffer[i]=CLIP(buffer[i]);
+
         }
         if (ff && xx && sb_preamp < 64.0f) {
             sb_preamp*=1.01f;
         }
+
     } else {
         for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++){
             buffer[i]*=sb_preamp;
+			buffer[i]=CLIP(buffer[i]);
+
         }
     }
 
 
-    for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) {
-        reverb_buffer[reverb_write]=buffer[i];
-        reverb_write=WRAPINC(reverb_write,maxx);
-        if (reverb_write == maxx - 1)
-            reverb_buffer_filled = true;
-    }
-    if (!reverb_buffer_filled) {
-
-        for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) {
-            buffer[i]=0.0f;
-        }
-    } else {
-        for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) {
-
-            buffer[i]=CONV(reverb_buffer[reverb_read],reverb_buffer[(reverb_read+1000)%maxx]);
-            buffer[i]=CONV(buffer[i],reverb_buffer[(reverb_read+500) % maxx]);
-            reverb_read=WRAPINC(reverb_read,maxx);
-        }
-    }
 /*
     float mid,xre,xim,newb;
     unsigned step=0,chans=2,ichans;
@@ -209,7 +187,6 @@ int VPEffectPluginEQ::finit()
         VSettings::getSingleton()->writefloat(band,target[i]);
     }
 
-    ALIGNED_FREE(reverb_buffer);
 
     VSettings::getSingleton()->writefloat("eqpre",sb_preamp);
 

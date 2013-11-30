@@ -1,6 +1,6 @@
 #include "vswidget.h"
 #include "ui_vswidget.h"
-
+#include <cmath>
 #include <QPaintEvent>
 #include <QPainter>
 

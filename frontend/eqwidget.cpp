@@ -125,6 +125,12 @@ void EQWidget::on_pbSave_clicked()
 
 void EQWidget::on_pbAuto_toggled(bool checked)
 {
-    if (plugin)
+
+    if (checked) {
+        preampHistory = plugin->getPreamp();
         plugin->setAutoPreamp(checked);
+    } else {
+        plugin->setAutoPreamp(checked);
+        plugin->setPreamp(preampHistory);
+    }
 }

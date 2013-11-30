@@ -15,6 +15,7 @@ class VPEffectPlugin
 {
 protected:
     VPBuffer *bin,*bout;
+	VPlayer *owner;
 public:
     virtual int init(VPlayer *v, VPBuffer *in, VPBuffer **out) = 0;
     virtual void process(float *buffer) = 0;

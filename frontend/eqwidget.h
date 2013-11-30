@@ -31,6 +31,7 @@ private:
     QSlider *target_sliders[19];
     QWidget *empty;
     QLabel labelsBottom[19];
+    float preampHistory;
 public slots:
     void target_changed(int);
 private slots:

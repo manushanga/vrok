@@ -20,17 +20,14 @@ VPDecoderPlugin* MPEGDecoder::VPDecoderMPEG_new(VPlayer *v)
     return (VPDecoderPlugin *)new MPEGDecoder(v);
 }
 
-MPEGDecoder::MPEGDecoder(VPlayer *v) : seek_to(SEEK_MAX)
+MPEGDecoder::MPEGDecoder(VPlayer *v) : seek_to(SEEK_MAX) ,buffer(NULL)
 {
     int err;
-
     owner = v;
     mpg123_init();
     if ((mh = mpg123_new(NULL, &err)) == NULL){
         DBG("init fail");
     }
-    buffer = NULL;
-
 }
 
 void MPEGDecoder::reader()

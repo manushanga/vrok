@@ -29,10 +29,10 @@ void FolderSeeker::setExtensionList(QStringList _extensions)
 void FolderSeeker::setSeekPath(QString path)
 {
     currentPath = path;
-    QFile f(currentPath + VROK_CACHE);
+    /*QFile f(currentPath + VROK_CACHE);*/
     dirs.clear();
 
-    if (f.exists()) {
+    /*if (f.exists()) {
         f.open(QFile::Text | QFile::ReadOnly);
         f.setTextModeEnabled(true);
         QTextStream ts(&f);
@@ -42,9 +42,9 @@ void FolderSeeker::setSeekPath(QString path)
             dirs.append(ts.readLine());
         }
         f.close();
-    } else {        
+    } else {*/        
         folderSeekSweep();
-    }
+    /*}*/
 }
 
 QString FolderSeeker::getQueue(QStandardItemModel *m, int idx)
@@ -71,7 +71,7 @@ QString FolderSeeker::getQueue(QStandardItemModel *m, int idx)
 
 FolderSeeker::~FolderSeeker()
 {
-    QFile f(currentPath + VROK_CACHE);
+   /* QFile f(currentPath + VROK_CACHE);
     f.open(QFile::Text | QFile::WriteOnly);
     f.setTextModeEnabled(true);
     QTextStream ts(&f);
@@ -81,7 +81,7 @@ FolderSeeker::~FolderSeeker()
         ts << dirs[i] <<"\n" ;
         i++;
     }
-    f.close();
+    f.close();*/
 }
 
 void FolderSeeker::folderSeekSweep()

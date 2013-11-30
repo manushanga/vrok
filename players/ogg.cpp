@@ -19,9 +19,9 @@ VPDecoderPlugin* OGGDecoder::VPDecoderOGG_new(VPlayer *v)
     return (VPDecoderPlugin *)new OGGDecoder(v);
 }
 
-OGGDecoder::OGGDecoder(VPlayer *v) : seek_to(SEEK_MAX)
+OGGDecoder::OGGDecoder(VPlayer *v) : seek_to(SEEK_MAX), buffer(NULL)
 {
-    owner = v;
+    owner =v;
 }
 
 int OGGDecoder::open(const char *url)

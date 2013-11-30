@@ -34,17 +34,19 @@ extern std::shared_mutex __m_console;
 
 // aligning
 #if defined(__GNUC__)
-#define ALIGNAUTO __attribute__((aligned(sizeof(void *)*2)))
-#define ALIGN(x) __attribute__((aligned(x)))
+
+#define ALIGNAUTO(x) x __attribute__((aligned(sizeof(void *)*2)))
+#define ALIGN(x,y) x __attribute__((aligned(y)))
 
 // x should be a multiple of sizeof(void *)*2, which is 16 or 8 in most known
 // systems; you are guaranteed that this holds if you allocate multiples of
 // VPBUFFER_FRAMES or VPBUFFER_PERIOD(==512)
 #define ALIGNED_ALLOC(x) aligned_alloc(sizeof(void *)*2, (x))
 #define ALIGNED_FREE(x) free(x)
-#elif _MSC_VER
-#define ALIGNAUTO
-#define ALIGN(x)
+#elif _MSC_VE
+#define ALIGNAUTO(x) __declspec( align( 16 ) ) x
+#define ALIGN(x,y) __declspec( align( y ) ) x
+
 #define ALIGNED_ALLOC(x) _aligned_malloc((x),sizeof(void *)*2)
 #define ALIGNED_FREE(x) _aligned_free(x)
 #endif
@@ -55,8 +57,9 @@ extern std::shared_mutex __m_console;
     #define FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
 
-#define DEBUG 
-#if defined(DEBUG) || !defined(NDEBUG)
+
+#define DEBUG
+#if defined(DEBUG)
     #include <iostream>
     #define DBG(...) \
     __m_console.lock(); \

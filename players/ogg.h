@@ -14,7 +14,6 @@ public:
     OggVorbis_File vf;
     float *buffer;
     unsigned half_buffer_size;
-    VPlayer *owner;
     uint64_t seek_to;
 
     OGGDecoder(VPlayer *v);

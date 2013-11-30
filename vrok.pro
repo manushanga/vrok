@@ -136,6 +136,8 @@ linux-gcc {
 
 win32* {
 
+DEFINES += _USE_MATH_DEFINES
+
 Dsound {
     LIBS += -lole32 -ldxguid -ldsound
     DEFINES += VPOUT_DSOUND
@@ -161,13 +163,11 @@ QMAKE_CXXFLAGS += /TP
 
 debug {
 LIBS    += -L"C:/src/vrok/libs/static/debug"
-LIBS    += msvcrtd.lib
-QMAKE_LFLAGS = /INCREMENTAL
 }
 release {
 LIBS    += -L"C:/src/vrok/libs/static/release"
-QMAKE_CXXFLAGS += /MD /GS /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
-QMAKE_LFLAGS = /INCREMENTAL /NODEFAULTLIB:"MSVCRTD" /NODEFAULTLIB:"LIBCMTD" /ALLOWISOLATION /TLBID:1 /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:QUEUE
+QMAKE_CXXFLAGS +=  /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
+QMAKE_LFLAGS += /NODEFAULTLIB:MSVCRTD
 }
 }
 
@@ -184,6 +184,7 @@ SOURCES += \
     frontend/dockmanager.cpp \
     effects/shibatch/equ.cpp \
     effects/visualization/vpeffectvis.cpp \
+    effects/reverb/reverb.cpp \
     frontend/reverbwidget.cpp
 
 HEADERS += \
@@ -195,6 +196,7 @@ HEADERS += \
     frontend/manageddockwidget.h \
     effects/shibatch/equ.h \
     effects/visualization/vpeffectvis.h \
+    effects/reverb/reverb.h \
     frontend/reverbwidget.h
 
 FORMS += \

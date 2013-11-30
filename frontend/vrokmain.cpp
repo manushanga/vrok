@@ -26,7 +26,6 @@
 #include "players/flac.h"
 #include "players/mpeg.h"
 #include "players/ogg.h"
-#include "effects/shibatch/eq.h"
 
 #include "playlistfactory.h"
 
@@ -153,13 +152,14 @@ VrokMain::VrokMain(QWidget *parent) :
     vp=NULL;
     ew=NULL;
     vw=NULL;
+    rw=NULL;
 
     setWindowIcon(QIcon(":icon/vrok.png"));
 
     vp = new VPlayer(callback_next, this);
     eq = new VPEffectPluginEQ(100);
     vz = new VPEffectPluginVis();
-
+    rb = new VPEffectPluginReverb();
 
     std::vector<VPEffectPlugin *> effects;
     if (VSettings::getSingleton()->readInt("eqon",1) ){
@@ -167,6 +167,9 @@ VrokMain::VrokMain(QWidget *parent) :
         ui->btnEQt->setChecked(true);
     }
     effects.push_back(vz);
+
+    effects.push_back(rb);
+
     vp->setEffectList(effects);
 
     tcb.setSingleShot(true);
@@ -578,7 +581,9 @@ void VrokMain::on_pbReverb_toggled(bool checked)
 
         rw = NULL;
     } else {
-        rw = new ReverbWidget(dockManager,vz);
+
+        rw = new ReverbWidget(dockManager,rb);
+
         rw->registerUi();
     }
 

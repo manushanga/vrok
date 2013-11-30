@@ -194,11 +194,9 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
 
 }
 
-FLACDecoder::FLACDecoder(VPlayer *v) : seek_to(SEEK_MAX)
+FLACDecoder::FLACDecoder(VPlayer *v) : seek_to(SEEK_MAX), buffer(NULL), decoder(NULL)
 {
-    buffer = NULL;
-    decoder = NULL;
-    owner = v;
+	owner=v;
     if ((decoder = FLAC__stream_decoder_new()) == NULL) {
         DBG("FLACPlayer:open: decoder create fail");
     }

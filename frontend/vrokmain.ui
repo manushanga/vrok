@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>616</width>
+    <width>649</width>
     <height>365</height>
    </rect>
   </property>
@@ -28,6 +28,12 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>30</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>EQ</string>
         </property>
@@ -47,6 +53,12 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Set EQ</string>
         </property>
@@ -59,6 +71,12 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
         </property>
         <property name="text">
          <string>Open Dir</string>
@@ -75,7 +93,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>90</width>
+          <width>70</width>
           <height>23</height>
          </size>
         </property>
@@ -122,7 +140,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>60</width>
           <height>23</height>
          </size>
         </property>
@@ -145,6 +163,18 @@
       </item>
       <item>
        <widget class="QPushButton" name="pbReverb">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>23</height>
+         </size>
+        </property>
         <property name="text">
          <string>Reverb</string>
         </property>
@@ -160,6 +190,12 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>60</width>
+          <height>23</height>
+         </size>
         </property>
         <property name="text">
          <string>About</string>
