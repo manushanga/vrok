@@ -168,7 +168,7 @@ VrokMain::VrokMain(QWidget *parent) :
     }
     effects.push_back(vz);
     effects.push_back(rb);
-    vp->setEffectList(effects);
+    vp->setEffectsList(effects);
 
     tcb.setSingleShot(true);
     tcb.setInterval(0);
@@ -428,7 +428,7 @@ void VrokMain::on_btnEQt_clicked()
         VSettings::getSingleton()->writeInt("eqon",1);
     }
     effects.push_back(vz);
-    vp->setEffectList(effects);
+    vp->setEffectsList(effects);
 
 }
 void VrokMain::on_btnSpec_clicked()
@@ -566,11 +566,6 @@ void VrokMain::on_tbQueues_currentChanged(int index)
 
 }
 
-void VrokMain::on_sbPosition_sliderReleased()
-{
-    if (vp->isPlaying())
-        vp->setPosition(ui->sbPosition->value()/1000.0f);
-}
 
 void VrokMain::on_pbReverb_toggled(bool checked)
 {
@@ -585,3 +580,9 @@ void VrokMain::on_pbReverb_toggled(bool checked)
 
 }
 
+
+void VrokMain::on_sbPosition_sliderReleased()
+{
+    if (vp->isPlaying())
+        vp->setPosition(ui->sbPosition->value()/1000.0f);
+}

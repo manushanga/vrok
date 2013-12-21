@@ -43,7 +43,7 @@ extern std::shared_mutex __m_console;
 // VPBUFFER_FRAMES or VPBUFFER_PERIOD(==512)
 #define ALIGNED_ALLOC(x) aligned_alloc(sizeof(void *)*2, (x))
 #define ALIGNED_FREE(x) free(x)
-#elif _MSC_VE
+#elif _MSC_VER
 #define ALIGNAUTO(x) __declspec( align( 16 ) ) x
 #define ALIGN(x,y) __declspec( align( y ) ) x
 

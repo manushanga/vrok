@@ -100,7 +100,7 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
 }
 
 
-void VPlayer::setEffectList(std::vector<VPEffectPlugin *> list)
+void VPlayer::setEffectsList(std::vector<VPEffectPlugin *> list)
 {
 
     control.lock();
@@ -133,6 +133,16 @@ void VPlayer::setEffectList(std::vector<VPEffectPlugin *> list)
     }
 
 }
+
+std::vector<VPEffectPlugin *> VPlayer::getEffectsList()
+{
+    std::vector<VPEffectPlugin *> ll;
+    for (int i=0;i<eff_count;i++) {
+        ll.push_back(effects[i].eff);
+    }
+    return ll;
+}
+
 bool VPlayer::isEffectActive(VPEffectPlugin *eff)
 {
     if (eff) {

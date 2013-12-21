@@ -20,7 +20,7 @@ public:
     void process(float *buffer);
     int finit();
     void setAmplitude(int idx, float amp) { if (idx>=0 && idx<MAX_REVERBS) { reverb_amp[idx]=amp; } }
-    void setDelay(int idx, float delay){ if (idx>=0 && idx<MAX_REVERBS) { reverb_delay[idx]=(int)(delay*VPBUFFER_FRAMES*bin->chans); std::cout<<"dd"<<reverb_delay[idx]<<std::endl;} }
+    void setDelay(int idx, float delay){ if (idx>=0 && idx<MAX_REVERBS) { reverb_delay[idx]=(int)(delay*VPBUFFER_FRAMES*bin->chans); } }
     float getDelay(int idx) { return ((float)(reverb_delay[idx]))/(VPBUFFER_FRAMES*bin->chans); }
 	float getAmplitude(int idx) { return reverb_amp[idx]; }
     ~VPEffectPluginReverb();

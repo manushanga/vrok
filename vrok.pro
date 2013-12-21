@@ -87,6 +87,7 @@ OTHER_FILES += README.md \
 
 linux* {
 LIBS     += -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
+LIBS    +=  -lavformat -lavcodec -lavutil
 LIBS += -lpthread
 
 PulseAudio {
@@ -185,7 +186,8 @@ SOURCES += \
     effects/shibatch/equ.cpp \
     effects/visualization/vpeffectvis.cpp \
     effects/reverb/reverb.cpp \
-    frontend/reverbwidget.cpp
+    frontend/reverbwidget.cpp \
+    players/ffmpeg.cpp
 
 HEADERS += \
     frontend/playlistfactory.h \
@@ -197,7 +199,8 @@ HEADERS += \
     effects/shibatch/equ.h \
     effects/visualization/vpeffectvis.h \
     effects/reverb/reverb.h \
-    frontend/reverbwidget.h
+    frontend/reverbwidget.h \
+    players/ffmpeg.h
 
 FORMS += \
     frontend/vswidget.ui \

@@ -81,7 +81,6 @@ private slots:
 
     void on_pbReverb_toggled(bool checked);
 
-
 private:
     void folderSeekSweep(QDir& root);
     // dock manager

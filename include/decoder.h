@@ -3,6 +3,8 @@
 
 #include "vplayer.h"
 
+#include <stdint.h>
+
 class VPDecoderPlugin
 {
 protected:

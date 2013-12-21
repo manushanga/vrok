@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     VPlayer *pl= new VPlayer(next_cb, NULL);
     VPEffectPluginEQ *eq=new VPEffectPluginEQ(100.0);
 
-    pl->setEffectList((VPEffectPlugin*)eq);
+    pl->setEffectsList((VPEffectPlugin*)eq);
     pl->open(argv[1]);
 
     while (pl->isPlaying()) {

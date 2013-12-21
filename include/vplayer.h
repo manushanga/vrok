@@ -120,7 +120,8 @@ public:
     float getVolume();
     void setPosition(float pos);
     float getPosition();
-    void setEffectList(std::vector<VPEffectPlugin *> list);
+    void setEffectsList(std::vector<VPEffectPlugin *> list);
+    std::vector<VPEffectPlugin *> getEffectsList();
     bool isEffectActive(VPEffectPlugin *eff);
     bool isPlaying();
     int getSupportedFileTypeCount();

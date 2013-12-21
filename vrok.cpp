@@ -54,11 +54,22 @@ VPDecoderFactory::VPDecoderFactory()
     vpdecoder_entry_t decoders[]= {
      {"FLAC",(vpdecode_creator_t)FLACDecoder::VPDecoderFLAC_new },
      {"MPEG",(vpdecode_creator_t)MPEGDecoder::VPDecoderMPEG_new },
-     {"OGG",(vpdecode_creator_t)OGGDecoder::VPDecoderOGG_new }
+     {"OGG",(vpdecode_creator_t)OGGDecoder::VPDecoderOGG_new },
+     {"FFMPEG",(vpdecode_creator_t)FFMPEGDecoder::VPDecoderFFMPEG_new }
     };
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("flac",decoders[0]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp1",decoders[1]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp2",decoders[1]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp3",decoders[1]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp3",decoders[3]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("ogg",decoders[2]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mpg",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("avi",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mpeg",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp4",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mkv",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("dat",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("vob",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("aac",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("wav",decoders[3]));
+
 }

@@ -13,6 +13,7 @@
 #include "players/flac.h"
 #include "players/mpeg.h"
 #include "players/ogg.h"
+#include "players/ffmpeg.h"
 
 #include "cpplib.h"
 
