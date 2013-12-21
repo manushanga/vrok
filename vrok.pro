@@ -158,6 +158,7 @@ INCLUDEPATH += ./libs/include \
                .
 
 LIBS     += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -llibvorbis -llibogg
+LIBS    +=  -lavformat -lavcodec -lavutil
 LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
 
 QMAKE_CXXFLAGS += /TP
