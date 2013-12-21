@@ -114,7 +114,7 @@ void FFMPEGDecoder::reader()
                 AVFrame *fr=avcodec_alloc_frame();
                 frame_position=0;
                 avformat_seek_file(container,audio_stream_id,0,0,0,AVSEEK_FLAG_FRAME);
-                while (frame_position <= seek_to && av_read_frame(container,&pp)>=0){
+                while (frame_position < seek_to && av_read_frame(container,&pp)>=0){
                     frame_position++;
                 }
                 frame=fr;
@@ -243,7 +243,7 @@ void FFMPEGDecoder::setPosition(uint64_t t)
 
 uint64_t FFMPEGDecoder::getPosition()
 {
-    return frame_position;//frame->pts;
+    return frame_position;
 }
 
 FFMPEGDecoder::~FFMPEGDecoder()

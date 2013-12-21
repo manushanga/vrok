@@ -23,7 +23,6 @@ private:
     AVFrame *frame;
     AVPacket packet;
     ALIGNAUTO (float remainder[FFMPEG_MAX_BUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE]);
-    ALIGNAUTO (float samples[FFMPEG_MAX_BUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE]);
     uint64_t frame_position;
     uint64_t seek_to;
     uint64_t frame_count;
