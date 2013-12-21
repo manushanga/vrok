@@ -129,6 +129,7 @@ void VrokMain::on_btnAbout_clicked()
              "<a href=\"http://flac.sourceforge.net/\">libFLAC</a>: FLAC Decoder<br/>"
              "<a href=\"http://xiph.org/vorbis/\">libvorbisfile</a>, <a href=\"http://xiph.org/ogg/\">libogg</a>: OGG Vorbis Decoder<br/>"
              "<a href=\"http://www.mpg123.de/\">libmpg123</a>: MPEG Layer 1,2,3 Decoder<br/>"
+             "<a href=\"http://www.ffmpeg.org/\">libavcodec</a>: Demux & Decode AAC, MP4, MPG, AVI ... and more<br/>"
              "<br/>DSP<br/>"
              "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br/>"
              "<br/>GUI<br/>"

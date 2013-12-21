@@ -164,10 +164,12 @@ LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut
 QMAKE_CXXFLAGS += /TP
 
 debug {
-LIBS    += -L"C:/src/vrok/libs/static/debug"
+LIBS    += -L"C:/src/vrok/vrok/libs/static/debug"
+LIBS    += -L"C:/src/vrok/vrok/libs/shared/release"
 }
 release {
-LIBS    += -L"C:/src/vrok/libs/static/release"
+LIBS    += -L"C:/src/vrok/vrok/libs/static/release"
+LIBS    += -L"C:/src/vrok/vrok/libs/shared/release"
 QMAKE_CXXFLAGS +=  /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
 QMAKE_LFLAGS += /NODEFAULTLIB:MSVCRTD
 }

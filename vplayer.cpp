@@ -217,10 +217,18 @@ int VPlayer::open(const char *url)
     int ret = 0;
 
     if (vpdecode){
-        ret += vpdecode->open(url);
+        ret = vpdecode->open(url);
+        if (ret == -1) {
+            WARN("dropping file");
+            delete vpdecode;
+            vpdecode=NULL;
+            control.unlock();
+            return -1;
+        }
     } else {
         WARN("failed to make vpdecoder");
-        ret = -1;
+        control.unlock();
+        return -1;
     }
 
 

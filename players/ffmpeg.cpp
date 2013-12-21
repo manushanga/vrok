@@ -6,13 +6,15 @@
 
 VPDecoderPlugin* FFMPEGDecoder::VPDecoderFFMPEG_new(VPlayer *v){
     // one time call for a single load
-    av_register_all();
+    static int s=0;
+    if (s==0)
+        av_register_all();
+    s++;
     return (VPDecoderPlugin *) new FFMPEGDecoder(v);
 }
 
 int FFMPEGDecoder::open(const char *url)
 {
-    container = avformat_alloc_context();
     if(avformat_open_input(&container,url,NULL,NULL)<0){
         DBG("Can't open file");
         return 0;
@@ -71,6 +73,7 @@ int FFMPEGDecoder::open(const char *url)
     frame_count=0;
     while (av_read_frame(container,&pp)>=0){
         frame_count++;
+        av_free_packet(&pp);
     }
     avformat_seek_file(container,audio_stream_id,0,0,0,AVSEEK_FLAG_FRAME);
 
@@ -108,17 +111,18 @@ void FFMPEGDecoder::reader()
             }
             if (ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) != SEEK_MAX ){
                 // messy? go ask FFMPEG team!
+                av_free_packet(&packet);
+                avcodec_free_frame(&frame);
                 AVPacket pp;
                 av_init_packet(&pp);
-                avcodec_free_frame(&frame);
                 AVFrame *fr=avcodec_alloc_frame();
                 frame_position=0;
                 avformat_seek_file(container,audio_stream_id,0,0,0,AVSEEK_FLAG_FRAME);
                 while (frame_position < seek_to && av_read_frame(container,&pp)>=0){
                     frame_position++;
+                    av_free_packet(&pp);
                 }
                 frame=fr;
-                packet=pp;
                 seek_to = SEEK_MAX;
             }
 
@@ -217,6 +221,8 @@ void FFMPEGDecoder::reader()
 
             }
         }
+
+        av_free_packet(&packet);
         owner->postProcess(bout->buffer[*bout->cursor]);
 
         owner->mutex[0].lock();
@@ -225,6 +231,9 @@ void FFMPEGDecoder::reader()
 
 
     }
+
+    avcodec_free_frame(&frame);
+
 }
 
 uint64_t FFMPEGDecoder::getLength()
@@ -248,7 +257,12 @@ uint64_t FFMPEGDecoder::getPosition()
 
 FFMPEGDecoder::~FFMPEGDecoder()
 {
-    avformat_free_context(container);
+    DBG("deffmpeg");
+
+    avcodec_close(ctx);
+    av_close_input_file(container);
+    //avformat_close_input(&container);
+    //avformat_free_context(container);
 }
 
 FFMPEGDecoder::FFMPEGDecoder(VPlayer *v) :

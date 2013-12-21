@@ -25,7 +25,7 @@ VPOutFactory::VPOutFactory()
     currentOut = "Dummy";
 #elif defined(VPOUT_DSOUND)
     vpout_entry_t def=
-    { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*16};
+    { (vpout_creator_t)VPOutPluginDSound::VPOutPluginDSound_new, VPBUFFER_PERIOD*6};
     creators.insert(std::pair<std::string, vpout_entry_t> ("DSound",def));
     currentOut = "DSound";
 #elif defined(VPOUT_ALSA)
@@ -60,7 +60,7 @@ VPDecoderFactory::VPDecoderFactory()
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("flac",decoders[0]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp1",decoders[1]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp2",decoders[1]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp3",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp3",decoders[1]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("ogg",decoders[2]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("mpg",decoders[3]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("avi",decoders[3]));
@@ -71,5 +71,6 @@ VPDecoderFactory::VPDecoderFactory()
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("vob",decoders[3]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("aac",decoders[3]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("wav",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("flv",decoders[3]));
 
 }
