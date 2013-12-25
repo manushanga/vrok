@@ -1,3 +1,11 @@
+/*
+  Vrok - smokin' audio
+  (C) 2013 Madura A. released under GPL 2.0 All following copyrights
+  hold. This notice must be retained.
+
+  See LICENSE for details.
+*/
+
 #ifndef FFMPEGPLAYER_H
 #define FFMPEGPLAYER_H
 

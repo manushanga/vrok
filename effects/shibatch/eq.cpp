@@ -16,7 +16,7 @@
 #endif
 VPEffectPluginEQ::VPEffectPluginEQ(float cap)
 {
-    sb_preamp = (float) VSettings::getSingleton()->readfloat("eqpre",96.0f);
+    sb_preamp = (float) VSettings::getSingleton()->readFloat("eqpre",96.0f);
     autopreamp = (bool) VSettings::getSingleton()->readInt("autopreamp",0);
     sb_paramsroot = NULL;
     sched_recalc = false;
@@ -24,7 +24,7 @@ VPEffectPluginEQ::VPEffectPluginEQ(float cap)
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
         band.append(std::to_string(i));
-        target[i]=VSettings::getSingleton()->readfloat(band,pow(10,48.0f/-20));
+        target[i]=VSettings::getSingleton()->readFloat(band,pow(10,48.0f/-20));
     }
     memset(&sb_state, 0, sizeof(SuperEqState));
     limit= cap;

@@ -40,11 +40,11 @@ public:
     VSettings();
     void writeInt(std::string field, int i);
     void writeDouble(std::string field, double dbl);
-    void writefloat(std::string field, float flt);
+    void writeFloat(std::string field, float flt);
     void writeString(std::string field, std::string str);
     int readInt(std::string field, int def);
     double readDouble(std::string field, double def);
-    float readfloat(std::string field, float def);
+    float readFloat(std::string field, float def);
     std::string readString(std::string field, std::string def);
     ~VSettings();
 };
@@ -60,7 +60,7 @@ public:
         static VPOutFactory vpf;
         return &vpf;
     }
-    inline uint getBufferSize()
+    inline int getBufferSize()
     {
         std::map<std::string, vpout_entry_t>::iterator it=creators.find(currentOut);
         if (it == creators.end()) {

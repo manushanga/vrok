@@ -190,7 +190,9 @@ SOURCES += \
     effects/visualization/vpeffectvis.cpp \
     effects/reverb/reverb.cpp \
     frontend/reverbwidget.cpp \
-    players/ffmpeg.cpp
+    players/ffmpeg.cpp \
+    effects/spatial/spatial.cpp \
+    frontend/spatialwidget.cpp
 
 HEADERS += \
     frontend/playlistfactory.h \
@@ -203,11 +205,14 @@ HEADERS += \
     effects/visualization/vpeffectvis.h \
     effects/reverb/reverb.h \
     frontend/reverbwidget.h \
-    players/ffmpeg.h
+    players/ffmpeg.h \
+    effects/spatial/spatial.h \
+    frontend/spatialwidget.h
 
 FORMS += \
     frontend/vswidget.ui \
-    frontend/reverbwidget.ui
+    frontend/reverbwidget.ui \
+    frontend/spatialwidget.ui
 
 RC_FILE += \
     vrok.rc

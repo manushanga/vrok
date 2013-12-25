@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>630</width>
+    <width>597</width>
     <height>365</height>
    </rect>
   </property>
@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,1,0,0,0,0,0">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,1,0,0,0,0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
       </property>
@@ -99,7 +99,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>70</width>
+          <width>90</width>
           <height>23</height>
          </size>
         </property>
@@ -146,7 +146,7 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>60</width>
+          <width>80</width>
           <height>23</height>
          </size>
         </property>
@@ -186,6 +186,25 @@
         </property>
         <property name="checkable">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb3D">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>30</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>3D</string>
         </property>
        </widget>
       </item>

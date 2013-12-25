@@ -72,5 +72,7 @@ VPDecoderFactory::VPDecoderFactory()
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("aac",decoders[3]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("wav",decoders[3]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("flv",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("wma",decoders[3]));
+    creators.insert(std::pair<std::string, vpdecoder_entry_t>("wmv",decoders[3]));
 
 }

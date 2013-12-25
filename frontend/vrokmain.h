@@ -14,6 +14,7 @@
 #include "../effects/shibatch/eq.h"
 #include "../effects/visualization/vpeffectvis.h"
 #include "../effects/reverb/reverb.h"
+#include "../effects/spatial/spatial.h"
 
 #include <QGraphicsScene>
 #include <QStringListModel>
@@ -36,6 +37,7 @@
 #include "dockmanager.h"
 #include "vswidget.h"
 #include "reverbwidget.h"
+#include "spatialwidget.h"
 
 namespace Ui {
 class VrokMain;
@@ -81,6 +83,8 @@ private slots:
 
     void on_pbReverb_toggled(bool checked);
 
+    void on_pb3D_clicked();
+
 private:
     void folderSeekSweep(QDir& root);
     // dock manager
@@ -100,8 +104,14 @@ private:
     VSWidget *vw;
     DisplayTicker *lblDisplay;
 
+    // reverb
     VPEffectPluginReverb *rb;
     ReverbWidget *rw;
+
+    // spatial
+    VPEffectPluginSpatial *sp;
+    SpatialWidget *sw;
+
     unsigned vis_counter;
     float bar_vals[BAR_COUNT];
     bool visuals;

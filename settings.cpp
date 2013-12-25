@@ -211,7 +211,7 @@ void VSettings::writeDouble(std::string field, double dbl)
     }
 }
 
-float VSettings::readfloat(std::string field, float def)
+float VSettings::readFloat(std::string field, float def)
 {
     if (settings.find(field)!=settings.end()){
         std::vector<int>& list = settings[field];

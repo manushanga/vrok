@@ -154,19 +154,23 @@ VrokMain::VrokMain(QWidget *parent) :
     ew=NULL;
     vw=NULL;
     rw=NULL;
+    sw=NULL;
 
     setWindowIcon(QIcon(":icon/vrok.png"));
 
     vp = new VPlayer(callback_next, this);
     eq = new VPEffectPluginEQ(100);
+    sp = new VPEffectPluginSpatial();
     vz = new VPEffectPluginVis();
     rb = new VPEffectPluginReverb();
 
     std::vector<VPEffectPlugin *> effects;
+
     if (VSettings::getSingleton()->readInt("eqon",1) ){
         effects.push_back(eq);
         ui->btnEQt->setChecked(true);
     }
+    effects.push_back(sp);
     effects.push_back(vz);
     effects.push_back(rb);
     vp->setEffectsList(effects);
@@ -586,4 +590,16 @@ void VrokMain::on_sbPosition_sliderReleased()
 {
     if (vp->isPlaying())
         vp->setPosition(ui->sbPosition->value()/1000.0f);
+}
+
+void VrokMain::on_pb3D_clicked()
+{
+    if (sw) {
+        delete sw;
+
+        sw = NULL;
+    } else {
+        sw = new SpatialWidget(dockManager,sp);
+        sw->registerUi();
+    }
 }
