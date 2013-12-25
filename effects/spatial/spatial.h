@@ -30,7 +30,6 @@ public:
     float *getParameters() { return &params[0]; }
     void setParameters(float h, float L, float l);
     VPEffectPluginSpatial();
-    void delay(float *samples, float delay);
     void statusChange(VPStatus status);
     int init(VPlayer *v, VPBuffer *in, VPBuffer **out);
     void process(float *buffer);

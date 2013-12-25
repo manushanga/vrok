@@ -32,6 +32,8 @@
 #include <cstring>
 #include <ctime>
 
+#include "orderer.h"
+
 #define QA_REMOVE 0
 #define QA_FILLRAN 1
 #define QA_FILLSEQ 2
@@ -164,16 +166,20 @@ VrokMain::VrokMain(QWidget *parent) :
     vz = new VPEffectPluginVis();
     rb = new VPEffectPluginReverb();
 
-    std::vector<VPEffectPlugin *> effects;
+    effects.push_back(VPEffectInfo("Equalizer",eq,VSettings::getSingleton()->readInt("equalizer",1) ));
+    effects.push_back(VPEffectInfo("Visualization",vz,VSettings::getSingleton()->readInt("visualization",1) ));
+    effects.push_back(VPEffectInfo("Reverb",rb,VSettings::getSingleton()->readInt("reverb",1) ));
+    effects.push_back(VPEffectInfo("Spatial Audio",sp,VSettings::getSingleton()->readInt("spatial_audio",1) ));
 
-    if (VSettings::getSingleton()->readInt("eqon",1) ){
-        effects.push_back(eq);
-        ui->btnEQt->setChecked(true);
+    std::vector<VPEffectPlugin *> ee;
+
+    foreach (VPEffectInfo e, effects){
+        if (e.enabled) {
+            ee.push_back(e.ptr);
+        }
     }
-    effects.push_back(sp);
-    effects.push_back(vz);
-    effects.push_back(rb);
-    vp->setEffectsList(effects);
+    vp->setEffectsList(ee);
+
 
     tcb.setSingleShot(true);
     tcb.setInterval(0);
@@ -425,15 +431,40 @@ void VrokMain::on_btnEQ_clicked()
 }
 void VrokMain::on_btnEQt_clicked()
 {
-    std::vector<VPEffectPlugin *> effects;
-    if (vp->isEffectActive((VPEffectPlugin *)eq)){
-        VSettings::getSingleton()->writeInt("eqon",0);
-    } else {
-        effects.push_back(eq);
-        VSettings::getSingleton()->writeInt("eqon",1);
+
+    QStandardItemModel aa;
+    int i=0;
+    foreach (VPEffectInfo e, effects){
+        QStandardItem *s1=new QStandardItem(QString(e.name));
+        s1->setData(qVariantFromValue((void*)e.ptr));
+        s1->setCheckable(true);
+        s1->setCheckState(e.enabled ? Qt::Checked : Qt::Unchecked);
+        aa.setItem(i,s1);
+        i++;
     }
-    effects.push_back(vz);
-    vp->setEffectsList(effects);
+    Orderer xr(&aa);
+    xr.exec();
+
+
+    if (xr.okPressed) {
+        std::vector<VPEffectPlugin*> effs;
+        effects.clear();
+        for (int i=0;i<aa.rowCount();i++){
+            VPEffectPlugin *p=(VPEffectPlugin *) xr.model->item(i,0)->data().value<void*>();
+
+            if (xr.model->item(i,0)->checkState() == Qt::Checked) {
+                VSettings::getSingleton()->writeInt(xr.model->item(i,0)->text().toLower().replace(' ','_').toStdString(),1);
+                effects.push_back( VPEffectInfo(xr.model->item(i)->text() , p , true) );
+                effs.push_back(p);
+            } else {
+                VSettings::getSingleton()->writeInt(xr.model->item(i,0)->text().toLower().replace(' ','_').toStdString(),0);
+                effects.push_back( VPEffectInfo(xr.model->item(i)->text() , p , false) );
+            }
+        }
+
+        vp->setEffectsList(effs);
+    }
+
 
 }
 void VrokMain::on_btnSpec_clicked()

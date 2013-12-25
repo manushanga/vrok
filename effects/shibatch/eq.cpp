@@ -186,11 +186,11 @@ int VPEffectPluginEQ::finit()
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
         band.append(std::to_string(i));
-        VSettings::getSingleton()->writefloat(band,target[i]);
+        VSettings::getSingleton()->writeFloat(band,target[i]);
     }
 
 
-    VSettings::getSingleton()->writefloat("eqpre",sb_preamp);
+    VSettings::getSingleton()->writeFloat("eqpre",sb_preamp);
 
     equ_quit(&sb_state);
     memset(&sb_state, 0, sizeof(SuperEqState));

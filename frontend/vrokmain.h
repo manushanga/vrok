@@ -46,7 +46,15 @@ class VrokMain;
 class VrokMain : public QMainWindow
 {
     Q_OBJECT
-
+private:
+    struct VPEffectInfo {
+        QString name;
+        VPEffectPlugin *ptr;
+        bool enabled;
+        VPEffectInfo(QString _name, VPEffectPlugin *_ptr, bool _enabled)
+        { name = _name; ptr = _ptr; enabled = _enabled; }
+    };
+    QList<VPEffectInfo> effects;
 public:
     Ui::VrokMain *ui;
 

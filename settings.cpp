@@ -233,7 +233,7 @@ float VSettings::readFloat(std::string field, float def)
     }
 
 }
-void VSettings::writefloat(std::string field, float flt)
+void VSettings::writeFloat(std::string field, float flt)
 {
     std::map< std::string, std::vector<int> >::iterator it = settings.find(field);
     std::vector<int> list;

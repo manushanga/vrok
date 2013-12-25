@@ -207,7 +207,8 @@ HEADERS += \
     frontend/reverbwidget.h \
     players/ffmpeg.h \
     effects/spatial/spatial.h \
-    frontend/spatialwidget.h
+    frontend/spatialwidget.h \
+    frontend/orderer.h
 
 FORMS += \
     frontend/vswidget.ui \

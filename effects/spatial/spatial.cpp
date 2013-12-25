@@ -94,10 +94,8 @@ void VPEffectPluginSpatial::process(float *buffer)
 
         }
 
-        //DBG(delay_ceil );
         for (register int i=delay_ceil*2;i<VPBUFFER_FRAMES*2;i++) {
             delayed[i] = buffer[i -delay_ceil*2 ]+(delay - delay_floor_fl)*( buffer[i-delay_floor*2] - buffer[i-delay_ceil*2]  );
-
         }
 
         int rest_start=VPBUFFER_FRAMES*2 - delay_ceil*2 ;
