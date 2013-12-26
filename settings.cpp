@@ -99,7 +99,7 @@ VSettings::VSettings()
         first=true;
         DBG("older version detected, overwriting settings");
         settings.clear();
-        writeInt("version",2);
+        writeInt("version",VERSION);
     }
 }
 

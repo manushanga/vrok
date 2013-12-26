@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>563</width>
-    <height>300</height>
+    <width>561</width>
+    <height>288</height>
    </rect>
   </property>
   <property name="features">
@@ -21,7 +21,7 @@
     <item>
      <widget class="QGraphicsView" name="graphicsView">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -166,7 +166,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Spatial Audio will only work for stereo tracks, when the output is stereo. It is not recommended to use in other setups. You are needed to measure the L,H,D values in your listening environment first and set those values here to gain maximum immersiveness. It is assumed that the speakers are in the same horizontal plain as the ears.s&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Spatial Audio will only work for stereo tracks, when the output is stereo. It is not recommended to use in other setups. You are needed to measure the L,H,D values in your listening environment first and set those values here to gain maximum immersiveness. It is assumed that the speakers are in the same horizontal plain as the ears.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt; color:#ff0000;&quot;&gt;WARNING: NOT FOR USE WITH HEADPHONES, TRANSAURAL IS DESIGNED FOR LOUDSPEAKERS. YOU MIGHT EXPERIENCE UNEASINESS AND/OR HEADACHES. VROK AUTHOR(S) ARE NOT LIABLE FOR THESE CONCEQUENCES. PLEASE USE AS ADVICED.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

@@ -10,6 +10,8 @@ SpatialWidget::SpatialWidget(DockManager *manager,  VPEffectPluginSpatial *sp, Q
     ui->graphicsView->setScene(new QGraphicsScene());
     QPixmap img(":images/effects/spatial/res/diagram.png");
     ui->graphicsView->scene()->addPixmap(img);
+    ui->graphicsView->setFixedHeight(img.height() + 10);
+    ui->graphicsView->setFixedWidth(img.width() + 10);
     initd=false;
     ui->hsL->setValue((int)(plugin->getParameters()[SPATIAL_PARAM_L]*10000));
     ui->hsH->setValue((int)(plugin->getParameters()[SPATIAL_PARAM_H]*10000));

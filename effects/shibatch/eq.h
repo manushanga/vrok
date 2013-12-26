@@ -51,7 +51,6 @@ private:
     void sb_recalc_table();
 public:
     VPEffectPluginEQ(float cap);
-    void applyKnowledge();
     inline const char **getBandNames() const { return sb_bandnames; }
     inline const float *getBands() const { return sb_bands; }
     inline const float *getTargetBands() const {  return target; }

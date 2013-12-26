@@ -7,9 +7,7 @@ ReverbWidget::ReverbWidget(DockManager *manager, VPEffectPluginReverb *rb, QWidg
     ui(new Ui::ReverbWidget)
 {
     ui->setupUi(this);
-	int i;
-    for (i=0;plugin->getDelay(i)>0;i++) { }
-    ui->slReverbs->setMaximum(i);
+    ui->slReverbs->setMaximum(MAX_REVERBS);
     on_slReverbs_sliderMoved(0);
 }
 
@@ -32,13 +30,4 @@ void ReverbWidget::on_slAmplitude_sliderMoved(int position)
 void ReverbWidget::on_slDelay_sliderMoved(int position)
 {
     plugin->setDelay(ui->slReverbs->value(),position/1000.0f);
-}
-
-void ReverbWidget::on_pbAdd_clicked()
-{
-    if (ui->slReverbs->maximum() < MAX_REVERBS-1) {
-        ui->slReverbs->setMaximum(ui->slReverbs->maximum()+1);
-    }
-    ui->slReverbs->setValue(ui->slReverbs->maximum() );
-    ui->pbAdd->setText(QString("Add (") + QString::number(ui->slReverbs->maximum()) + QString(")"));
 }

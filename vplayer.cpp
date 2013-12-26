@@ -27,8 +27,6 @@
 
 void VPlayer::playWork(VPlayer *self)
 {
-
-
     self->vpout->wakeup();
     while (1) {
         self->vpdecode->reader();
@@ -104,7 +102,10 @@ void VPlayer::setEffectsList(std::vector<VPEffectPlugin *> list)
 {
 
     control.lock();
+	bool wasPlaying = isPlaying();
+	float pos = getPosition();
     stop();
+
     for (int i=0;i<eff_count;i++) {
         effects[i].eff->finit();
     }
@@ -130,6 +131,13 @@ void VPlayer::setEffectsList(std::vector<VPEffectPlugin *> list)
         char copy[256];
         strcpy(copy,currentTrack);
         open(copy);
+		
+		pause();
+		setPosition(pos);
+		
+		if (wasPlaying) {
+			play();
+		}
     }
 
 }

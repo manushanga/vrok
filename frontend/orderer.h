@@ -20,10 +20,11 @@ public:
     bool okPressed;
     QStandardItemModel *model;
     Orderer( QStandardItemModel *list, QWidget *parent=0) :
-        QDialog::QDialog(parent),
+        QDialog(parent),
         model(list),
         okPressed(false)
     {
+        lv.setEditTriggers(QAbstractItemView::NoEditTriggers);
         lv.setParent(this);
         lv.setModel(list);
         lv.setGeometry(10,10, 200 , 280);

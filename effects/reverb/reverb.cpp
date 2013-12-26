@@ -14,7 +14,7 @@
 #define WRAPINC(x,max) (x+1) % max
 #define CLIP(x) max(min(x,1.0f),-1.0f)
 
-VPEffectPluginReverb::VPEffectPluginReverb() : reverb_buffer(NULL)
+VPEffectPluginReverb::VPEffectPluginReverb() : reverb_buffer(NULL), initd(false)
 {
 	for (int i=0;i<MAX_REVERBS;i++) { reverb_delay[i]=0; reverb_amp[i]=0.8f; }
 }
@@ -48,6 +48,8 @@ int VPEffectPluginReverb::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 	reverb_read = 0;
     reverb_write = 0;
 	buffer_counter = 0;
+
+	initd=true;
     return 0;
 }
 

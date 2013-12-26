@@ -55,6 +55,7 @@ private:
         { name = _name; ptr = _ptr; enabled = _enabled; }
     };
     QList<VPEffectInfo> effects;
+    QMap<QString,ManagedDockWidget*> docks;
 public:
     Ui::VrokMain *ui;
 
@@ -68,9 +69,6 @@ public:
 
 public slots:
     void on_btnPlay_clicked();
-    void on_btnEQt_clicked();
-    void on_btnSpec_clicked();
-    void on_btnEQ_clicked();
     void on_btnOpenDir_clicked();
     void on_lvFiles_doubleClicked(QModelIndex i);
     void on_btnAbout_clicked();
@@ -89,9 +87,7 @@ private slots:
     void on_tbQueues_currentChanged(int index);
     void on_sbPosition_sliderReleased();
 
-    void on_pbReverb_toggled(bool checked);
-
-    void on_pb3D_clicked();
+    void on_btnPlugins_clicked();
 
 private:
     void folderSeekSweep(QDir& root);

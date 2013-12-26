@@ -17,7 +17,7 @@
 
 #include "cpplib.h"
 
-#define VERSION 2
+#define VERSION 3
 
 class VPlayer;
 

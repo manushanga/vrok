@@ -25,8 +25,6 @@ private slots:
 
     void on_slDelay_sliderMoved(int position);
 
-    void on_pbAdd_clicked();
-
 private:
     VPEffectPluginReverb *plugin;
     Ui::ReverbWidget *ui;

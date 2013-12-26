@@ -78,20 +78,7 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
     return 0;
 
 }
-void VPEffectPluginEQ::applyKnowledge()
-{
 
-/*    for (unsigned i=0;i<BAR_COUNT;i++){
-        float next=knowledge[i]*mids[i]*0.6f + sb_bands[i]*0.4f;
-        if (next<target[i] && next>target[i]-3.0f){
-            sb_bands[i] = next;
-        } else {
-            knowledge[i]*=0.5f;
-        }
-    }
-    sched_recalc=true;
-*/
-}
 void VPEffectPluginEQ::process(float *buffer)
 {
     if (sched_recalc){
