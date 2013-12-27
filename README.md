@@ -1,7 +1,7 @@
 Vrok - smokin' audio
 ======================
 
-* Plays FLAC, MPEG and Ogg Vorbis
+* Plays FLAC, MPEG and Ogg Vorbis through their native decoders and plays other formats via FFmpeg
 * Shibatch SuperEQ with Self Learning
 * Windows and Linux(PulseAudio and ALSA)
 * Gapless
@@ -19,6 +19,7 @@ Make sure you have these dependencies,
 * libogg and headers
 * libvorbis and headers
 * libpulse-simple for PulseAudio support
+* FFmpeg
 
 Run these commands in the project directory(use must have qmake-qt4 or qmake-qt5
 installed, with all the development libraries. On Linux vrok will build with GCC and
@@ -49,6 +50,7 @@ it too. I recommend DSound, it's the most tested output plugin on Windows.
 * libmpg123
 * libogg
 * libvorbis
+* FFmpeg
 
 You can use QtCreator on Windows set up with MSVC to build or you can use MS Visual
 Studio with the Qt addin from qt-project.org to compile for Windows. Make sure
