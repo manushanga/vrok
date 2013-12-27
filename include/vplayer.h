@@ -5,13 +5,6 @@
 
   See LICENSE for details.
 */
-/*
-  Notes:
-  * Please do not propose to use std::string, I hate it for backend usage.
-  * There is no resampling or channel mixing support on the VPlayer and it is
-    not planned. If it can't be played on the hardware you have, it won't be
-    played. Ofcause it is open for anyone else to implement!
-*/
 
 #ifndef VPLAYER_H
 #define VPLAYER_H

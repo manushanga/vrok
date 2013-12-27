@@ -6,12 +6,23 @@
   See LICENSE for details.
 */
 /*
-  Notes
-  A file is played on playWorker thread, the mutex[0], mutex[2], mutex_pause
-  control it's states. Pausing is done by invoking a try_lock() and the thread
-  locks itself up next time it reaches mutex_pause->lock(), paused should be true.
 
-  Only play_worker is managed here.
+  Notes:
+
+  Decoders run only inside playWork function, each playback of a file runs in a
+  new thread. This thread is destroyed soon after a file ends playing. But
+  output runs continuously on the same thread IF gapless requirements hold
+  (channel count and samplerate are the same in the next file). VPBuffer system
+  consists of two buffers that are swapped after a fill. This happens in all
+  buffer in the chain; for example,
+
+  bout -> dsp_buf1 -> dsp_buf2 -> dsp_buf3 ... dsp_bufN -> bin
+
+  All buffers swap when VP_SWAP_BUFFERS is used. The dual buffer system was
+  introduced to lower the time that Vrok have to spend on the write lock. With
+  this method we only spend very less time and actual data is write outside the
+  lock.
+
 */
 #include <cstring>
 #include <algorithm>
@@ -20,10 +31,6 @@
 #include "out.h"
 #include "decoder.h"
 #include "effect.h"
-
-#ifdef _WIN32
-#include <crtdbg.h>
-#endif
 
 void VPlayer::playWork(VPlayer *self)
 {
