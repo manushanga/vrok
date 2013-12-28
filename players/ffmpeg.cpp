@@ -74,6 +74,7 @@ int FFMPEGDecoder::open(const char *url)
         bout->buffer[0][i]=0.0f;
         bout->buffer[1][i]=0.0f;
     }
+    // fast but not exact, oh well
     frame_count = int64_t(container->duration * (double(ctx->time_base.num)/double(ctx->time_base.den))) ;
 
     return 1;
