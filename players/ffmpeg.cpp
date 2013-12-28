@@ -5,7 +5,7 @@
 
   See LICENSE for details.
 */
-
+#include <limits>
 #include "vrok.h"
 #include "ffmpeg.h"
 
@@ -74,16 +74,7 @@ int FFMPEGDecoder::open(const char *url)
         bout->buffer[0][i]=0.0f;
         bout->buffer[1][i]=0.0f;
     }
-
-    // no fast way to get FFMPEG total frames? to hell with gapless
-    AVPacket pp;
-    av_init_packet(&pp);
-    frame_count=0;
-    while (av_read_frame(container,&pp)>=0){
-        frame_count++;
-        av_free_packet(&pp);
-    }
-    avformat_seek_file(container,audio_stream_id,0,0,0,AVSEEK_FLAG_FRAME);
+    frame_count = int64_t(container->duration * (double(ctx->time_base.num)/double(ctx->time_base.den))) ;
 
     return 1;
 }
@@ -99,7 +90,10 @@ void FFMPEGDecoder::reader()
     av_init_packet(&packet);
     AVFrame *frame=avcodec_alloc_frame();
 
+    int64_t timeBase = (int64_t(ctx->time_base.num) * AV_TIME_BASE) / int64_t(ctx->time_base.den);
     frame_position =0;
+
+
     while (ATOMIC_CAS(&owner->work,true,true) && packetFinished >=0) {
         vpbuffer_write=0;
         if (remainder_write>0) {
@@ -118,26 +112,22 @@ void FFMPEGDecoder::reader()
                 break;
             }
             if (ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) != SEEK_MAX ){
-                // messy? go ask FFMPEG team!
-                av_free_packet(&packet);
-                avcodec_free_frame(&frame);
-                AVPacket pp;
-                av_init_packet(&pp);
-                AVFrame *fr=avcodec_alloc_frame();
-                frame_position=0;
-                avformat_seek_file(container,audio_stream_id,0,0,0,AVSEEK_FLAG_FRAME);
-                while (frame_position < seek_to && av_read_frame(container,&pp)>=0){
-                    frame_position++;
-                    av_free_packet(&pp);
+
+                int ret=avformat_seek_file(container,audio_stream_id,std::numeric_limits<int64_t>::min(),(int64_t)seek_to*timeBase,std::numeric_limits<int64_t>::max(),AVSEEK_FLAG_FRAME|AVSEEK_FLAG_ANY);
+                if (ret<0) {
+                    DBG("seek failed");
+                } else {
+
+                    frame_position=seek_to;
+                    avcodec_flush_buffers(ctx);
                 }
-                frame=fr;
                 seek_to = SEEK_MAX;
             }
 
             if(packet.stream_index==audio_stream_id){
                 avcodec_decode_audio4(ctx,frame,&frameFinished,&packet);
 
-                frame_position++;
+                frame_position+=1;
                 av_samples_get_buffer_size(&plane_size, ctx->channels,
                                                     frame->nb_samples,
                                                     ctx->sample_fmt, 1);
