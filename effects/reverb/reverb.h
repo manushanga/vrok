@@ -17,7 +17,7 @@ public:
     VPEffectPluginReverb();
 	void statusChange(VPStatus status);
     int init(VPlayer *v, VPBuffer *in, VPBuffer **out);
-    void process(float *buffer);
+    void process();
     int finit();
     void setAmplitude(int idx, float amp) { if (!initd) return; if (idx>=0 && idx<MAX_REVERBS) { reverb_amp[idx]=amp; } }
     void setDelay(int idx, float delay){ if (!initd) return; if (idx>=0 && idx<MAX_REVERBS) { reverb_delay[idx]=(int)(delay*VPBUFFER_FRAMES*bin->chans); } }

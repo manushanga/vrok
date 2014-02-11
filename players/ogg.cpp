@@ -80,9 +80,9 @@ void OGGDecoder::reader()
             }
             done+=ret;
         }
-
-        memcpy(bout->buffer[*bout->cursor], buffer, VPBUFFER_FRAMES*bout->chans*sizeof(float) );
-        owner->postProcess(bout->buffer[*bout->cursor]);
+        *bout->currentBufferSamples() = done;
+        memcpy(bout->currentBuffer(), buffer, VPBUFFER_FRAMES*bout->chans*sizeof(float) );
+        owner->postProcess();
 
         owner->mutex[0].lock();
         VP_SWAP_BUFFERS(bout);

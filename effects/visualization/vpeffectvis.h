@@ -19,7 +19,7 @@ public:
     VPEffectPluginVis();
     inline float *getBars(){ return bars; }
     int init(VPlayer *v, VPBuffer *in, VPBuffer **out) ;
-    void process(float *buffer) ;
+    void process() ;
     inline void setType(vis_t t) {  type=t;   }
     inline vis_t getType() { return type; }
     void statusChange(VPStatus status) {status;}

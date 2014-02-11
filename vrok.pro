@@ -19,15 +19,18 @@ INCLUDEPATH += include
 
 console {
 SOURCES += \
+    thirdparty/ooura_fft.c \
     cli/main.cpp \
     vplayer.cpp \
-    effects/shibach/eq.cpp \
+    vrok.cpp \
+    settings.cpp \
+    effects/shibatch/eq.cpp \
+    effects/shibatch/equ.cpp \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
     util/utils.cpp \
-    util/cpplib.cpp \
-    thirdparty/ooura_fft.c
+    util/cpplib.cpp
 
 HEADERS  += \
     include/vplayer.h \
@@ -41,6 +44,7 @@ HEADERS  += \
     include/ooura_fft.h \
     effects/shibatch/paramlist.hpp \
     effects/shibatch/eq.h \
+    effects/shibatch/equ.h \
     players/flac.h \
     players/mpeg.h \
     players/ogg.h
@@ -55,9 +59,22 @@ SOURCES += \
     players/flac.cpp \
     players/mpeg.cpp \
     players/ogg.cpp \
+    players/ffmpeg.cpp \
     util/utils.cpp \
     util/cpplib.cpp \
-    thirdparty/ooura_fft.c
+    thirdparty/ooura_fft.c \
+    vrok.cpp \
+    settings.cpp \
+    frontend/playlistfactory.cpp \
+    frontend/folderseeker.cpp \
+    frontend/vswidget.cpp \
+    frontend/dockmanager.cpp \
+    effects/shibatch/equ.cpp \
+    effects/visualization/vpeffectvis.cpp \
+    effects/reverb/reverb.cpp \
+    frontend/reverbwidget.cpp \
+    effects/spatial/spatial.cpp \
+    frontend/spatialwidget.cpp
 
 HEADERS  += \
     include/vplayer.h \
@@ -74,11 +91,33 @@ HEADERS  += \
     effects/shibatch/eq.h \
     players/flac.h \
     players/mpeg.h \
-    players/ogg.h
+    players/ogg.h \
+    frontend/playlistfactory.h \
+    frontend/displayticker.h \
+    frontend/folderseeker.h \
+    frontend/vswidget.h \
+    frontend/dockmanager.h \
+    frontend/manageddockwidget.h \
+    effects/shibatch/equ.h \
+    effects/visualization/vpeffectvis.h \
+    effects/reverb/reverb.h \
+    frontend/reverbwidget.h \
+    players/ffmpeg.h \
+    effects/spatial/spatial.h \
+    frontend/spatialwidget.h \
+    frontend/orderer.h
 
 
 FORMS    += frontend/vrokmain.ui \
-            frontend/eqwidget.ui
+            frontend/eqwidget.ui \
+            frontend/vswidget.ui \
+            frontend/reverbwidget.ui \
+            frontend/spatialwidget.ui
+
+TRANSLATIONS += vrok_si.ts
+
+RESOURCES += vrok.qrc
+
 }
 
 OTHER_FILES += README.md \
@@ -173,47 +212,11 @@ LIBS    += -L"C:/src/vrok/vrok/libs/shared/release"
 QMAKE_CXXFLAGS +=  /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
 QMAKE_LFLAGS += /NODEFAULTLIB:MSVCRTD
 }
-}
-
-TRANSLATIONS += vrok_si.ts
-
-RESOURCES += vrok.qrc
-
-SOURCES += \
-    vrok.cpp \
-    settings.cpp \
-    frontend/playlistfactory.cpp \
-    frontend/folderseeker.cpp \
-    frontend/vswidget.cpp \
-    frontend/dockmanager.cpp \
-    effects/shibatch/equ.cpp \
-    effects/visualization/vpeffectvis.cpp \
-    effects/reverb/reverb.cpp \
-    frontend/reverbwidget.cpp \
-    players/ffmpeg.cpp \
-    effects/spatial/spatial.cpp \
-    frontend/spatialwidget.cpp
-
-HEADERS += \
-    frontend/playlistfactory.h \
-    frontend/displayticker.h \
-    frontend/folderseeker.h \
-    frontend/vswidget.h \
-    frontend/dockmanager.h \
-    frontend/manageddockwidget.h \
-    effects/shibatch/equ.h \
-    effects/visualization/vpeffectvis.h \
-    effects/reverb/reverb.h \
-    frontend/reverbwidget.h \
-    players/ffmpeg.h \
-    effects/spatial/spatial.h \
-    frontend/spatialwidget.h \
-    frontend/orderer.h
-
-FORMS += \
-    frontend/vswidget.ui \
-    frontend/reverbwidget.ui \
-    frontend/spatialwidget.ui
 
 RC_FILE += \
     vrok.rc
+
+}
+
+
+

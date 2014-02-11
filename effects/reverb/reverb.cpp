@@ -53,13 +53,17 @@ int VPEffectPluginReverb::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
     return 0;
 }
 
-void VPEffectPluginReverb::process(float *buffer)
+void VPEffectPluginReverb::process()
 {
 
-    register int maxx=VPBUFFER_FRAMES*bin->chans*2;
+    float *buffer = bin->currentBuffer();
+    int samples_per_chan = *bin->currentBufferSamples();
+    int samples = samples_per_chan*bin->chans;
+
+    register int maxx=samples*2;
 	
 
-    for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) {
+    for (register int i=0;i<samples;i++) {
         reverb_buffer[reverb_write]=buffer[i];
         reverb_write=WRAPINC(reverb_write,maxx);
     }
@@ -67,12 +71,12 @@ void VPEffectPluginReverb::process(float *buffer)
 		buffer_counter++;
 	}
     if (buffer_counter < 2) {
-        for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) {
+        for (register int i=0;i<samples;i++) {
             buffer[i]=0.0f;
         }
     } else {
 		float tmp;
-  		for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) {
+        for (register int i=0;i<samples;i++) {
 			tmp=CONV(reverb_buffer[reverb_read],reverb_buffer[(reverb_read+reverb_delay[0]) % maxx], reverb_amp[0]);
 			for (register int rev=1;(reverb_delay[rev] > 0) && (rev < MAX_REVERBS);rev++) {
 				tmp=CONV(tmp, reverb_buffer[(reverb_read+reverb_delay[rev]) % maxx], reverb_amp[rev]);

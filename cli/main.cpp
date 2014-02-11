@@ -23,19 +23,17 @@ int main(int argc, char *argv[])
     gargv = argv;
     gargc=argc;
     VPlayer *pl= new VPlayer(next_cb, NULL);
-    VPEffectPluginEQ *eq=new VPEffectPluginEQ(100.0);
+    VPEffectPluginEQ *eq=new VPEffectPluginEQ();
 
-    pl->setEffectsList((VPEffectPlugin*)eq);
+
+    std::vector<VPEffectPlugin *> effects;
+    effects.push_back((VPEffectPlugin*)eq);
+    pl->setEffectsList(effects);
     pl->open(argv[1]);
 
     while (pl->isPlaying()) {
-        sleep(3);
-        pl->pause();
-        sleep(1);
-        pl->play();
         sleep(2);
-    }
-    pl->removeEffect((VPEffectPlugin*)eq);
+    };
     delete pl;
     delete eq;
     return 0;

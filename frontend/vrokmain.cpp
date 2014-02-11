@@ -161,7 +161,7 @@ VrokMain::VrokMain(QWidget *parent) :
     setWindowIcon(QIcon(":icon/vrok.png"));
 
     vp = new VPlayer(callback_next, this);
-    eq = new VPEffectPluginEQ(100);
+    eq = new VPEffectPluginEQ();
     sp = new VPEffectPluginSpatial();
     vz = new VPEffectPluginVis();
     rb = new VPEffectPluginReverb();
@@ -223,7 +223,6 @@ VrokMain::VrokMain(QWidget *parent) :
     }
     ui->lvFiles->installEventFilter(this);
     vis_counter = 0;
-    vp->effectsActive = true;
 
     contextMenuFiles.push_back(new QAction("Queue",this));
 

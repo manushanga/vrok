@@ -141,7 +141,7 @@ void FFMPEGDecoder::reader()
                             for (int nb=0;nb<plane_size/sizeof(uint16_t);nb++){
                                 for (int ch = 0; ch < ctx->channels; ch++) {
                                     if (vpbuffer_write< vpbuffer_samples){
-                                        bout->buffer[*bout->cursor][vpbuffer_write]= ((short *) frame->extended_data[ch])[nb] * SHORTTOFL;
+                                        bout->currentBuffer()[vpbuffer_write]= ((short *) frame->extended_data[ch])[nb] * SHORTTOFL;
                                         vpbuffer_write++;
                                     } else {
                                         remainder[remainder_write] = ((short *) frame->extended_data[ch])[nb] * SHORTTOFL;
@@ -155,7 +155,7 @@ void FFMPEGDecoder::reader()
                                 for (int ch = 0; ch < ctx->channels; ch++) {
 
                                     if (vpbuffer_write< vpbuffer_samples){
-                                        bout->buffer[*bout->cursor][vpbuffer_write]= ((float *) frame->extended_data[ch])[nb] ;
+                                        bout->currentBuffer()[vpbuffer_write]= ((float *) frame->extended_data[ch])[nb] ;
                                         vpbuffer_write++;
                                     } else {
                                         remainder[remainder_write] = ((float *) frame->extended_data[ch])[nb];
@@ -167,7 +167,7 @@ void FFMPEGDecoder::reader()
                         case AV_SAMPLE_FMT_S16:
                             for (int nb=0;nb<plane_size/sizeof(short);nb++){
                                 if (vpbuffer_write< vpbuffer_samples){
-                                    bout->buffer[*bout->cursor][vpbuffer_write]= ((short *) frame->extended_data[0])[nb] * SHORTTOFL ;
+                                    bout->currentBuffer()[vpbuffer_write]= ((short *) frame->extended_data[0])[nb] * SHORTTOFL ;
                                     vpbuffer_write++;
                                 } else {
                                     remainder[remainder_write] = ((short *) frame->extended_data[0])[nb] * SHORTTOFL;
@@ -178,7 +178,7 @@ void FFMPEGDecoder::reader()
                         case AV_SAMPLE_FMT_FLT:
                             for (int nb=0;nb<plane_size/sizeof(float);nb++){
                                 if (vpbuffer_write< vpbuffer_samples){
-                                    bout->buffer[*bout->cursor][vpbuffer_write]= ((float *) frame->extended_data[0])[nb] ;
+                                    bout->currentBuffer()[vpbuffer_write]= ((float *) frame->extended_data[0])[nb] ;
                                     vpbuffer_write++;
                                 } else {
                                     remainder[remainder_write] = ((float *) frame->extended_data[0])[nb];
@@ -190,7 +190,7 @@ void FFMPEGDecoder::reader()
                             for (int nb=0;nb<plane_size/sizeof(uint8_t);nb++){
                                 for (int ch = 0; ch < ctx->channels; ch++) {
                                     if (vpbuffer_write< vpbuffer_samples){
-                                        bout->buffer[*bout->cursor][vpbuffer_write]= ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
+                                        bout->currentBuffer()[vpbuffer_write]= ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
                                         vpbuffer_write++;
                                     } else {
                                         remainder[remainder_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
@@ -203,7 +203,7 @@ void FFMPEGDecoder::reader()
                             for (int nb=0;nb<plane_size/sizeof(uint8_t);nb++){
 
                                 if (vpbuffer_write< vpbuffer_samples){
-                                    bout->buffer[*bout->cursor][vpbuffer_write]= ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
+                                    bout->currentBuffer()[vpbuffer_write]= ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
                                     vpbuffer_write++;
                                 } else {
                                     remainder[remainder_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
@@ -222,7 +222,9 @@ void FFMPEGDecoder::reader()
         }
 
         av_free_packet(&packet);
-        owner->postProcess(bout->buffer[*bout->cursor]);
+
+        *bout->currentBufferSamples() = vpbuffer_write / bout->chans;
+        owner->postProcess();
 
         owner->mutex[0].lock();
         VP_SWAP_BUFFERS(bout);

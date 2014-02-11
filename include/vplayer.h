@@ -33,12 +33,17 @@ class VPDecoderPlugin;
 typedef void(*next_track_cb_t)(char *mem, void *user);
 
 struct VPBuffer {
-    unsigned srate;
-    unsigned chans;
+    int srate;
+    int chans;
     int *cursor;
     float *buffer[2];
+    int *samples[2]; // total sample count per channel that's in the buffer
     VPBuffer(): srate(0), chans(0), cursor(NULL)
-    { buffer[0]=NULL; buffer[1]=NULL; }
+    { buffer[0]=NULL; buffer[1]=NULL; samples[0]=NULL; samples[1]=NULL; }
+    inline float *currentBuffer() { return buffer[*cursor]; }
+    inline int *currentBufferSamples() { return samples[*cursor]; }
+    inline float *nextBuffer() { return buffer[1-*cursor]; }
+    inline int *nextBufferSamples() { return samples[1-*cursor]; }
 };
 
 struct VPEffect {
@@ -69,6 +74,7 @@ private:
     float volume;
 
     int bufferCursor;
+    int bufferSamples[2];
 public:
     char currentTrack[256];
     // take lock on mutex_control when writing to this
@@ -87,9 +93,6 @@ public:
     // internal, paused state
     bool paused;
 
-    // external, effects are on if true
-    bool effectsActive;
-
     std::thread *playWorker;
     VPOutPlugin *vpout;
     VPDecoderPlugin *vpdecode;
@@ -101,7 +104,7 @@ public:
 
     // internal interface
     static void playWork(VPlayer *self);
-    void postProcess(float *buffer);
+    void postProcess();
     void setOutBuffers(VPBuffer *outprop, VPBuffer **out);
 
     // external interface

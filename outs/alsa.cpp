@@ -44,14 +44,14 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
 
         self->rd.end_of_input = 0;
         self->rd.data_out = self->out_buf;
-        self->rd.input_frames = VPBUFFER_FRAMES;
         self->rd.output_frames = self->out_frames;
         self->rd.output_frames_gen = 1;
         out_frames=0;
 
         self->owner->mutex[1].lock();
 
-        self->rd.data_in = self->bin->buffer[1-(*self->bin->cursor)];
+        self->rd.input_frames = *self->bin->nextBufferSamples();
+        self->rd.data_in = self->bin->nextBuffer();
 
 
         while (self->rd.output_frames_gen) {

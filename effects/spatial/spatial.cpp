@@ -73,8 +73,12 @@ int VPEffectPluginSpatial::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
     return 0;
 }
 
-void VPEffectPluginSpatial::process(float *buffer)
+void VPEffectPluginSpatial::process()
 {
+
+    float *buffer = bin->currentBuffer();
+    int samples_per_chan = *bin->currentBufferSamples();
+    //int samples = samples_per_chan*bin->chans;
 
     if (enabled) {
         // effective delay
@@ -94,18 +98,18 @@ void VPEffectPluginSpatial::process(float *buffer)
 
         }
 
-        for (register int i=delay_ceil*2;i<VPBUFFER_FRAMES*2;i++) {
+        for (register int i=delay_ceil*2;i<samples_per_chan*2;i++) {
             delayed[i] = buffer[i -delay_ceil*2 ]+(delay - delay_floor_fl)*( buffer[i-delay_floor*2] - buffer[i-delay_ceil*2]  );
         }
 
-        int rest_start=VPBUFFER_FRAMES*2 - delay_ceil*2 ;
+        int rest_start=samples_per_chan*2 - delay_ceil*2 ;
 
         for (int i = 0; i < delay_ceil*2; i++) {
             remainder[i]=buffer[rest_start + i];
         }
 
         // add delayed effect
-        for (register int i=0;i<VPBUFFER_FRAMES*2;i+=1) {
+        for (register int i=0;i<samples_per_chan*2;i+=1) {
             buffer[i]=CONV(buffer[i], delayed[i]*-0.5f);
         }
 

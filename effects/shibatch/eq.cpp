@@ -14,20 +14,20 @@
 #else
 #define CLIP(x) std::max(std::min(x,1.0f),-1.0f)
 #endif
-VPEffectPluginEQ::VPEffectPluginEQ(float cap)
+VPEffectPluginEQ::VPEffectPluginEQ()
 {
     sb_preamp = (float) VSettings::getSingleton()->readFloat("eqpre",96.0f);
     autopreamp = (bool) VSettings::getSingleton()->readInt("autopreamp",0);
     sb_paramsroot = NULL;
-    sched_recalc = false;
+
     owner=NULL;
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
         band.append(std::to_string(i));
         target[i]=VSettings::getSingleton()->readFloat(band,pow(10,48.0f/-20));
+        DBG(band<<" "<<target[i]);
     }
     memset(&sb_state, 0, sizeof(SuperEqState));
-    limit= cap;
     initd=false;
 
 }
@@ -71,6 +71,7 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
     bout = in;
     *out = in;
 
+
     equ_init (&sb_state, 14, bin->chans);
     sb_recalc_table();
     initd = true;
@@ -79,8 +80,12 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 
 }
 
-void VPEffectPluginEQ::process(float *buffer)
+void VPEffectPluginEQ::process()
 {
+    float *buffer = bin->currentBuffer();
+    int samples_per_chan = *bin->currentBufferSamples();
+    int samples = samples_per_chan*bin->chans;
+
     if (sched_recalc){
         sb_recalc_table();
         sched_recalc=false;
@@ -88,12 +93,12 @@ void VPEffectPluginEQ::process(float *buffer)
 
     //assert(buffer == bin->buffer);
 
-    equ_modifySamples_float(&sb_state, (char *)buffer, VPBUFFER_FRAMES, bin->chans);
+    equ_modifySamples_float(&sb_state, (char *)buffer, samples_per_chan, bin->chans);
 
 
     if (autopreamp) {
         bool ff=true, xx=true;
-        for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++){
+        for (register int i=0;i<samples;i++){
             float tmp=buffer[i]*sb_preamp;
             if (tmp > 0.95f && sb_preamp > 32.0f) {
                 sb_preamp*=0.999f;
@@ -113,59 +118,13 @@ void VPEffectPluginEQ::process(float *buffer)
         }
 
     } else {
-        for (register int i=0;i<VPBUFFER_FRAMES*bin->chans;i++){
+        for (register int i=0;i<samples;i++){
             buffer[i]*=sb_preamp;
 			buffer[i]=CLIP(buffer[i]);
 
         }
     }
 
-
-/*
-    float mid,xre,xim,newb;
-    unsigned step=0,chans=2,ichans;
-    float *bar_array_w=bar_array;
-    float delta;
-    float changes=0.0f;
-
-    while (step<BAR_SETS){
-        for (size_t b=0;b<BAR_COUNT;b++){
-            xre=0.0;
-            xim=0.0;
-            for (size_t i=0;i<VPBUFFER_PERIOD;i++){
-                ichans = i*chans;
-                mid = (buffer[ichans]+buffer[ichans+1] )* 0.5f;
-                xre +=mid*trig[0][b][i];
-                xim +=mid*trig[1][b][i];
-            }
-            newb = (fabs(xre)+fabs(xim))*(0.6f+ b*1.7f);
-            bar_array_w[b] = (newb<limit)?newb:limit;
-            if (bar_array_w[b] > mids[b]){
-                mids[b]=mids[b]*0.8f+bar_array_w[b]*0.2f;
-            } else {
-                mids[b]=mids[b]*0.99f;
-            }
-
-        }
-
-        for (unsigned b=0;b<BAR_COUNT;b++){
-            for (unsigned h=0;h<10;h++){
-                delta = 0.0002f*(mids[b]*knowledge[b]-target[b])*mids[b];
-                knowledge[b] -= delta;
-                changes+=delta;
-
-            }
-        }
-
-        step+=1;
-        bar_array_w += BAR_COUNT;
-        buffer += VPBUFFER_PERIOD*2;
-    }
-    if (changes > 0.002f*BAR_SETS && !period_count){
-        applyKnowledge();
-    }
-    period_count = (period_count + BAR_SETS) % 100;
-*/
 }
 
 int VPEffectPluginEQ::finit()

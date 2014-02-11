@@ -32,7 +32,7 @@ public:
     VPEffectPluginSpatial();
     void statusChange(VPStatus status);
     int init(VPlayer *v, VPBuffer *in, VPBuffer **out);
-    void process(float *buffer);
+    void process();
     int finit();
     ~VPEffectPluginSpatial();
 };

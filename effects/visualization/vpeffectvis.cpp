@@ -14,15 +14,18 @@ int VPEffectPluginVis::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
     return 0;
 }
 
-void VPEffectPluginVis::process(float *buffer)
+void VPEffectPluginVis::process()
 {
+    float *buffer = bin->currentBuffer();
+    int samples_per_chan = *bin->currentBufferSamples();
+    //int samples = samples_per_chan*bin->chans;
 
     if (wstate)
         return;
    // if (ATOMIC_CAS(&filled,true,true))
    //     return;
 
-    for (int i=0;i<VPBUFFER_FRAMES;i++) {
+    for (int i=0;i<samples_per_chan;i++) {
         float mid=0.0f;
         for (int j=0;j<bin->chans;j++) {
             mid = (mid + buffer[i*bin->chans + j])/2.0f;

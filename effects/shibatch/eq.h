@@ -44,13 +44,12 @@ private:
     ALIGNAUTO(float target[BAR_COUNT]);//__attribute__ ((aligned(16)));
 
     bool sched_recalc;
-    float limit;
     bool initd;
     bool autopreamp;
 
     void sb_recalc_table();
 public:
-    VPEffectPluginEQ(float cap);
+    VPEffectPluginEQ();
     inline const char **getBandNames() const { return sb_bandnames; }
     inline const float *getBands() const { return sb_bands; }
     inline const float *getTargetBands() const {  return target; }
@@ -71,7 +70,7 @@ public:
 
     int init(VPlayer *v, VPBuffer *in, VPBuffer **out);
     void statusChange(VPStatus status);
-    void process(float *buffer);
+    void process();
     int finit();
     ~VPEffectPluginEQ();
 };

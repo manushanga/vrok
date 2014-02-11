@@ -82,7 +82,6 @@ VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
     playWorker = NULL;
     work=false;
     active=false;
-    effectsActive=false;
 
     paused = true;
 
@@ -349,6 +348,8 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
 
     *out = &bout;
     bufferCursor = 0;
+    bufferSamples[0] = 0;
+    bufferSamples[1] = 0;
     if (bout.srate != outprop->srate || bout.chans != outprop->chans) {
         if (vpout){
             delete vpout;
@@ -363,12 +364,13 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         }
 
         vpout =VPOutFactory::getSingleton()->create();
-        DBG(VPBUFFER_FRAMES);
         assert(vpout);
 
         outprop->buffer[0] = (float*)ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*outprop->chans);
         outprop->buffer[1] = (float*)ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*outprop->chans);
         outprop->cursor = &bufferCursor;
+        outprop->samples[0] = &bufferSamples[0];
+        outprop->samples[1] = &bufferSamples[1];
 
         assert(outprop->buffer[0] && outprop->buffer[1]);
 
@@ -378,6 +380,11 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         bout.buffer[1] = outprop->buffer[1];
 
         bout.cursor = &bufferCursor;
+        bout.samples[0] = &bufferSamples[0];
+        bout.samples[1] = &bufferSamples[1];
+
+        bufferCursor =0;
+
 
         DBG("track chs: "<<bout.chans);
         DBG("track rate: "<<bout.srate);
@@ -436,13 +443,13 @@ float VPlayer::getPosition()
 }
 
 
-void VPlayer::postProcess(float *buffer)
+void VPlayer::postProcess()
 {
-    if (effectsActive){
-        for (int i=0;i<eff_count;i++){
-            if (effects[i].active)
-                effects[i].eff->process(buffer);
-        }
+
+    for (int i=0;i<eff_count;i++){
+        if (effects[i].active)
+            effects[i].eff->process();
     }
+
 }
 
