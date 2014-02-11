@@ -1,4 +1,7 @@
 Vrok - smokin' audio
+
+LICENSE
+
 Copyright (C) 2012 Madura A., DeaDBeeF Authors, Naoki Shibata.
 Parts of the program code distribute code released by Microsoft
 Corporation under Public Domain License, they do not fall under
@@ -17,3 +20,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+*** As the original author, I reserve the right to base projects on original
+source to publish projects that have different licenses to GNU GPL. This does
+not apply in anyway any other person ***
