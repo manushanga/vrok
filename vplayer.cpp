@@ -50,7 +50,7 @@ void VPlayer::playWork(VPlayer *self)
             self->nextTrackCallback(self->nextTrack, self->nextCallbackUser);
 
             if (self->nextTrack[0]!='\0') {
-                self->open(self->nextTrack);
+                self->open(self->nextTrack,true);
                 DBG("new track");
             } else {
                 delete self->vpdecode;
@@ -207,14 +207,19 @@ void VPlayer::uiStateChanged(VPWindowState state)
         effects[i].eff->minimized(state == VPMINIMIZED);
     }
 }
-int VPlayer::open(const char *url)
+int VPlayer::open(const char *url, bool tryGapless)
 {
 
     control.lock();
 
-    stop();
-    DBG(url);
+    if (tryGapless) {
+        delete vpdecode;
+        vpdecode=NULL;
+    } else {
+        stop();
+    }
 
+    DBG("ss");
     currentTrack[0]='\0';
 
     std::string ext;
@@ -245,9 +250,10 @@ int VPlayer::open(const char *url)
         return -1;
     }
 
-
     work = true;
     active = true;
+
+    FULL_MEMORY_BARRIER;
 
     if (!playWorker){
         playWorker = new std::thread((void(*)(void*))VPlayer::playWork, this);
@@ -405,6 +411,8 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         memcpy(&bin,tmp,sizeof(VPBuffer));
 
         vpout->init(this, &bin);
+    } else {
+        DBG("gapless");
     }
 }
 
@@ -434,7 +442,7 @@ float VPlayer::getPosition()
     float ret;
     //control.lock();
     if (vpdecode) {
-        ret= (vpdecode->getPosition()*1.0f)/(vpdecode->getLength()*1.0f);
+        ret= float(vpdecode->getPosition())/float(vpdecode->getLength());
     } else {
         ret= 0.0f;
     }

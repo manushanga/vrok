@@ -32,8 +32,10 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
     while (ATOMIC_CAS(&self->work,true,true)){
         if (ATOMIC_CAS(&self->pause_check,true,true)) {
             ATOMIC_CAS(&self->paused,false,true);
+            snd_pcm_pause(self->handle,true);
             self->m_pause.lock();
             self->m_pause.unlock();
+            snd_pcm_pause(self->handle,false);
             ATOMIC_CAS(&self->paused,true,false);
             ATOMIC_CAS(&self->pause_check,true,false);
             if (!ATOMIC_CAS(&self->work,false,false)) {
@@ -155,6 +157,8 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
     work = true;
     paused = false;
     pause_check = false;
+
+    FULL_MEMORY_BARRIER;
 
     worker = new std::thread((void(*)(void*))worker_run, this);
     worker->high_priority();

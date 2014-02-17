@@ -53,8 +53,7 @@ void MPEGDecoder::reader()
         done=0;
 
         if (err == MPG123_ERR) {
-            DBG("MPEG error");
-            break;
+            DBG("skipping through");
         } else {
             for (size_t i=0;i<count;i++){
                 bout->currentBuffer()[i]=SHORTTOFL*buffer[i];

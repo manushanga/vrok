@@ -157,14 +157,14 @@ Ao {
 }
 
 linux-clang {
-    QMAKE_CXXFLAGS_RELEASE += -Wall -O4 -msse4.2 -ffast-math
-    QMAKE_CXXFLAGS_DEBUG += -fno-omit-frame-pointer \
-                            -O2 #-pg
+    QMAKE_CXXFLAGS_RELEASE += -Wall -O3 -msse4.2 -ffast-math
+    QMAKE_CXXFLAGS_DEBUG +=  -g -O3 #-pg
     #QMAKE_LFLAGS_DEBUG += # -fsanitize=thread  #-pg
 }
 
 linux-gcc {
-    QMAKE_CXXFLAGS_RELEASE += -Wall -O4 -msse4.2 -ffast-math
+    QMAKE_CXXFLAGS_RELEASE += -Wall -O3 -msse4.2 -ffast-math
+    QMAKE_CXXFLAGS_DEBUG +=  -g -O3 #-pg
 }
 
 !linux-clang {

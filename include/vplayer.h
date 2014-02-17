@@ -108,7 +108,7 @@ public:
     void setOutBuffers(VPBuffer *outprop, VPBuffer **out);
 
     // external interface
-    int open(const char *url);
+    int open(const char *url, bool tryGapless=false);
     int play();
     void pause();
     void stop();

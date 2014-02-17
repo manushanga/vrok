@@ -7,9 +7,15 @@
 #define ATOMIC_ADDF(ptr,v) __sync_add_and_fetch(ptr, v)
 #define ATOMIC_SUBF(ptr,v) __sync_sub_and_fetch(ptr, v)
 #define ATOMIC_BOOL_CAS(ptr,oldv,newv) __sync_bool_compare_and_swap(ptr, oldv, newv)
+
+#define FULL_MEMORY_BARRIER __sync_synchronize()
+
 #elif defined(_MSC_VER)
 // bool is implemented as 8 bits
 #define ATOMIC_CAS(ptr,oldv,newv) _InterlockedCompareExchange8((char*)ptr, (char)newv, (char)oldv)
+
+#define FULL_MEMORY_BARRIER MemoryBarrier
+
 /*#define ATOMIC_FADD(ptr,v) __sync_fetch_and_add(ptr, v)
 #define ATOMIC_FSUB(ptr,v) __sync_fetch_and_sub(ptr, v)
 #define ATOMIC_ADDF(ptr,v) __sync_add_and_fetch(ptr, v)

@@ -3,7 +3,7 @@
 #include <QFileDialog>
 #include <QPainter>
 #include <QTextStream>
-#define PREAMPMAX 192
+#define PREAMPMAX 256
 
 EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) :
     plugin(eq),

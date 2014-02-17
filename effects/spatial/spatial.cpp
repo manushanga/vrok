@@ -61,6 +61,8 @@ int VPEffectPluginSpatial::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 
     if (in->chans == 2) {
         enabled = true;
+    } else {
+        enabled = false;
     }
 
     for (int i=0;i<VPBUFFER_FRAMES*bin->chans;i++) {

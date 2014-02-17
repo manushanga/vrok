@@ -19,6 +19,7 @@ VPEffectPluginEQ::VPEffectPluginEQ()
     sb_preamp = (float) VSettings::getSingleton()->readFloat("eqpre",96.0f);
     autopreamp = (bool) VSettings::getSingleton()->readInt("autopreamp",0);
     sb_paramsroot = NULL;
+    sched_recalc = true;
 
     owner=NULL;
     for (int i=0;i<BAR_COUNT;i++) {

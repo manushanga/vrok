@@ -121,7 +121,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
     return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
 
-FLACDecoder::FLACDecoder(VPlayer *v) : seek_to(SEEK_MAX), buffer(NULL), decoder(NULL)
+FLACDecoder::FLACDecoder(VPlayer *v) : seek_to(SEEK_MAX), buffer(NULL), decoder(NULL) , ret_vpout_open(0)
 {
     owner=v;
     if ((decoder = FLAC__stream_decoder_new()) == NULL) {
@@ -135,7 +135,6 @@ FLACDecoder::~FLACDecoder()
 {
     FLAC__stream_decoder_finish(decoder);
     FLAC__stream_decoder_delete(decoder);
-    ALIGNED_FREE(buffer);
 }
 
 int FLACDecoder::open(const char *url)
@@ -157,7 +156,7 @@ void FLACDecoder::reader()
         FLAC__stream_decoder_process_until_end_of_stream(decoder);
         if (buffer_write > 0) {
 
-            *(bout->samples[*bout->cursor]) = buffer_write;
+            *bout->currentBufferSamples() = buffer_write / bout->chans;
             owner->postProcess();
 #ifdef SINGLE_CORE
             owner->vpout->writeSingleCore();

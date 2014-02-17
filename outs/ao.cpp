@@ -35,7 +35,7 @@ void VPOutPluginAO::worker_run(VPOutPluginAO *self)
         self->owner->mutex[1].lock();
 
         for (int i=0;i<VPBUFFER_FRAMES*chans;i++){
-            self->buffer[i]=(unsigned short)(self->bin->buffer[1-*self->bin->cursor][i]*32767.0f);
+            self->buffer[i]=(unsigned short)(self->bin->currentBuffer()[i]*32767.0f);
 		}
         ao_play(self->device, (char *)self->buffer,VPBUFFER_FRAMES*chans*sizeof(unsigned short));
 
