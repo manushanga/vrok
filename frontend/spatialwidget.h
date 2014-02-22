@@ -16,6 +16,8 @@ class SpatialWidget : public ManagedDockWidget
 
 public:
     explicit SpatialWidget(DockManager *manager, VPEffectPluginSpatial *sp, QWidget *parent = 0);
+    void registerUi();
+
     ~SpatialWidget();
 
 private slots:

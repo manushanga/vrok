@@ -191,6 +191,7 @@ uint64_t FLACDecoder::getPosition()
     if (ATOMIC_CAS(&owner->work,true,true)) {
         uint64_t pos=0;
         FLAC__stream_decoder_get_decode_position(decoder, &pos);
+        DBG(pos);
         return (uint64_t) ((pos*8) / bps);
     } else {
         return 0;

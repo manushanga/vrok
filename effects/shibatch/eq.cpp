@@ -89,7 +89,7 @@ void VPEffectPluginEQ::process()
 
     if (sched_recalc){
         sb_recalc_table();
-        sched_recalc=false;
+        ATOMIC_CAS(&sched_recalc,true,false);
     }
 
     //assert(buffer == bin->buffer);

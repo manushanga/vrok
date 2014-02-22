@@ -23,6 +23,7 @@ class EQWidget : public ManagedDockWidget
     
 public:
     explicit EQWidget(DockManager *manager, VPEffectPluginEQ *effectPlugin, QWidget *parent = 0);
+    void registerUi();
     ~EQWidget();
     
 private:

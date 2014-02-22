@@ -25,7 +25,7 @@ public:
         t.setInterval(500);
         connect(&t, SIGNAL(timeout()), this,SLOT(updateScrollingText()));
         x=0;
-        t.start();
+        t.stop();
     }
     inline void setText(QString text){
         _text = text;

@@ -63,6 +63,7 @@ SOURCES += \
     util/utils.cpp \
     util/cpplib.cpp \
     thirdparty/ooura_fft.c \
+    thirdparty/sqlite3.c \
     vrok.cpp \
     settings.cpp \
     frontend/playlistfactory.cpp \
@@ -127,7 +128,7 @@ OTHER_FILES += README.md \
 linux* {
 LIBS     += -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
 LIBS    +=  -lavformat -lavcodec -lavutil
-LIBS += -lpthread
+LIBS += -lpthread -ldl
 
 PulseAudio {
     LIBS += -lpulse-simple
@@ -217,6 +218,15 @@ RC_FILE += \
     vrok.rc
 
 }
+
+HEADERS += \
+    frontend/playlistwidget.h
+
+SOURCES += \
+    frontend/playlistwidget.cpp
+
+FORMS += \
+    frontend/playlistwidget.ui
 
 
 

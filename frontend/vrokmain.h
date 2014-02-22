@@ -39,6 +39,8 @@
 #include "reverbwidget.h"
 #include "spatialwidget.h"
 
+#include "playlistwidget.h"
+
 namespace Ui {
 class VrokMain;
 }

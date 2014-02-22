@@ -22,6 +22,11 @@ VSWidget::VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent
     q.start();
 }
 
+void VSWidget::registerUi()
+{
+    dockManager->registerDockWidget(dockWidget, DockManager::Plugin);
+}
+
 VSWidget::~VSWidget()
 {
     q.stop();

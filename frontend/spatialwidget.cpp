@@ -19,6 +19,11 @@ SpatialWidget::SpatialWidget(DockManager *manager,  VPEffectPluginSpatial *sp, Q
     initd=true;
 }
 
+void SpatialWidget::registerUi()
+{
+    dockManager->registerDockWidget(dockWidget, DockManager::Plugin);
+}
+
 
 SpatialWidget::~SpatialWidget()
 {

@@ -38,6 +38,7 @@ public:
     static VSettings *getSingleton();
 
     VSettings();
+    std::string getSettingsPath();
     void writeInt(std::string field, int i);
     void writeDouble(std::string field, double dbl);
     void writeFloat(std::string field, float flt);

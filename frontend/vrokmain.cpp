@@ -166,6 +166,9 @@ VrokMain::VrokMain(QWidget *parent) :
     vz = new VPEffectPluginVis();
     rb = new VPEffectPluginReverb();
 
+    PlaylistWidget *pw=new PlaylistWidget(dockManager, vp);
+    pw->registerUi();
+
     effects.push_back(VPEffectInfo("Equalizer",eq,VSettings::getSingleton()->readInt("equalizer",1) ));
     effects.push_back(VPEffectInfo("Visualizer",vz,VSettings::getSingleton()->readInt("visualizer",0) ));
     effects.push_back(VPEffectInfo("Reverb",rb,VSettings::getSingleton()->readInt("reverb",0) ));
@@ -177,9 +180,9 @@ VrokMain::VrokMain(QWidget *parent) :
         if (e.enabled) {
             ee.push_back(e.ptr);
 			if (e.name == "Equalizer") { docks.insert(e.name,new EQWidget(dockManager, (VPEffectPluginEQ *) e.ptr)); }
-			else if (e.name == "Visualizer") {  docks.insert(e.name,new VSWidget(dockManager, (VPEffectPluginVis *) e.ptr)); }
-			else if (e.name == "Reverb") { docks.insert(e.name,new ReverbWidget(dockManager, (VPEffectPluginReverb *) e.ptr)); }
-			else if (e.name == "Spatial Audio") { docks.insert(e.name,new SpatialWidget(dockManager, (VPEffectPluginSpatial *) e.ptr)); }
+            else if (e.name == "Visualizer") {  docks.insert(e.name,new VSWidget(dockManager, (VPEffectPluginVis *) e.ptr)); }
+            else if (e.name == "Reverb") { docks.insert(e.name,new ReverbWidget(dockManager, (VPEffectPluginReverb *) e.ptr)); }
+            else if (e.name == "Spatial Audio") { docks.insert(e.name,new SpatialWidget(dockManager, (VPEffectPluginSpatial *) e.ptr)); }
 			else {
 				docks[e.name]=NULL;
 			}
@@ -187,10 +190,9 @@ VrokMain::VrokMain(QWidget *parent) :
 				docks[e.name]->registerUi();
 			}
         }
-
-		
-
     }
+
+
     vp->setEffectsList(ee);
     tcb.setSingleShot(true);
     tcb.setInterval(0);
@@ -430,6 +432,7 @@ void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
 
 VrokMain::~VrokMain()
 {
+    delete dockManager;
     // effect plugins are cleaned by VPlayer
     if (vp)
         delete vp;
@@ -576,25 +579,29 @@ void VrokMain::on_btnPlugins_clicked()
 
 
     if (xr.okPressed) {
+        foreach (VPEffectInfo e, effects){
+            if (docks.find(e.name) != docks.end()) {
+                delete( docks[e.name]);
+            }
+        }
+        docks.clear();
         std::vector<VPEffectPlugin*> effs;
         effects.clear();
+
+
         for (int i=0;i<aa.rowCount();i++){
             VPEffectPlugin *p=(VPEffectPlugin *) xr.model->item(i,0)->data().value<void*>();
 
             if (xr.model->item(i,0)->checkState() == Qt::Checked) {
                 VSettings::getSingleton()->writeInt(xr.model->item(i,0)->text().toLower().replace(' ','_').toStdString(),1);
                 effects.push_back( VPEffectInfo(xr.model->item(i)->text() , p , true) );
-                if (docks.find(xr.model->item(i)->text()) != docks.end() ) {
-                    ManagedDockWidget *wptr=docks[xr.model->item(i)->text()];
-                    if (wptr) {
-                        delete wptr;
-                    }
-                }
+
                 QString name=xr.model->item(i)->text();
-				if (name == "Equalizer") { docks[name]=new EQWidget(dockManager, (VPEffectPluginEQ *) p); }
-				else if (name == "Visualizer") { docks[name]=new VSWidget(dockManager, (VPEffectPluginVis *) p); }
-				else if (name == "Reverb") { docks[name]=new ReverbWidget(dockManager, (VPEffectPluginReverb *)p); }
-				else if (name == "Spatial Audio") { docks[name]=new SpatialWidget(dockManager, (VPEffectPluginSpatial *) p); }
+                DBG(name.toStdString());
+                if (name == "Equalizer") { docks.insert(name,new EQWidget(dockManager, (VPEffectPluginEQ *) p)); }
+                else if (name == "Visualizer") { docks.insert(name,new VSWidget(dockManager, (VPEffectPluginVis *) p)); }
+                else if (name == "Reverb") { docks.insert(name,new ReverbWidget(dockManager, (VPEffectPluginReverb *)p)); }
+                else if (name == "Spatial Audio") { docks.insert(name,new SpatialWidget(dockManager, (VPEffectPluginSpatial *) p)); }
                 else {
                     docks[name]=NULL;
                 }
@@ -605,11 +612,8 @@ void VrokMain::on_btnPlugins_clicked()
                 effs.push_back(p);
             } else {
                 VSettings::getSingleton()->writeInt(xr.model->item(i,0)->text().toLower().replace(' ','_').toStdString(),0);
-				if (docks.find(xr.model->item(i)->text()) != docks.end()) {
-                	delete docks[xr.model->item(i)->text()];
-					docks[xr.model->item(i)->text()]=NULL;
-					
-				}
+                //DBG("xx"<<xr.model->item(i)->text().toStdString());
+
                 effects.push_back( VPEffectInfo(xr.model->item(i)->text() , p , false) );
             }
         }

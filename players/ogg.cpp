@@ -81,7 +81,7 @@ void OGGDecoder::reader()
             done+=ret;
         }
         *bout->currentBufferSamples() = done;
-        memcpy(bout->currentBuffer(), buffer, VPBUFFER_FRAMES*bout->chans*sizeof(float) );
+        memcpy(bout->currentBuffer(), buffer, done*bout->chans*sizeof(float) );
         owner->postProcess();
 
         owner->mutex[0].lock();

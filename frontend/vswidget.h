@@ -80,6 +80,7 @@ class VSWidget : public ManagedDockWidget
 
 public:
     explicit VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent = 0);
+    void registerUi();
     ~VSWidget();
 public slots:
     void process();

@@ -53,6 +53,11 @@ EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) 
     ui->pbAuto->setChecked(plugin->getAutoPreamp());
 }
 
+void EQWidget::registerUi()
+{
+    dockManager->registerDockWidget(dockWidget, DockManager::Plugin);
+}
+
 void EQWidget::target_changed(int)
 {
     QSlider *th = (QSlider *)sender();

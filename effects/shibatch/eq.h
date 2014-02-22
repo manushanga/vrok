@@ -58,11 +58,11 @@ public:
         sb_bands[i]=(val);
         target[i]=(val);
 
-        sched_recalc=true;
+        ATOMIC_CAS(&sched_recalc,false,true);
     }
     inline void setAutoPreamp(bool yes){ autopreamp = yes; }
     inline bool getAutoPreamp() { return autopreamp; }
-    inline void setBand(int i, float val) { sb_bands[i]=(val); sched_recalc=true; }
+    inline void setBand(int i, float val) { sb_bands[i]=(val); ATOMIC_CAS(&sched_recalc,false,true);}
     inline void setPreamp(float val) { sb_preamp = val; }
     inline float getPreamp() const { return sb_preamp; }
     inline unsigned getBarCount() const { return BAR_COUNT; }

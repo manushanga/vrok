@@ -103,6 +103,12 @@ VSettings::VSettings()
     }
 }
 
+std::string VSettings::getSettingsPath()
+{
+    bool first;
+    return settings_path(&first);
+}
+
 std::string VSettings::readString(std::string field, std::string def)
 {
     if (settings.find(field)!=settings.end()){

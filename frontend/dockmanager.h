@@ -7,14 +7,16 @@ class ManagedDockWidget;
 
 class DockManager
 {
-
+public:
+    enum WidgetType { Generic=0, TrackList, Plugin, WidgetTypeEnd };
 private:
     QMainWindow *mainWin;
-    QSet<QDockWidget*> widgets;
+    QList< QSet<QDockWidget*> > widgets;
 public:
     DockManager(QMainWindow *main);
-    bool registerDockWidget(QDockWidget *widget);
+    bool registerDockWidget(QDockWidget *widget, WidgetType widgetType);
     bool unregisterDockWidget(QDockWidget *widget);
+    ~DockManager();
 };
 
 #endif // DOCKMANAGER_H

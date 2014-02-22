@@ -16,6 +16,7 @@ class ReverbWidget : public ManagedDockWidget
 
 public:
     explicit ReverbWidget(DockManager *manager, VPEffectPluginReverb *rb, QWidget *parent = 0);
+    void registerUi();
     ~ReverbWidget();
 
 private slots:

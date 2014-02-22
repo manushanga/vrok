@@ -14,10 +14,19 @@ public:
     ManagedDockWidget(DockManager *manager, QDockWidget *dock, QWidget *parent = 0)
         : dockManager(manager), dockWidget(dock), QDockWidget(parent)
     { }
-    void registerUi()
-    { dockManager->registerDockWidget(dockWidget); }
+    virtual void registerUi()
+    {
+        DBG("Registering as Generic, if you see this you need to override 'registerUi()'");
+        dockManager->registerDockWidget(dockWidget, DockManager::Generic);
+    }
+    virtual void unregisterUi()
+    {
+        dockManager->unregisterDockWidget(dockWidget);
+    }
     ~ManagedDockWidget()
-    { dockManager->unregisterDockWidget(dockWidget); }
+    {
+        DBG("destroying "<<dockWidget); unregisterUi();
+    }
 };
 
 #endif // MANAGEDDOCKWIDGET_H

@@ -11,6 +11,11 @@ ReverbWidget::ReverbWidget(DockManager *manager, VPEffectPluginReverb *rb, QWidg
     on_slReverbs_sliderMoved(0);
 }
 
+void ReverbWidget::registerUi()
+{
+    dockManager->registerDockWidget(dockWidget, DockManager::Plugin);
+}
+
 ReverbWidget::~ReverbWidget()
 {
     delete ui;
