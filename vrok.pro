@@ -63,7 +63,6 @@ SOURCES += \
     util/utils.cpp \
     util/cpplib.cpp \
     thirdparty/ooura_fft.c \
-    thirdparty/sqlite3.c \
     vrok.cpp \
     settings.cpp \
     frontend/playlistfactory.cpp \
