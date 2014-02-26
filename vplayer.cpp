@@ -73,7 +73,7 @@ void VPlayer::playWork(VPlayer *self)
 
 }
 
-VPlayer::VPlayer(next_track_cb_t cb, void *cb_user)
+VPlayer::VPlayer(NextTrackCallback cb, void *cb_user)
 {
     control.lock();
     nextCallbackUser = cb_user;
@@ -322,7 +322,7 @@ void VPlayer::stop()
 }
 bool VPlayer::isPlaying()
 {
-    return !paused && ATOMIC_CAS(&active,true,true);
+    return active && !paused;
 }
 
 VPlayer::~VPlayer()
@@ -448,6 +448,12 @@ float VPlayer::getPosition()
     }
     //control.unlock();
     return ret;
+}
+
+void VPlayer::setNextTrackCallback(NextTrackCallback callback, void *user)
+{
+    nextTrackCallback = callback;
+    nextCallbackUser = user;
 }
 
 

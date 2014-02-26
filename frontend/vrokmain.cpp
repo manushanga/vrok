@@ -22,6 +22,8 @@
 #include "vputils.h"
 #include "vplayer.h"
 #include "vswidget.h"
+#include "playlistwidget.h"
+#include "controlswidget.h"
 
 #include "players/flac.h"
 #include "players/mpeg.h"
@@ -45,22 +47,7 @@
 
 #define QA_QUEUE 0
 
-void VrokMain::callback_next(char *mem, void *user)
-{
-    VrokMain *mm =(VrokMain *) user;
 
-    if (mm->queueModel.rowCount() > 0){
-        QString name = mm->queueModel.item(0,0)->text();
-        QString path = mm->queueModel.item(0,1)->text();
-        mm->queueModel.removeRow(0);
-        mm->lblDisplay->setText(name);
-        strcpy(mem,path.toUtf8().data());
-    }
-
-    if (mm->queueModel.rowCount() < 3) {
-        mm->metaObject()->invokeMethod(mm,"startFillTimer");
-    }
-}
 
 bool VrokMain::eventFilter(QObject *target, QEvent *event)
 {
@@ -77,38 +64,11 @@ bool VrokMain::eventFilter(QObject *target, QEvent *event)
     if ( event->type() == QEvent::MouseButtonPress ){
         return true;
     }
-    if ((target == (QObject *)ui->lvFiles) && (event->type() == QEvent::KeyPress)) {
-        int val = ui->sbFolderSeek->value();
-        switch (((QKeyEvent*)event)->key()) {
-        case Qt::Key_Left:
-            if (val > 0)
-                ui->sbFolderSeek->setValue(val-1);
-            return true;
-        case Qt::Key_Right:
-            if (val < ui->sbFolderSeek->maximum())
-                ui->sbFolderSeek->setValue(val+1);
-            return true;
-        case Qt::Key_Enter:
-            on_lvFiles_doubleClicked(ui->lvFiles->currentIndex());
-            return true;
-        case Qt::Key_Return:
-            on_lvFiles_doubleClicked(ui->lvFiles->currentIndex());
-            return true;
-        default:
-            return false;
-        }
-
-    } else {
-        return false;
-    }
+    return true;
 }
 
-void VrokMain::resizeEvent(QResizeEvent *event)
-{
 
-}
-
-void VrokMain::on_btnAbout_clicked()
+void VrokMain::showAboutVrok()
 {
     QDialog d(this);
     d.setWindowTitle(tr("About Vrok"));
@@ -116,9 +76,9 @@ void VrokMain::on_btnAbout_clicked()
     QHBoxLayout h(&d);
     d.setLayout(&h);
     QLabel a("<center>"
-             "<span style=\"font-size: 12pt\"><b>Vrok</b> smokin' audio<br/></span>"
+             "<span style=\"font-size: 12pt\"><b>Vrok 3</b> smokin' audio<br/></span>"
              "</center>"
-             "Copyright (C) 2012-2013 Madura A. <madura.x86@gmail.com><br/>"
+             "Copyright (C) 2012-2014 Madura A. <madura.x86@gmail.com><br/>"
              "<br/>"
              "<b>Libraries</b><br/>"
              "<br/>Sound Ouput<br/>"
@@ -137,7 +97,7 @@ void VrokMain::on_btnAbout_clicked()
              "<br/>GUI<br/>"
              "<a href=\"http://qt-project.org\">Qt</a>: Frontend<br/>"
              "<br/>"
-             "<span style=\"font-size: 8pt\">Bugs may exist. Built on " __DATE__ " at " __TIME__ ".</span>");
+             "<span style=\"font-size: 8pt\">Bugs may exist. Built on " __DATE__ " at " __TIME__ ".</span>" );
     h.addWidget(&a);
     d.exec();
 }
@@ -148,9 +108,7 @@ VrokMain::VrokMain(QWidget *parent) :
     lastTab(0)
 {
     ui->setupUi(this);
-
-    lblDisplay = new DisplayTicker(this);
-    ui->vlColumn2->addWidget(lblDisplay);
+    ui->centralWidget->hide();
 
     vp=NULL;
     ew=NULL;
@@ -160,13 +118,15 @@ VrokMain::VrokMain(QWidget *parent) :
 
     setWindowIcon(QIcon(":icon/vrok.png"));
 
-    vp = new VPlayer(callback_next, this);
+    vp = new VPlayer(NULL, NULL);
     eq = new VPEffectPluginEQ();
     sp = new VPEffectPluginSpatial();
     vz = new VPEffectPluginVis();
     rb = new VPEffectPluginReverb();
 
     PlaylistWidget *pw=new PlaylistWidget(dockManager, vp);
+    ControlsWidget *cw=new ControlsWidget(dockManager, this);
+    cw->registerUi();
     pw->registerUi();
 
     effects.push_back(VPEffectInfo("Equalizer",eq,VSettings::getSingleton()->readInt("equalizer",1) ));
@@ -192,248 +152,23 @@ VrokMain::VrokMain(QWidget *parent) :
         }
     }
 
-
     vp->setEffectsList(ee);
-    tcb.setSingleShot(true);
-    tcb.setInterval(0);
-    tcb.stop();
-
-    tpos.setSingleShot(false);
-    tpos.setInterval(1000);
-    tpos.start();
-
-    curdir.setFilter(QDir::Files|QDir::Hidden);
-    curdir.setNameFilters(getExtentionsList());
-    cursweep.setFilter(QDir::Files);
-    cursweep.setNameFilters(getExtentionsList());
 
 
-    FolderSeeker::getSingleton()->setExtensionList(getExtentionsList());
-    if (( VSettings::getSingleton()->readString("lastopen","") ).size()>0) {
-        ui->lvFiles->setModel(&dirFilesModel);
-
-        lblDisplay->setText("Scanning...");
-        QApplication::instance()->processEvents();
-        FolderSeeker::getSingleton()->setSeekPath(QString(VSettings::getSingleton()->readString("lastopen","").c_str()));
-        lblDisplay->setText("Done.");
-        QApplication::instance()->processEvents();
-        ui->sbFolderSeek->setMinimum(0);
-        ui->sbFolderSeek->setMaximum(FolderSeeker::getSingleton()->getFolderCount() - 1);
-
-        on_sbFolderSeek_valueChanged(0);
-        PlaylistFactory::getSingleton()->setRoot(FolderSeeker::getSingleton()->getSeekPath());
-    }
-    ui->lvFiles->installEventFilter(this);
     vis_counter = 0;
 
-    contextMenuFiles.push_back(new QAction("Queue",this));
-
-    ui->lvFiles->addActions(contextMenuFiles);
-
-    contextMenuQueue.push_back(new QAction("Remove",this));
-    contextMenuQueue.push_back(new QAction("Fill Random",this));
-    contextMenuQueue.push_back(new QAction("Fill Sequential",this));
-    contextMenuQueue.push_back(new QAction("Fill None",this));
-    contextMenuQueue.push_back(new QAction("Fill from directory",this));
-    contextMenuQueue.push_back(new QAction("New Queue",this));
-    contextMenuQueue.push_back(new QAction("Clear",this));
-    contextMenuQueue.push_back(new QAction("Load Playlist",this));
-
-    queueToggleFillType = new QActionGroup(this);
-    contextMenuQueue[QA_FILLRAN]->setActionGroup(queueToggleFillType);
-    contextMenuQueue[QA_FILLRAN]->setCheckable(true);
-    contextMenuQueue[QA_FILLSEQ]->setActionGroup(queueToggleFillType);
-    contextMenuQueue[QA_FILLSEQ]->setCheckable(true);
-    contextMenuQueue[QA_FILLNON]->setActionGroup(queueToggleFillType);
-    contextMenuQueue[QA_FILLNON]->setCheckable(true);
-    contextMenuQueue[QA_FILLLIMITDIR]->setActionGroup(queueToggleFillType);
-    contextMenuQueue[QA_FILLLIMITDIR]->setCheckable(true);
-    ui->lvQueue->addActions(contextMenuQueue);
-
-    ui->lvFiles->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ui->lvQueue->setContextMenuPolicy(Qt::ActionsContextMenu);
-
-    ui->lvQueue->setModel(&queueModel);
-    ui->lvFiles->setModel(&dirFilesModel);
-
-    connect(contextMenuFiles[QA_QUEUE],SIGNAL(triggered()),this,SLOT(actionQueueTriggered()));
-    connect(contextMenuQueue[QA_REMOVE],SIGNAL(triggered()),this,SLOT(actionQueueRemove()));
-    connect(contextMenuQueue[QA_NEW_QUEUE],SIGNAL(triggered()),this,SLOT(actionNewQueue()));
-    connect(contextMenuQueue[QA_CLEAR],SIGNAL(triggered()),this,SLOT(actionClear()));
-    connect(contextMenuQueue[QA_LOADPL],SIGNAL(triggered()),this,SLOT(actionNewPlaylist()));
 
 
-    connect(&tcb,SIGNAL(timeout()), this, SLOT(fillQueue()));
-    connect(&tpos,SIGNAL(timeout()),this,SLOT(positionTick()));
-
-    lblDisplay->setText(" *smoke* ... V r o k ... *some more smoke* ");
-    int sel=VSettings::getSingleton()->readInt("queue_menu", QA_FILLLIMITDIR);
-    contextMenuQueue[sel]->setChecked(true);
 
 }
-void VrokMain::startFillTimer()
-{
-    tcb.start();
-}
-
-void VrokMain::positionTick()
-{
-    if (vp->isPlaying())
-        ui->sbPosition->setValue(vp->getPosition()*1000);
-}
-void VrokMain::fillQueue()
-{
-    srand(time(NULL));
-    if (contextMenuQueue[QA_FILLRAN]->isChecked()) {
-        QStandardItemModel fileModel;
-        int j=0;
-        uint dbloom=0,drbloom;
-        if (FolderSeeker::getSingleton()->getFolderCount()==1) {
-            FolderSeeker::getSingleton()->getQueue(&fileModel,0);
-            for (int i=0;i<fileModel.rowCount();i++) {
-                int rc = queueModel.rowCount();
-                queueModel.setItem(rc,0, fileModel.item(i,0)->clone());
-                queueModel.setItem(rc,1, fileModel.item(i,1)->clone());
-            }
-        } else {
-            while (queueModel.rowCount()<10 && j<100){
-                drbloom = abs(rand()) % (FolderSeeker::getSingleton()->getFolderCount()-1);
-                if ((drbloom & dbloom) != drbloom) {
-                    FolderSeeker::getSingleton()->getQueue(&fileModel,drbloom);
-                    uint bloom=0;
-
-                    int selectMax=(fileModel.rowCount()>4)?4:2;
-                    for (int i=0;i<selectMax;i++) {
-                        int rc = queueModel.rowCount();
-                        int tr = abs(rand()*5+rand()+i) % (fileModel.rowCount());
-                        uint rbloom = FNV(fileModel.item(tr,1)->text().toUtf8().data());
-                        if ((rbloom & bloom) != rbloom) {
-
-                            queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
-                            queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
-
-                            bloom = bloom | rbloom;
-                        }
-                    }
-                    dbloom = dbloom | drbloom;
-                }
-                j++;
-            }
-        }
-        if (queueModel.rowCount()>0 && !vp->isPlaying()) {
-            QString path = queueModel.item(0,1)->text();
-            lblDisplay->setText(queueModel.item(0,0)->text());
-            queueModel.removeRow(0);
-            vp->open(path.toUtf8().data());
-        }
-    } else if (contextMenuQueue[QA_FILLSEQ]->isChecked()) {
-        QStandardItemModel fileModel;
-        uint dbloom=0,drbloom;
-        if (FolderSeeker::getSingleton()->getFolderCount()==1) {
-            PlaylistFactory::getSingleton()->loadQueue(&fileModel,0);
-            for (int i=0;i<fileModel.rowCount();i++) {
-                int rc = queueModel.rowCount();
-                queueModel.setItem(rc,0, fileModel.item(i,0)->clone());
-                queueModel.setItem(rc,1, fileModel.item(i,1)->clone());
-            }
-        } else {
-            while (queueModel.rowCount()<10){
-                drbloom = abs(rand()) % (FolderSeeker::getSingleton()->getFolderCount()-1);
-                if ((drbloom & dbloom) != drbloom) {
-                    PlaylistFactory::getSingleton()->loadQueue(&fileModel,drbloom);
-
-                    for (int i=0;i<fileModel.rowCount();i++) {
-                        int rc = queueModel.rowCount();
-                        queueModel.setItem(rc,0, fileModel.item(i,0)->clone());
-                        queueModel.setItem(rc,1, fileModel.item(i,1)->clone());
-
-                    }
-                    dbloom = dbloom | drbloom;
-                }
-            }
-        }
-        if (queueModel.rowCount()>0 && !vp->isPlaying()) {
-            QString path = queueModel.item(0,1)->text();
-            lblDisplay->setText(queueModel.item(0,0)->text());
-            queueModel.removeRow(0);
-            vp->open(path.toUtf8().data());
-        }
-    } else if (contextMenuQueue[QA_FILLLIMITDIR]->isChecked()) {
-        QStandardItemModel fileModel;
-
-        FolderSeeker::getSingleton()->getQueue(&fileModel, ui->sbFolderSeek->value());
-
-        QSet<int> checker;
-        int selectMax=(fileModel.rowCount() < 100)? fileModel.rowCount():100;
-        for (int i=0;i<selectMax;i++) {
-            int rc = queueModel.rowCount();
-            int tr = abs(rand()*5+rand()+i) % (fileModel.rowCount());
-
-            if (checker.find(tr) == checker.end()) {
-
-                queueModel.setItem(rc,0, fileModel.item(tr,0)->clone());
-                queueModel.setItem(rc,1, fileModel.item(tr,1)->clone());
-
-                checker.insert(tr);
-            }
-        }
 
 
-        if (queueModel.rowCount()>0 && !vp->isPlaying()) {
-            QString path = queueModel.item(0,1)->text();
-            lblDisplay->setText(queueModel.item(0,0)->text());
-            queueModel.removeRow(0);
-            vp->open(path.toUtf8().data());
-        }
-    }
-}
-
-
-void VrokMain::on_btnPlay_clicked()
-{
-    if (vp->isPlaying()){
-        vp->pause();
-
-    } else {
-        vp->play();
-
-    }
-}
-
-void VrokMain::on_btnOpenDir_clicked()
-{
-    QString d = QFileDialog::getExistingDirectory(this, tr("Open Dir"),
-                                                  QString(VSettings::getSingleton()->readString("lastopen","").c_str()),
-                                                  0);
-
-    if (!d.isEmpty()) {
-        VSettings::getSingleton()->writeString("lastopen",d.toStdString());
-        dirFilesModel.clear();
-        lblDisplay->setText("Scanning...");
-        qApp->processEvents();
-        FolderSeeker::getSingleton()->setSeekPath(d);
-        lblDisplay->setText("Done.");
-        qApp->processEvents();
-        ui->sbFolderSeek->setMinimum(0);
-        ui->sbFolderSeek->setMaximum(FolderSeeker::getSingleton()->getFolderCount()-1);
-        FolderSeeker::getSingleton()->getQueue(&dirFilesModel,0);
-        on_sbFolderSeek_valueChanged(0);
-        PlaylistFactory::getSingleton()->setRoot(d);
-    }
-}
-
-void VrokMain::on_lvFiles_doubleClicked(QModelIndex i)
-{
-    vp->open(dirFilesModel.item(i.row(),1)->text().toUtf8().data());
-    lblDisplay->setText(dirFilesModel.item(i.row(),0)->text());
-
-}
 
 
 VrokMain::~VrokMain()
 {
     delete dockManager;
-    // effect plugins are cleaned by VPlayer
+
     if (vp)
         delete vp;
     if (eq)
@@ -443,125 +178,9 @@ VrokMain::~VrokMain()
     delete ui;
 }
 
-void VrokMain::on_sbFolderSeek_valueChanged(int value)
-{
-    if (FolderSeeker::getSingleton()->getFolderCount() > 0) {
-
-        QString dname=FolderSeeker::getSingleton()->getQueue(&dirFilesModel,value);
-        lblDisplay->setText(dname.section('/',-1,-1));
-    }
-}
-
-void VrokMain::actionQueueTriggered()
-{
-
-    QModelIndexList selected=ui->lvFiles->selectionModel()->selectedIndexes();
-    for (int i=0;i<selected.size();i++) {
-
-        int r = queueModel.rowCount();
-        queueModel.setItem(r,0,dirFilesModel.item(selected[i].row(),0)->clone() );
-        queueModel.setItem(r,1,dirFilesModel.item(selected[i].row(),1)->clone() );
-
-    }
-}
-
-void VrokMain::actionQueueRemove()
-{
-    QModelIndexList selected=ui->lvQueue->selectionModel()->selectedIndexes();
-
-    if (selected.size()  > 0) {
-        int rows=selected.size();
-        if (rows> queueModel.rowCount())
-            rows /= 2;
-        queueModel.removeRows(selected.first().row(),rows);
-    }
-}
-
-void VrokMain::actionNewQueue()
-{
-    ui->tbQueues->addTab( new QWidget(),"Queue " + QString::number(ui->tbQueues->count()+1));
-}
-
-void VrokMain::actionClear()
-{
-    queueModel.clear();
-}
-
-void VrokMain::actionNewPlaylist()
-{
-    QString p = QFileDialog::getOpenFileName(this,"Select Playlist","","M3U (*.m3u)");
-    if (p.endsWith("m3u",Qt::CaseInsensitive)) {
-        QFile f(p);
-        f.open(QFile::ReadOnly);
-        QTextStream ts(&f);
-        while (!ts.atEnd()){
-            QString line = ts.readLine();
-
-            if (line.startsWith("#EXTINF:")) {
-
-                QStringList g= line.split(',');
-                int row=queueModel.rowCount();
-                queueModel.setItem(row,0,new QStandardItem(g[1]));
-                queueModel.setItem(row,1,new QStandardItem(ts.readLine()));
-
-            }
-        }
-        f.close();
-    }
-}
 
 
-QStringList VrokMain::getExtentionsList()
-{
-    std::vector<std::string> exts;
-    QStringList list;
-    vp->getSupportedFileTypeExtensions(exts);
-
-
-    for (int i=0;i<(int)exts.size();i++) {
-        list.append(QString("*.").append(exts[i].c_str()));
-    }
-    return list;
-}
-
-
-void VrokMain::on_lvQueue_doubleClicked(const QModelIndex &index)
-{
-
-    QString path = queueModel.item(index.row(),1)->text();
-    lblDisplay->setText(queueModel.item(index.row(),0)->text());
-    queueModel.removeRow(index.row());
-    vp->open(path.toUtf8().data());
-
-}
-
-void VrokMain::on_tbQueues_tabCloseRequested(int index)
-{
-    if (index == 0) {
-        QMessageBox( QMessageBox::Warning,"Error","Can't remove default playlist").exec();
-    } else {
-        ui->tbQueues->removeTab(index);
-    }
-}
-
-void VrokMain::on_tbQueues_currentChanged(int index)
-{
-    DBG(index);
-
-    PlaylistFactory::getSingleton()->saveQueue(&queueModel,lastTab);
-    PlaylistFactory::getSingleton()->loadQueue(&queueModel,index);
-    lastTab = index;
-
-}
-
-
-void VrokMain::on_sbPosition_sliderReleased()
-{
-    if (vp->isPlaying())
-        vp->setPosition(ui->sbPosition->value()/1000.0f);
-}
-
-void VrokMain::on_btnPlugins_clicked()
+void VrokMain::configurePlugins()
 {
 
     QStandardItemModel aa;

@@ -7,6 +7,8 @@
 #include <QDir>
 #include <QFile>
 #include <QStandardItemModel>
+#include <QActionGroup>
+#include <QTimer>
 
 #include "vrok.h"
 #include "sqlite3.h"
@@ -20,12 +22,16 @@ class PlaylistWidget : public ManagedDockWidget
     Q_OBJECT
 
 public:
+    static void callbackNext(char *mem, void *user);
     explicit PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *parent = 0);
     void registerUi();
     QStringList getExtensionList();
     ~PlaylistWidget();
 
 private slots:
+    void fillQueue();
+    void startFillTimer();
+
     void on_leSearch_textChanged(const QString &arg1);
 
     void on_lvPlaylist_clicked(const QModelIndex &index);
@@ -34,14 +40,28 @@ private slots:
 
     void on_tvLibrary_clicked(const QModelIndex &index);
 
+    void actionQueueTriggered();
+    void actionQueueRemove();
+    void actionQueueClear();
+    void actionSetLibDir();
+    void actionRescan();
+    void on_lvPlaylist_doubleClicked(const QModelIndex &index);
+
 private:
-    static int db_callback(void *user, int argc, char **argv, char **azColName);
+    QString dbpath;
+    QTimer fillTimer;
     QStandardItemModel model;
     QStandardItemModel searchModel;
     QStandardItemModel playlist;
-    sqlite3 *db;
+
+    QList< QAction * > contextMenuFiles;
+    QList< QAction * > contextMenuQueue;
+    QActionGroup *queueToggleFillType;
+
     VPlayer *player;
     Ui::PlaylistWidget *ui;
+    void loadLibrary();
+    void saveLibrary();
 };
 
 #endif // PLAYLISTWIDGET_H

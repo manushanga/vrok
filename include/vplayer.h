@@ -30,7 +30,7 @@ class VPOutPlugin;
 class VPEffectPlugin;
 class VPDecoderPlugin;
 
-typedef void(*next_track_cb_t)(char *mem, void *user);
+typedef void(*NextTrackCallback)(char *mem, void *user);
 
 struct VPBuffer {
     int srate;
@@ -63,7 +63,7 @@ enum VPWindowState {
 class VPlayer
 {
 private:
-    next_track_cb_t nextTrackCallback;
+    NextTrackCallback nextTrackCallback;
     VPEffect effects[VP_MAX_EFFECTS];
     int eff_count;
 
@@ -100,7 +100,7 @@ public:
     // bin: buffer in for vpout
     VPBuffer bout,bin;
 
-    VPlayer(next_track_cb_t cb, void *cb_user);
+    VPlayer(NextTrackCallback cb, void *cb_user);
 
     // internal interface
     static void playWork(VPlayer *self);
@@ -116,6 +116,7 @@ public:
     float getVolume();
     void setPosition(float pos);
     float getPosition();
+    void setNextTrackCallback(NextTrackCallback callback, void *user);
     void setEffectsList(std::vector<VPEffectPlugin *> list);
     std::vector<VPEffectPlugin *> getEffectsList();
     bool isEffectActive(VPEffectPlugin *eff);

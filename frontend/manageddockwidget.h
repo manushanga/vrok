@@ -27,6 +27,7 @@ public:
     {
         DBG("destroying "<<dockWidget); unregisterUi();
     }
+
 };
 
 #endif // MANAGEDDOCKWIDGET_H

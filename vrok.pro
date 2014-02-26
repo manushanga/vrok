@@ -220,13 +220,16 @@ RC_FILE += \
 }
 
 HEADERS += \
-    frontend/playlistwidget.h
+    frontend/playlistwidget.h \
+    frontend/controlswidget.h
 
 SOURCES += \
-    frontend/playlistwidget.cpp
+    frontend/playlistwidget.cpp \
+    frontend/controlswidget.cpp
 
 FORMS += \
-    frontend/playlistwidget.ui
+    frontend/playlistwidget.ui \
+    frontend/controlswidget.ui
 
 
 
