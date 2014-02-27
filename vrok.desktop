@@ -5,6 +5,7 @@ Icon=/usr/share/vrok/vrok.png
 Type=Application
 NoDisplay=false
 Version=1.0
+Categories=Audio;Player;Music
 StartupNotify=false
 GenericName[en_US]=Vrok
 Terminal=false
