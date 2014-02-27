@@ -110,6 +110,8 @@ int VPOutPluginDummy::init(VPlayer *v, VPBuffer *in)
     paused = false;
     pause_check = false;
 
+    FULL_MEMORY_BARRIER;
+
     worker = new std::thread((void(*)(void*))worker_run, this);
     DBG("Dummy thread made");
     return 0;

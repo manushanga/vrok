@@ -226,6 +226,9 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
     work=true;
     paused=false;
     pause_check=false;
+
+    FULL_MEMORY_BARRIER;
+
     worker = new std::thread( (void(*)(void*))worker_run, this);
     worker->high_priority();
     DBG("DSound thread made");

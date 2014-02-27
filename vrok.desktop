@@ -1,0 +1,14 @@
+[Desktop Entry]
+Hidden=false
+Exec=/usr/bin/vrok
+Icon=/usr/share/vrok/vrok.png
+Type=Application
+NoDisplay=false
+Version=1.0
+StartupNotify=false
+GenericName[en_US]=Vrok
+Terminal=false
+Name=Vrok
+GenericName=Vrok
+Icon[en_US]=/usr/share/vrok/vrok.png
+Name[en_US]=Vrok

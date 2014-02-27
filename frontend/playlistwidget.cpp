@@ -255,7 +255,7 @@ void PlaylistWidget::actionSetLibDir()
                                                   QString(VSettings::getSingleton()->readString("lastopen","").c_str()),
                                                   0);
     VSettings::getSingleton()->writeString("lastopen",d.toStdString());
-    loadLibrary();
+    actionRescan();
 }
 
 void PlaylistWidget::actionRescan()
