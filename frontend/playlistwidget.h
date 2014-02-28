@@ -40,6 +40,7 @@ private slots:
     void on_tvLibrary_clicked(const QModelIndex &index);
 
     void actionQueueTriggered();
+    void actionSetQueueTriggered();
     void actionQueueRemove();
     void actionQueueClear();
     void actionSetLibDir();
@@ -48,6 +49,7 @@ private slots:
 
 private:
     QString dbpath;
+    QString lastplayed;
     QTimer fillTimer;
     QStandardItemModel model;
     QStandardItemModel searchModel;
@@ -56,7 +58,7 @@ private:
     QList< QAction * > contextMenuFiles;
     QList< QAction * > contextMenuQueue;
     QActionGroup *queueToggleFillType;
-
+    QActionGroup *queueTogglePlayType;
     VPlayer *player;
     Ui::PlaylistWidget *ui;
     void loadLibrary();

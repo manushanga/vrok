@@ -11,26 +11,42 @@
 #define QA_FILLRAN 1
 #define QA_FILLNON 2
 #define QA_FILLRPT 3
-#define QA_CLEAR 4
-#define QA_LOADPL 5
-#define QA_SAVEPL 6
+#define QA_PLAYRAN 4
+#define QA_PLAYRPT 5
+#define QA_PLAYSEQ 6
+#define QA_CLEAR 7
+#define QA_LOADPL 8
+#define QA_SAVEPL 9
 
 #define QA_QUEUE 0
-#define QA_SETLIBDIR 1
-#define QA_RESCAN 2
+#define QA_SETQUEUE 1
+#define QA_SETLIBDIR 2
+#define QA_RESCAN 3
 
 void PlaylistWidget::callbackNext(char *mem, void *user)
 {
     PlaylistWidget *wgt=(PlaylistWidget*)user;
-    if (wgt->playlist.rowCount() > 0){
-        QString path = wgt->playlist.item(0,1)->text();
-        wgt->playlist.removeRow(0);
-        strcpy(mem,path.toUtf8().data());
+    if (wgt->contextMenuQueue[QA_PLAYRAN]->isChecked()) {
+        if (wgt->playlist.rowCount() > 0){
+            int rowIdx=rand() % wgt->playlist.rowCount();
+            QString path = wgt->playlist.item( rowIdx ,1)->text();
+            wgt->lastplayed = path;
+            wgt->playlist.removeRow(rowIdx);
+            strcpy(mem,path.toUtf8().data());
+        }
+    } else if (wgt->contextMenuQueue[QA_PLAYRPT]->isChecked() && wgt->lastplayed != "" ) {
+        strcpy(mem,wgt->lastplayed.toUtf8().data());
+    } else {
+        if (wgt->playlist.rowCount() > 0){
+            QString path = wgt->playlist.item(0,1)->text();
+            wgt->lastplayed = path;
+            wgt->playlist.removeRow(0);
+            strcpy(mem,path.toUtf8().data());
+        }
     }
 
-    if (wgt->playlist.rowCount() < 3) {
-        wgt->metaObject()->invokeMethod(wgt,"startFillTimer");
-    }
+    wgt->metaObject()->invokeMethod(wgt,"startFillTimer");
+
 }
 
 PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *parent) :
@@ -41,6 +57,7 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
     ui->setupUi(this);
     ui->tvLibrary->setColumnHidden(1,true);
     contextMenuFiles.push_back(new QAction("Queue",this));
+    contextMenuFiles.push_back(new QAction("Set Queue",this));
     contextMenuFiles.push_back(new QAction("Set Library Directory",this));
     contextMenuFiles.push_back(new QAction("Rescan",this));
 
@@ -50,6 +67,9 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
     contextMenuQueue.push_back(new QAction("Fill Random",this));
     contextMenuQueue.push_back(new QAction("Fill None",this));
     contextMenuQueue.push_back(new QAction("Fill Repeat",this));
+    contextMenuQueue.push_back(new QAction("Play Random",this));
+    contextMenuQueue.push_back(new QAction("Play Repeat",this));
+    contextMenuQueue.push_back(new QAction("Play Sequential",this));
     contextMenuQueue.push_back(new QAction("Clear",this));
     contextMenuQueue.push_back(new QAction("Load Playlist",this));
     contextMenuQueue.push_back(new QAction("Save Playlist",this));
@@ -61,12 +81,23 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
     contextMenuQueue[QA_FILLNON]->setCheckable(true);
     contextMenuQueue[QA_FILLRPT]->setActionGroup(queueToggleFillType);
     contextMenuQueue[QA_FILLRPT]->setCheckable(true);
+
+    queueTogglePlayType = new QActionGroup(this);
+    contextMenuQueue[QA_PLAYRAN]->setActionGroup(queueTogglePlayType);
+    contextMenuQueue[QA_PLAYRAN]->setCheckable(true);
+    contextMenuQueue[QA_PLAYRPT]->setActionGroup(queueTogglePlayType);
+    contextMenuQueue[QA_PLAYRPT]->setCheckable(true);
+    contextMenuQueue[QA_PLAYSEQ]->setActionGroup(queueTogglePlayType);
+    contextMenuQueue[QA_PLAYSEQ]->setCheckable(true);
+
     ui->lvPlaylist->addActions(contextMenuQueue);
 
     ui->tvLibrary->setContextMenuPolicy(Qt::ActionsContextMenu);
     ui->lvPlaylist->setContextMenuPolicy(Qt::ActionsContextMenu);
 
     connect(contextMenuFiles[QA_QUEUE],SIGNAL(triggered()),this,SLOT(actionQueueTriggered()));
+    connect(contextMenuFiles[QA_SETQUEUE],SIGNAL(triggered()),this,SLOT(actionSetQueueTriggered()));
+
     connect(contextMenuFiles[QA_SETLIBDIR],SIGNAL(triggered()),this,SLOT(actionSetLibDir()));
     connect(contextMenuFiles[QA_RESCAN],SIGNAL(triggered()),this,SLOT(actionRescan()));
 
@@ -79,11 +110,13 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
     player->setNextTrackCallback(PlaylistWidget::callbackNext, this);
     dbpath=QString(VSettings::getSingleton()->getSettingsPath().c_str()).section('/',0,-2) ;
 
-    int sel=VSettings::getSingleton()->readInt("playlist_menu",-1);
+    int sel=VSettings::getSingleton()->readInt("playlist_menu", QA_FILLRAN);
 
-    if (sel!=-1)
-        contextMenuQueue[sel]->setChecked(true);
+    contextMenuQueue[sel]->setChecked(true);
 
+    sel=VSettings::getSingleton()->readInt("playlist_menu_play", QA_PLAYSEQ);
+
+    contextMenuQueue[sel]->setChecked(true);
 
     loadLibrary();
 
@@ -91,6 +124,9 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
     fillTimer.stop();
     ui->tvLibrary->setModel(&model);
     ui->lvPlaylist->setModel(&playlist);
+
+    lastplayed="";
+    srand(time(NULL));
 }
 
 void PlaylistWidget::registerUi()
@@ -114,12 +150,20 @@ QStringList PlaylistWidget::getExtensionList()
 
 PlaylistWidget::~PlaylistWidget()
 {
-    for (int i=0;i<contextMenuQueue.size();i++){
+    for (int i=QA_FILLRAN;i<=QA_FILLRPT;i++){
         if (contextMenuQueue[i]->isChecked()){
             VSettings::getSingleton()->writeInt("playlist_menu",i);
             break;
         }
     }
+
+    for (int i=QA_PLAYRAN;i<=QA_PLAYSEQ;i++){
+        if (contextMenuQueue[i]->isChecked()){
+            VSettings::getSingleton()->writeInt("playlist_menu_play",i);
+            break;
+        }
+    }
+
     delete ui;
 }
 
@@ -127,7 +171,7 @@ void PlaylistWidget::fillQueue()
 {
     int cur = playlist.rowCount();
     srand(time(NULL));
-    if (contextMenuQueue[QA_FILLRAN]->isChecked()) {
+    if (contextMenuQueue[QA_FILLRAN]->isChecked() && playlist.rowCount()<3) {
         for (int i=0;i<3;i++) {
             QStandardItem *item = model.item(rand() % model.rowCount());
             int idx=(rand()+i) % item->rowCount();
@@ -135,8 +179,14 @@ void PlaylistWidget::fillQueue()
             playlist.setItem(cur,1, item->child(idx,1)->clone() );
             cur++;
         }
+    } else if (contextMenuQueue[QA_FILLRPT]->isChecked() && lastplayed!="") {
+        playlist.setItem(cur,0,new QStandardItem(lastplayed.section('/',-1,-1)));
+        playlist.setItem(cur,1,new QStandardItem(lastplayed));
+        cur++;
     }
-    if (playlist.rowCount()>0) {
+
+
+    if (!player->isPlaying() && playlist.rowCount()>0) {
         QString path = playlist.item(0,1)->text();
         playlist.removeRow(0);
         player->open(path.toUtf8().data());
@@ -198,7 +248,8 @@ void PlaylistWidget::on_tvLibrary_doubleClicked(const QModelIndex &index)
     QStandardItemModel *model=(QStandardItemModel *)ui->tvLibrary->model();
     QStandardItem *item=model->itemFromIndex(index);
     if (!item->hasChildren()) {
-        player->open(index.sibling(item->row(),1).data().toString().toUtf8().data(),false);
+        lastplayed=index.sibling(item->row(),1).data().toString();
+        player->open(lastplayed.toUtf8().data(),false);
     }
 }
 
@@ -230,6 +281,12 @@ void PlaylistWidget::actionQueueTriggered()
         }
 
     }
+}
+
+void PlaylistWidget::actionSetQueueTriggered()
+{
+    playlist.clear();
+    actionQueueTriggered();
 }
 
 void PlaylistWidget::actionQueueRemove()

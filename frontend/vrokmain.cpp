@@ -36,17 +36,6 @@
 
 #include "orderer.h"
 
-#define QA_REMOVE 0
-#define QA_FILLRAN 1
-#define QA_FILLSEQ 2
-#define QA_FILLNON 3
-#define QA_FILLLIMITDIR 4
-#define QA_NEW_QUEUE 5
-#define QA_CLEAR 6
-#define QA_LOADPL 7
-
-#define QA_QUEUE 0
-
 
 
 bool VrokMain::eventFilter(QObject *target, QEvent *event)
