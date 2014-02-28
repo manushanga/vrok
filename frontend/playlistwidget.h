@@ -11,7 +11,6 @@
 #include <QTimer>
 
 #include "vrok.h"
-#include "sqlite3.h"
 
 namespace Ui {
 class PlaylistWidget;

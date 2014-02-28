@@ -66,7 +66,6 @@ SOURCES += \
     vrok.cpp \
     settings.cpp \
     frontend/playlistfactory.cpp \
-    frontend/folderseeker.cpp \
     frontend/vswidget.cpp \
     frontend/dockmanager.cpp \
     effects/shibatch/equ.cpp \
@@ -94,7 +93,6 @@ HEADERS  += \
     players/ogg.h \
     frontend/playlistfactory.h \
     frontend/displayticker.h \
-    frontend/folderseeker.h \
     frontend/vswidget.h \
     frontend/dockmanager.h \
     frontend/manageddockwidget.h \
@@ -200,8 +198,6 @@ LIBS     += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -l
 LIBS    +=  -lavformat -lavcodec -lavutil
 LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
 
-QMAKE_CXXFLAGS += /TP
-
 debug {
 LIBS    += -L"C:/src/vrok/vrok/libs/static/debug"
 LIBS    += -L"C:/src/vrok/vrok/libs/shared/release"
@@ -209,8 +205,13 @@ LIBS    += -L"C:/src/vrok/vrok/libs/shared/release"
 release {
 LIBS    += -L"C:/src/vrok/vrok/libs/static/release"
 LIBS    += -L"C:/src/vrok/vrok/libs/shared/release"
+
+win32-msvc* {
+QMAKE_CXXFLAGS += /TP
 QMAKE_CXXFLAGS +=  /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
 QMAKE_LFLAGS += /NODEFAULTLIB:MSVCRTD
+}
+
 }
 
 RC_FILE += \
