@@ -33,7 +33,6 @@
 
 #include "eqwidget.h"
 #include "displayticker.h"
-#include "folderseeker.h"
 #include "dockmanager.h"
 #include "vswidget.h"
 #include "reverbwidget.h"
