@@ -33,6 +33,10 @@ void PlaylistWidget::callbackNext(char *mem, void *user)
             wgt->lastplayed = path;
             wgt->playlist.removeRow(rowIdx);
             strcpy(mem,path.toUtf8().data());
+        } else {
+            QStandardItem *item = wgt->model.item(rand() % wgt->model.rowCount());
+            int idx=(rand()) % item->rowCount();
+            strcpy(mem, item->child(idx,1)->text().toUtf8().data());
         }
     } else if (wgt->contextMenuQueue[QA_PLAYRPT]->isChecked() && wgt->lastplayed != "" ) {
         strcpy(mem,wgt->lastplayed.toUtf8().data());
@@ -42,9 +46,23 @@ void PlaylistWidget::callbackNext(char *mem, void *user)
             wgt->lastplayed = path;
             wgt->playlist.removeRow(0);
             strcpy(mem,path.toUtf8().data());
+        } else {
+
+            srand(time(NULL));
+
+            if (wgt->contextMenuQueue[QA_FILLRAN]->isChecked()) {
+                QStandardItem *item = wgt->model.item(rand() % wgt->model.rowCount());
+                int idx=(rand()) % item->rowCount();
+                strcpy(mem, item->child(idx,1)->text().toUtf8().data());
+            } else if (wgt->contextMenuQueue[QA_FILLRPT]->isChecked() && wgt->lastplayed!="") {
+                strcpy(mem,wgt->lastplayed.toUtf8().data());
+            } else {
+                DBG("No fill, gapless stream stopped");
+            }
+
         }
     }
-
+    FULL_MEMORY_BARRIER;
     wgt->metaObject()->invokeMethod(wgt,"startFillTimer");
 
 }
@@ -170,27 +188,31 @@ PlaylistWidget::~PlaylistWidget()
 void PlaylistWidget::fillQueue()
 {
     int cur = playlist.rowCount();
-    srand(time(NULL));
-    if (contextMenuQueue[QA_FILLRAN]->isChecked() && playlist.rowCount()<3) {
-        for (int i=0;i<3;i++) {
-            QStandardItem *item = model.item(rand() % model.rowCount());
-            int idx=(rand()+i) % item->rowCount();
-            playlist.setItem(cur,0, item->child(idx,0)->clone() );
-            playlist.setItem(cur,1, item->child(idx,1)->clone() );
+    bool notplaying=!player->isPlaying();
+
+    if (playlist.rowCount()<3) {
+        srand(time(NULL));
+
+        if (contextMenuQueue[QA_FILLRAN]->isChecked()) {
+            for (int i=0;i<3;i++) {
+                QStandardItem *item = model.item(rand() % model.rowCount());
+                int idx=(rand()+i) % item->rowCount();
+                playlist.setItem(cur,0, item->child(idx,0)->clone() );
+                playlist.setItem(cur,1, item->child(idx,1)->clone() );
+                cur++;
+            }
+        } else if (contextMenuQueue[QA_FILLRPT]->isChecked() && lastplayed!="") {
+            playlist.setItem(cur,0,new QStandardItem(lastplayed.section('/',-1,-1)));
+            playlist.setItem(cur,1,new QStandardItem(lastplayed));
             cur++;
         }
-    } else if (contextMenuQueue[QA_FILLRPT]->isChecked() && lastplayed!="") {
-        playlist.setItem(cur,0,new QStandardItem(lastplayed.section('/',-1,-1)));
-        playlist.setItem(cur,1,new QStandardItem(lastplayed));
-        cur++;
     }
-
-
-    if (!player->isPlaying() && playlist.rowCount()>0) {
+/*
+    if (notplaying && playlist.rowCount()>0) {
         QString path = playlist.item(0,1)->text();
         playlist.removeRow(0);
         player->open(path.toUtf8().data());
-    }
+    }*/
 }
 
 void PlaylistWidget::startFillTimer()
@@ -248,7 +270,7 @@ void PlaylistWidget::on_tvLibrary_doubleClicked(const QModelIndex &index)
     QStandardItemModel *model=(QStandardItemModel *)ui->tvLibrary->model();
     QStandardItem *item=model->itemFromIndex(index);
     if (!item->hasChildren()) {
-        lastplayed=index.sibling(item->row(),1).data().toString();
+        lastplayed=index.sibling(item->row(),1).data().toString();  
         player->open(lastplayed.toUtf8().data(),false);
     }
 }

@@ -237,7 +237,7 @@ int VPlayer::open(const char *url, bool tryGapless)
 
     if (vpdecode){
         ret = vpdecode->open(url);
-        if (ret == -1) {
+        if (ret < 0) {
             WARN("dropping file");
             delete vpdecode;
             vpdecode=NULL;

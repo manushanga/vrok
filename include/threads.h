@@ -14,7 +14,7 @@
 // bool is implemented as 8 bits
 #define ATOMIC_CAS(ptr,oldv,newv) _InterlockedCompareExchange8((char*)ptr, (char)newv, (char)oldv)
 
-#define FULL_MEMORY_BARRIER MemoryBarrier
+#define FULL_MEMORY_BARRIER MemoryBarrier()
 
 /*#define ATOMIC_FADD(ptr,v) __sync_fetch_and_add(ptr, v)
 #define ATOMIC_FSUB(ptr,v) __sync_fetch_and_sub(ptr, v)

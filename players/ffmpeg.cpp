@@ -25,12 +25,12 @@ int FFMPEGDecoder::open(const char *url)
 {
     if(avformat_open_input(&container,url,NULL,NULL)<0){
         DBG("Can't open file");
-        return 0;
+        return -1;
     }
 
     if(avformat_find_stream_info(container, NULL)<0){
         DBG("Stream info load failed");
-        return 0;
+        return -1;
     }
 
     int i;
@@ -42,7 +42,7 @@ int FFMPEGDecoder::open(const char *url)
     }
     if(audio_stream_id==-1){
         DBG("No audio stream");
-        return 0;
+        return -1;
     }
 
 
@@ -52,12 +52,12 @@ int FFMPEGDecoder::open(const char *url)
 
     if(codec==NULL){
         DBG("Cannot find codec");
-        return 0;
+        return -1;
     }
 
     if(avcodec_open2(ctx,codec,NULL)<0){
         DBG("Codec cannot be opened");
-        return 0;
+        return -1;
     }
 
     sfmt=ctx->sample_fmt;
@@ -77,7 +77,7 @@ int FFMPEGDecoder::open(const char *url)
     // fast but not exact, oh well
     frame_count = int64_t(container->duration * (double(ctx->time_base.num)/double(ctx->time_base.den))) ;
 
-    return 1;
+    return 0;
 }
 
 void FFMPEGDecoder::reader()
