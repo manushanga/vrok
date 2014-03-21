@@ -10,13 +10,17 @@
 #define FFMPEGPLAYER_H
 
 #include "vplayer.h"
-#include "decoder.h"
 
 extern "C" {
-#include "libavutil/mathematics.h"
-#include "libavutil/samplefmt.h"
-#include "libavformat/avformat.h"
-#include "libswscale/swscale.h"
+
+#ifndef __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS
+#endif
+
+#include <libavutil/mathematics.h>
+#include <libavutil/samplefmt.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 }
 #define FFMPEG_MAX_BUF_SIZE 192000
 

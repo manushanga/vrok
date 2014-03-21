@@ -96,7 +96,6 @@ void VPEffectPluginEQ::process()
 
     equ_modifySamples_float(&sb_state, (char *)buffer, samples_per_chan, bin->chans);
 
-
     if (autopreamp) {
         bool ff=true, xx=true;
         for (register int i=0;i<samples;i++){
@@ -125,7 +124,6 @@ void VPEffectPluginEQ::process()
 
         }
     }
-
 }
 
 int VPEffectPluginEQ::finit()

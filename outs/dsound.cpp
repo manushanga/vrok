@@ -104,7 +104,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[i]=(short)(self->bin->buffer[1-*self->bin->cursor][i]*32700.0f);
+                    ((short *)lpvWrite)[i]=(short)(self->bin->nextBuffer()[i]*32700.0f);
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
@@ -115,7 +115,7 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
 
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[i]=(short)(self->bin->buffer[1-*self->bin->cursor][i]*32700.0f);
+                    ((short *)lpvWrite)[i]=(short)(self->bin->nextBuffer()[i]*32700.0f);
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
@@ -218,7 +218,7 @@ int VPOutPluginDSound::init(VPlayer *v, VPBuffer *in)
             return -1;
         } else {
             lpDsNotify->Release();
-        }        
+        }
     } else {
         return -1;
     }

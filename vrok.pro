@@ -194,7 +194,9 @@ INCLUDEPATH += ./libs/include \
                ./libs/include/libmpg123 \
                .
 
-LIBS     += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -llibvorbis -llibogg
+win32-msvc* {
+
+LIBS    += -lutf8_static -lwin_utf8_io -llibFLAC -llibmpg123 -llibvorbisfile -llibvorbis -llibogg
 LIBS    +=  -lavformat -lavcodec -lavutil
 LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
 
@@ -206,18 +208,36 @@ release {
 LIBS    += -L"C:/src/vrok/vrok/libs/static/release"
 LIBS    += -L"C:/src/vrok/vrok/libs/shared/release"
 
-win32-msvc* {
+
 QMAKE_CXXFLAGS += /TP
 QMAKE_CXXFLAGS +=  /arch:SSE2 /Ot /O2 /Oi /Oy- /fp:fast
 QMAKE_LFLAGS += /NODEFAULTLIB:MSVCRTD
-}
-
-}
 
 RC_FILE += \
     vrok.rc
+}
+
 
 }
+
+win32-g++* {
+
+SOURCES += \
+    thirdparty/mingw_aligned_alloc.c
+
+LIBS    +=  -lgcc_s
+LIBS    +=  -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
+LIBS    +=  -lavformat -lavcodec -lavutil
+LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
+QMAKE_CXXFLAGS_RELEASE += -march=i686 -Wall -O3
+QMAKE_CXXFLAGS_DEBUG +=  -g -O3 #-pgc
+
+}
+
+
+
+}
+
 
 HEADERS += \
     frontend/playlistwidget.h \

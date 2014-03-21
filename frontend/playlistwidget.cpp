@@ -367,6 +367,7 @@ void PlaylistWidget::loadLibrary()
     if (file.exists()) {
         file.open(QFile::ReadOnly);
         QTextStream ts(&file);
+        ts.setCodec("utf-8");
         int dirs=0,tracks=0;
         dirs = ts.readLine().toInt();
         DBG(dirs);
@@ -443,6 +444,7 @@ void PlaylistWidget::saveLibrary()
     QFile file(dbpath+"/ml.db");
     file.open(QFile::WriteOnly);
     QTextStream ts(&file);
+    ts.setCodec("utf-8");
     ts << model.rowCount() << "\n";
     for (int i=0;i<model.rowCount();i++) {
         QStandardItem *item = model.item(i);

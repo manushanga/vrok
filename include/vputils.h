@@ -38,11 +38,29 @@ extern std::shared_mutex __m_console;
 #define ALIGNAUTO(x) x __attribute__((aligned(sizeof(void *)*2)))
 #define ALIGN(x,y) x __attribute__((aligned(y)))
 
+#ifdef __MINGW32__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void *__mingw_aligned_malloc (size_t size, size_t alignment);
+void __mingw_aligned_free (void *memblock);
+
+#ifdef __cplusplus
+}
+#endif
+
+#define ALIGNED_ALLOC(x) __mingw_aligned_malloc((x),sizeof(void *)*2)
+#define ALIGNED_FREE(x) __mingw_aligned_free(x)
+#else
 // x should be a multiple of sizeof(void *)*2, which is 16 or 8 in most known
 // systems; you are guaranteed that this holds if you allocate multiples of
 // VPBUFFER_FRAMES or VPBUFFER_PERIOD(==512)
 #define ALIGNED_ALLOC(x) aligned_alloc(sizeof(void *)*2, (x))
 #define ALIGNED_FREE(x) free(x)
+
+#endif
 #elif _MSC_VER
 #define ALIGNAUTO(x) __declspec( align( 16 ) ) x
 #define ALIGN(x,y) __declspec( align( y ) ) x
