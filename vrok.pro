@@ -65,7 +65,6 @@ SOURCES += \
     thirdparty/ooura_fft.c \
     vrok.cpp \
     settings.cpp \
-    frontend/playlistfactory.cpp \
     frontend/vswidget.cpp \
     frontend/dockmanager.cpp \
     effects/shibatch/equ.cpp \
@@ -91,7 +90,6 @@ HEADERS  += \
     players/flac.h \
     players/mpeg.h \
     players/ogg.h \
-    frontend/playlistfactory.h \
     frontend/displayticker.h \
     frontend/vswidget.h \
     frontend/dockmanager.h \
