@@ -37,13 +37,10 @@ struct VPBuffer {
     int chans;
     int *cursor;
     float *buffer[2];
-    int *samples[2]; // total sample count per channel that's in the buffer
     VPBuffer(): srate(0), chans(0), cursor(NULL)
-    { buffer[0]=NULL; buffer[1]=NULL; samples[0]=NULL; samples[1]=NULL; }
+    { buffer[0]=NULL; buffer[1]=NULL; }
     inline float *currentBuffer() { return buffer[*cursor]; }
-    inline int *currentBufferSamples() { return samples[*cursor]; }
     inline float *nextBuffer() { return buffer[1-*cursor]; }
-    inline int *nextBufferSamples() { return samples[1-*cursor]; }
 };
 
 struct VPEffect {

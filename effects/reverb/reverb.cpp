@@ -57,8 +57,7 @@ void VPEffectPluginReverb::process()
 {
 
     float *buffer = bin->currentBuffer();
-    int samples_per_chan = *bin->currentBufferSamples();
-    int samples = samples_per_chan*bin->chans;
+    int samples = VPBUFFER_FRAMES*bin->chans;
 
     register int maxx=samples*2;
 	

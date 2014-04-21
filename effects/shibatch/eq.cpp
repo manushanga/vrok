@@ -84,8 +84,8 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 void VPEffectPluginEQ::process()
 {
     float *buffer = bin->currentBuffer();
-    int samples_per_chan = *bin->currentBufferSamples();
-    int samples = samples_per_chan*bin->chans;
+    int samples_per_chan = VPBUFFER_FRAMES;
+    int samples = VPBUFFER_FRAMES*bin->chans;
 
     if (sched_recalc){
         sb_recalc_table();

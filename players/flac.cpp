@@ -107,7 +107,6 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::write_callback(const FLAC__StreamDec
         }
         i++;
         if (selfp->buffer_write >= VPBUFFER_FRAMES * selfp->bout->chans) {
-            *selfp->bout->currentBufferSamples()  =  selfp->buffer_write/selfp->bout->chans;
             self->postProcess();
 
             self->mutex[0].lock();
@@ -156,15 +155,15 @@ void FLACDecoder::reader()
         FLAC__stream_decoder_process_until_end_of_stream(decoder);
         if (buffer_write > 0) {
 
-            *bout->currentBufferSamples() = buffer_write / bout->chans;
+            for (int i=buffer_write;i<VPBUFFER_FRAMES*bout->chans;i++){
+                bout->currentBuffer()[i]=0.0f;
+            }
             owner->postProcess();
-#ifdef SINGLE_CORE
-            owner->vpout->writeSingleCore();
-#else
+
             owner->mutex[0].lock();
             VP_SWAP_BUFFERS(bout);
             owner->mutex[1].unlock();
-#endif
+
         }
     } else {
         DBG("Error "<<FLAC__StreamDecoderInitStatusString[init_status]);

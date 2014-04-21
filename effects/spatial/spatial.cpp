@@ -79,8 +79,7 @@ void VPEffectPluginSpatial::process()
 {
 
     float *buffer = bin->currentBuffer();
-    int samples_per_chan = *bin->currentBufferSamples();
-    //int samples = samples_per_chan*bin->chans;
+    int samples_per_chan = VPBUFFER_FRAMES;
 
     if (enabled) {
         // effective delay

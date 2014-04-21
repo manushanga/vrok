@@ -36,7 +36,8 @@ void PlaylistWidget::callbackNext(char *mem, void *user)
         } else {
             QStandardItem *item = wgt->model.item(rand() % wgt->model.rowCount());
             int idx=(rand()) % item->rowCount();
-            strcpy(mem, item->child(idx,1)->text().toUtf8().data());
+            wgt->lastplayed=item->child(idx,1)->text();
+            strcpy(mem, wgt->lastplayed.toUtf8().data());
         }
     } else if (wgt->contextMenuQueue[QA_PLAYRPT]->isChecked() && wgt->lastplayed != "" ) {
         strcpy(mem,wgt->lastplayed.toUtf8().data());
@@ -53,7 +54,8 @@ void PlaylistWidget::callbackNext(char *mem, void *user)
             if (wgt->contextMenuQueue[QA_FILLRAN]->isChecked()) {
                 QStandardItem *item = wgt->model.item(rand() % wgt->model.rowCount());
                 int idx=(rand()) % item->rowCount();
-                strcpy(mem, item->child(idx,1)->text().toUtf8().data());
+                wgt->lastplayed=item->child(idx,1)->text();
+                strcpy(mem, wgt->lastplayed.toUtf8().data());
             } else if (wgt->contextMenuQueue[QA_FILLRPT]->isChecked() && wgt->lastplayed!="") {
                 strcpy(mem,wgt->lastplayed.toUtf8().data());
             } else {
@@ -144,6 +146,8 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
     ui->lvPlaylist->setModel(&playlist);
 
     lastplayed="";
+    ticker.setText("** Vrok **");
+    setTitleBarWidget( &ticker);
     srand(time(NULL));
 }
 
@@ -164,6 +168,10 @@ QStringList PlaylistWidget::getExtensionList()
     }
     return list;
 
+}
+
+void PlaylistWidget::setPlaylistTitle(QString filename)
+{
 }
 
 PlaylistWidget::~PlaylistWidget()
@@ -207,6 +215,8 @@ void PlaylistWidget::fillQueue()
             cur++;
         }
     }
+
+    setTicker(lastplayed.section('/',-1,-1));
 /*
     if (notplaying && playlist.rowCount()>0) {
         QString path = playlist.item(0,1)->text();
@@ -258,12 +268,9 @@ void PlaylistWidget::on_leSearch_textChanged(const QString &arg1)
         }
         ui->tvLibrary->setModel(&searchModel);
     }
-}
-
-void PlaylistWidget::on_lvPlaylist_clicked(const QModelIndex &index)
-{
 
 }
+
 
 void PlaylistWidget::on_tvLibrary_doubleClicked(const QModelIndex &index)
 {
@@ -272,12 +279,8 @@ void PlaylistWidget::on_tvLibrary_doubleClicked(const QModelIndex &index)
     if (!item->hasChildren()) {
         lastplayed=index.sibling(item->row(),1).data().toString();  
         player->open(lastplayed.toUtf8().data(),false);
+        setTicker(lastplayed.section('/',-1,-1));
     }
-}
-
-void PlaylistWidget::on_tvLibrary_clicked(const QModelIndex &index)
-{
-
 }
 
 void PlaylistWidget::actionQueueTriggered()
@@ -350,14 +353,21 @@ void PlaylistWidget::on_lvPlaylist_doubleClicked(const QModelIndex &index)
     QStandardItemModel *model=(QStandardItemModel *)ui->lvPlaylist->model();
     QStandardItem *item=model->itemFromIndex(index);
     if (!item->hasChildren()) {
-        player->open(index.sibling(item->row(),1).data().toString().toUtf8().data(),false);
+        lastplayed=index.sibling(item->row(),1).data().toString();
+        player->open(lastplayed.toUtf8().data(),false);
         if (contextMenuQueue[QA_FILLRPT]->isChecked()) {
             int r=model->rowCount();
             model->setItem(r,0, item->clone());
             model->setItem(r,1, model->itemFromIndex(index.sibling(item->row(),1))->clone() );
         }
+        setTicker(lastplayed.section('/',-1,-1));
         model->removeRow(index.row());
     }
+}
+
+void PlaylistWidget::setTicker(QString text)
+{
+    ticker.setText(text);
 }
 
 void PlaylistWidget::loadLibrary()

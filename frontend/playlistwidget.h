@@ -11,6 +11,7 @@
 #include <QTimer>
 
 #include "vrok.h"
+#include "ticker.h"
 
 namespace Ui {
 class PlaylistWidget;
@@ -25,6 +26,7 @@ public:
     explicit PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *parent = 0);
     void registerUi();
     QStringList getExtensionList();
+    void setPlaylistTitle(QString filename);
     ~PlaylistWidget();
 
 private slots:
@@ -33,11 +35,7 @@ private slots:
 
     void on_leSearch_textChanged(const QString &arg1);
 
-    void on_lvPlaylist_clicked(const QModelIndex &index);
-
     void on_tvLibrary_doubleClicked(const QModelIndex &index);
-
-    void on_tvLibrary_clicked(const QModelIndex &index);
 
     void actionQueueTriggered();
     void actionSetQueueTriggered();
@@ -48,6 +46,7 @@ private slots:
     void on_lvPlaylist_doubleClicked(const QModelIndex &index);
 
 private:
+    Ticker ticker;
     QString dbpath;
     QString lastplayed;
     QTimer fillTimer;
@@ -61,6 +60,7 @@ private:
     QActionGroup *queueTogglePlayType;
     VPlayer *player;
     Ui::PlaylistWidget *ui;
+    void setTicker(QString text);
     void loadLibrary();
     void saveLibrary();
 };

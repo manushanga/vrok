@@ -223,7 +223,6 @@ void FFMPEGDecoder::reader()
 
         av_free_packet(&packet);
 
-        *bout->currentBufferSamples() = vpbuffer_write / bout->chans;
         owner->postProcess();
 
         owner->mutex[0].lock();

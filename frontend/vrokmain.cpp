@@ -29,8 +29,6 @@
 #include "players/mpeg.h"
 #include "players/ogg.h"
 
-#include "playlistfactory.h"
-
 #include <cstring>
 #include <ctime>
 

@@ -375,8 +375,6 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         outprop->buffer[0] = (float*)ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*outprop->chans);
         outprop->buffer[1] = (float*)ALIGNED_ALLOC(sizeof(float)*VPBUFFER_FRAMES*outprop->chans);
         outprop->cursor = &bufferCursor;
-        outprop->samples[0] = &bufferSamples[0];
-        outprop->samples[1] = &bufferSamples[1];
 
         assert(outprop->buffer[0] && outprop->buffer[1]);
 
@@ -386,8 +384,6 @@ void VPlayer::setOutBuffers(VPBuffer *outprop, VPBuffer **out)
         bout.buffer[1] = outprop->buffer[1];
 
         bout.cursor = &bufferCursor;
-        bout.samples[0] = &bufferSamples[0];
-        bout.samples[1] = &bufferSamples[1];
 
         bufferCursor =0;
 

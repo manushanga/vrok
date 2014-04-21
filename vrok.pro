@@ -239,11 +239,13 @@ QMAKE_CXXFLAGS_DEBUG +=  -g -O3 #-pgc
 
 HEADERS += \
     frontend/playlistwidget.h \
-    frontend/controlswidget.h
+    frontend/controlswidget.h \
+    frontend/ticker.h
 
 SOURCES += \
     frontend/playlistwidget.cpp \
-    frontend/controlswidget.cpp
+    frontend/controlswidget.cpp \
+    frontend/ticker.cpp
 
 FORMS += \
     frontend/playlistwidget.ui \

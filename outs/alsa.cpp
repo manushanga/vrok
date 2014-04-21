@@ -24,7 +24,6 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
     unsigned out_frames=0;
     unsigned chans=self->bin->chans;
 
-    int *cursor = self->bin->cursor;
     float *buffer[2];
     buffer[0] = self->bin->buffer[0];
     buffer[1] = self->bin->buffer[1];
@@ -52,7 +51,7 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
 
         self->owner->mutex[1].lock();
 
-        self->rd.input_frames = *self->bin->nextBufferSamples();
+        self->rd.input_frames = VPBUFFER_FRAMES ;
         self->rd.data_in = self->bin->nextBuffer();
 
 

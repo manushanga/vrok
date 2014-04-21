@@ -34,7 +34,6 @@ void MPEGDecoder::reader()
 {
     int err = MPG123_ERR;
     size_t done=0;
-    size_t totalDone=0;
     DBG(&owner->bout<<bout);
     size_t count = VPBUFFER_FRAMES*bout->chans;
 
@@ -44,19 +43,21 @@ void MPEGDecoder::reader()
             mpg123_seek(mh, (off_t) seek_to,SEEK_SET);
             seek_to = SEEK_MAX;
         }
-        totalDone=0;
+
         while (done<count*sizeof(short) && err != MPG123_DONE){
             err = mpg123_read( mh, ((unsigned char *) buffer)+done, count*sizeof(short)-done, &done );
-            totalDone+=done;
         }
-        *bout->currentBufferSamples() =  totalDone/(bout->chans*sizeof(short));
-        done=0;
+
 
         if (err == MPG123_ERR) {
             DBG("skipping through");
         } else {
-            for (size_t i=0;i<count;i++){
+            size_t samples= done / sizeof(short) ;
+            for (size_t i=0;i<samples;i++){
                 bout->currentBuffer()[i]=SHORTTOFL*buffer[i];
+            }
+            for (size_t i=samples;i<count;i++) {
+                bout->currentBuffer()[i]=0.0f;
             }
             owner->postProcess();
 
@@ -65,6 +66,8 @@ void MPEGDecoder::reader()
             owner->mutex[1].unlock();
         }
 
+
+        done=0;
         if (err == MPG123_DONE){
             break;
         }
