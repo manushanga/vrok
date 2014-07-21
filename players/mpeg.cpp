@@ -50,7 +50,8 @@ void MPEGDecoder::reader()
 
 
         if (err == MPG123_ERR) {
-            DBG("skipping through");
+            DBG("MPG123 Error");
+            break;
         } else {
             size_t samples= done / sizeof(short) ;
             for (size_t i=0;i<samples;i++){
@@ -74,9 +75,9 @@ void MPEGDecoder::reader()
     }
 }
 
-int MPEGDecoder::open(const char *url)
+int MPEGDecoder::open(VPResource resource)
 {
-    fcurrent=fopenu(url,FOPEN_RB);
+    fcurrent=fopenu(resource.getPath().c_str(),FOPEN_RB);
     if (mpg123_open_fd(mh, fileno(fcurrent)) != MPG123_OK) {
         DBG("open file fail");
         return -1;

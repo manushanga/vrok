@@ -50,7 +50,7 @@ void VPlayer::playWork(VPlayer *self)
             self->nextTrackCallback(self->nextTrack, self->nextCallbackUser);
 
             if (self->nextTrack[0]!='\0') {
-                self->open(self->nextTrack,true);
+                self->open(VPResource(std::string(self->nextTrack),VPResource::INIT_FILE),true);
                 DBG("new track");
             } else {
                 delete self->vpdecode;
@@ -136,7 +136,7 @@ void VPlayer::setEffectsList(std::vector<VPEffectPlugin *> list)
 
         char copy[256];
         strcpy(copy,currentTrack);
-        open(copy);
+        open(VPResource(std::string(copy),VPResource::INIT_FILE));
 		
 		pause();
 		setPosition(pos);
@@ -207,7 +207,7 @@ void VPlayer::uiStateChanged(VPWindowState state)
         effects[i].eff->minimized(state == VPMINIMIZED);
     }
 }
-int VPlayer::open(const char *url, bool tryGapless)
+int VPlayer::open(VPResource resource, bool tryGapless)
 {
 
     control.lock();
@@ -219,24 +219,13 @@ int VPlayer::open(const char *url, bool tryGapless)
         stop();
     }
 
-    DBG("ss");
     currentTrack[0]='\0';
 
-    std::string ext;
-    for (int i=strlen(url)-1;i>0;i--) {
-        if (url[i]=='.'){
-            break;
-        } else {
-            ext+=(url[i]);
-        }
-    }
-    std::reverse(ext.begin(),ext.end());
-    ext=std::to_lower(ext);
-    vpdecode=VPDecoderFactory::getSingleton()->create(ext,this);
+    vpdecode=VPDecoderFactory::getSingleton()->create(resource,this);
     int ret = 0;
 
     if (vpdecode){
-        ret = vpdecode->open(url);
+        ret = vpdecode->open(resource);
         if (ret < 0) {
             WARN("dropping file");
             delete vpdecode;
@@ -264,7 +253,7 @@ int VPlayer::open(const char *url, bool tryGapless)
 
     announce(VP_STATUS_OPEN);
 
-    strcpy(currentTrack, url);
+    strcpy(currentTrack, resource.getPath().c_str());
 
     vpout->resume();
 

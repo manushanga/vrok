@@ -24,10 +24,10 @@ OGGDecoder::OGGDecoder(VPlayer *v) : seek_to(SEEK_MAX), buffer(NULL)
     owner =v;
 }
 
-int OGGDecoder::open(const char *url)
+int OGGDecoder::open(VPResource resource)
 {
 
-    int ret=ov_fopen(url,&vf);
+    int ret=ov_fopen(resource.getPath().c_str(),&vf);
     if (ret<0){
         DBG("open fail");
         return -1;

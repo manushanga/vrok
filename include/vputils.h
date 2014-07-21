@@ -31,6 +31,8 @@
 #endif
 
 extern std::shared_mutex __m_console;
+std::string function_name(const std::string& func);
+std::string class_name(const std::string& func);
 
 // aligning
 #if defined(__GNUC__)
@@ -79,9 +81,10 @@ void __mingw_aligned_free (void *memblock);
 #define DEBUG
 #if defined(DEBUG)
     #include <iostream>
+    #include "vputils.h"
     #define DBG(...) \
     __m_console.lock(); \
-    std::cout<<__VA_ARGS__<<" at "<<FUNCTION_NAME<<std::endl; \
+    std::cout<<class_name(FUNCTION_NAME)<<": "<<__VA_ARGS__<<" at "<<function_name(FUNCTION_NAME)<<std::endl; \
     __m_console.unlock();
 #else
     #define DBG(...)
@@ -100,7 +103,7 @@ void __mingw_aligned_free (void *memblock);
 #else
 #define WARN(...) \
     __m_console.lock(); \
-    std::cerr<<__VA_ARGS__<<std::endl; \
+    std::cerr<<" *** WARN: "<<__VA_ARGS__<<" *** "<<std::endl; \
     __m_console.unlock();
 
 #endif
@@ -109,7 +112,6 @@ void __mingw_aligned_free (void *memblock);
 #include <cstdio>
 #include <winnls.h>
 inline FILE *fopenu(const char *path,const char *opt){
-    DBG(path);
     wchar_t wpath[1024];
     wchar_t wopt[8];
     MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, 1024);

@@ -32,7 +32,9 @@ public:
     unsigned in_srate, out_srate;
     SRC_STATE *rs;
     SRC_DATA rd;
+    int multiplier;
     float *out_buf;
+    int *out_buf_i;
     unsigned out_frames;
 
     virtual int init(VPlayer *v, VPBuffer *in);

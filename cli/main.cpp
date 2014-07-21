@@ -25,11 +25,10 @@ int main(int argc, char *argv[])
     VPlayer *pl= new VPlayer(next_cb, NULL);
     VPEffectPluginEQ *eq=new VPEffectPluginEQ();
 
-
     std::vector<VPEffectPlugin *> effects;
     effects.push_back((VPEffectPlugin*)eq);
     pl->setEffectsList(effects);
-    pl->open(argv[1]);
+    pl->open(VPResource(std::string(argv[1]),VPResource::INIT_URL));
 
     while (pl->isPlaying()) {
         sleep(2);

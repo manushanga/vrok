@@ -4,6 +4,12 @@
   hold. This notice must be retained.
 
   See LICENSE for details.
+
+  Based on,
+  http://stackoverflow.com/questions/9799560/decode-audio-using-libavcodec-and-play-using-libao
+  http://dranger.com/ffmpeg/tutorial05.html
+  http://dranger.com/ffmpeg/tutorial04.html
+
 */
 #include <limits>
 #include "vrok.h"
@@ -21,9 +27,19 @@ VPDecoderPlugin* FFMPEGDecoder::VPDecoderFFMPEG_new(VPlayer *v){
     return (VPDecoderPlugin *) new FFMPEGDecoder(v);
 }
 
-int FFMPEGDecoder::open(const char *url)
+int FFMPEGDecoder::open(VPResource resource)
 {
-    if(avformat_open_input(&container,url,NULL,NULL)<0){
+    // Vrok's file:// definition is not the same as of URL RFC, see resource.h
+    std::string filename;
+    if (resource.getProtocol() == "file")
+    {
+        filename=resource.getPath();
+    } else
+    {
+        filename=resource.getURL();
+    }
+    DBG(filename);
+    if(avformat_open_input(&container,filename.c_str(),NULL,NULL)<0){
         DBG("Can't open file");
         return -1;
     }
@@ -45,11 +61,11 @@ int FFMPEGDecoder::open(const char *url)
         return -1;
     }
 
-
+    audio_st = container->streams[audio_stream_id];
     ctx=container->streams[audio_stream_id]->codec;
     codec=avcodec_find_decoder(ctx->codec_id);
 
-
+    DBG("codec: "<<codec->long_name);
     if(codec==NULL){
         DBG("Cannot find codec");
         return -1;
@@ -74,14 +90,15 @@ int FFMPEGDecoder::open(const char *url)
         bout->buffer[0][i]=0.0f;
         bout->buffer[1][i]=0.0f;
     }
-    // fast but not exact, oh well
-    frame_count = int64_t(container->duration * (double(ctx->time_base.num)/double(ctx->time_base.den))) ;
+
+    duration_in_seconds = container->duration / AV_TIME_BASE;
 
     return 0;
 }
 
 void FFMPEGDecoder::reader()
 {
+
     int frameFinished=0,packetFinished=0;
     int plane_size;
     int vpbuffer_write=0;
@@ -91,9 +108,7 @@ void FFMPEGDecoder::reader()
     av_init_packet(&packet);
     AVFrame *frame=avcodec_alloc_frame();
 
-    int64_t timeBase = (int64_t(ctx->time_base.num) * AV_TIME_BASE) / int64_t(ctx->time_base.den);
-    frame_position =0;
-
+    current_in_seconds=0;
 
     while (ATOMIC_CAS(&owner->work,true,true) && packetFinished >=0) {
         vpbuffer_write=0;
@@ -114,12 +129,12 @@ void FFMPEGDecoder::reader()
             }
             if (ATOMIC_CAS(&seek_to,SEEK_MAX,SEEK_MAX) != SEEK_MAX ){
 
-                int ret=avformat_seek_file(container,audio_stream_id,std::numeric_limits<int64_t>::min(),(int64_t)seek_to*timeBase,std::numeric_limits<int64_t>::max(),AVSEEK_FLAG_FRAME|AVSEEK_FLAG_ANY);
+                int ret=av_seek_frame(container,audio_stream_id,seek_to *audio_st->time_base.den / audio_st->time_base.num ,AVSEEK_FLAG_ANY);
                 if (ret<0) {
                     DBG("seek failed");
                 } else {
 
-                    frame_position=seek_to;
+                    current_in_seconds=seek_to;
                     avcodec_flush_buffers(ctx);
                 }
                 seek_to = SEEK_MAX;
@@ -128,13 +143,13 @@ void FFMPEGDecoder::reader()
             if(packet.stream_index==audio_stream_id){
                 avcodec_decode_audio4(ctx,frame,&frameFinished,&packet);
 
-                frame_position+=1;
                 av_samples_get_buffer_size(&plane_size, ctx->channels,
                                                     frame->nb_samples,
                                                     ctx->sample_fmt, 1);
 
-                if(frameFinished){
 
+                if(frameFinished){
+                    current_in_seconds = ( audio_st->time_base.num * frame->pkt_pts )/ audio_st->time_base.den ;
                     switch (sfmt){
 
                         case AV_SAMPLE_FMT_S16P:
@@ -239,7 +254,7 @@ void FFMPEGDecoder::reader()
 uint64_t FFMPEGDecoder::getLength()
 {
 
-    return frame_count;
+    return duration_in_seconds;
 }
 
 void FFMPEGDecoder::setPosition(uint64_t t)
@@ -252,17 +267,14 @@ void FFMPEGDecoder::setPosition(uint64_t t)
 
 uint64_t FFMPEGDecoder::getPosition()
 {
-    return frame_position;
+    return current_in_seconds;
 }
 
 FFMPEGDecoder::~FFMPEGDecoder()
 {
-    DBG("deffmpeg");
-
+    DBG("cleaning up");
     avcodec_close(ctx);
     av_close_input_file(container);
-    //avformat_close_input(&container);
-    //avformat_free_context(container);
 }
 
 FFMPEGDecoder::FFMPEGDecoder(VPlayer *v) :
@@ -270,7 +282,7 @@ FFMPEGDecoder::FFMPEGDecoder(VPlayer *v) :
     audio_stream_id(-1),
     ctx(NULL),
     codec(NULL),
-    frame_position(0),
+    current_in_seconds(0),
     seek_to(SEEK_MAX)
 {
     owner = v;

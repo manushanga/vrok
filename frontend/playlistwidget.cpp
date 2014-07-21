@@ -278,7 +278,7 @@ void PlaylistWidget::on_tvLibrary_doubleClicked(const QModelIndex &index)
     QStandardItem *item=model->itemFromIndex(index);
     if (!item->hasChildren()) {
         lastplayed=index.sibling(item->row(),1).data().toString();  
-        player->open(lastplayed.toUtf8().data(),false);
+        player->open( VPResource( std::string(lastplayed.toUtf8().data()), VPResource::INIT_FILE ) ,false);
         setTicker(lastplayed.section('/',-1,-1));
     }
 }
@@ -354,7 +354,7 @@ void PlaylistWidget::on_lvPlaylist_doubleClicked(const QModelIndex &index)
     QStandardItem *item=model->itemFromIndex(index);
     if (!item->hasChildren()) {
         lastplayed=index.sibling(item->row(),1).data().toString();
-        player->open(lastplayed.toUtf8().data(),false);
+        player->open( VPResource( std::string(lastplayed.toUtf8().data()), VPResource::INIT_FILE ),false);
         if (contextMenuQueue[QA_FILLRPT]->isChecked()) {
             int r=model->rowCount();
             model->setItem(r,0, item->clone());

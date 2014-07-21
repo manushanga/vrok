@@ -2,6 +2,7 @@
 #define CONFIG_OUT_H
 
 #include <map>
+#include <set>
 #include <list>
 #include <cassert>
 
@@ -17,7 +18,7 @@
 
 #include "cpplib.h"
 
-#define VERSION 3
+#define VERSION 4
 
 class VPlayer;
 
@@ -99,12 +100,13 @@ public:
 struct vpdecoder_entry_t{
     std::string name;
     vpdecode_creator_t creator;
+    std::string protocols;
+    std::string extensions;
 };
 
 class VPDecoderFactory{
 private:
-
-
+    std::vector< vpdecoder_entry_t > decoders_;
     std::map<std::string, vpdecoder_entry_t> creators;
 public:
     static VPDecoderFactory *getSingleton()
@@ -113,30 +115,9 @@ public:
         return &vpd;
     }
     VPDecoderFactory();
-    VPDecoderPlugin *create(std::string ext, VPlayer *v)
-    {
-        std::map<std::string, vpdecoder_entry_t>::iterator it=creators.find(ext);
-        if (it == creators.end())
-        {
-            WARN("no decoder for "<<ext);
-            return NULL;
-        } else {
-            return (VPDecoderPlugin *)it->second.creator(v);
-        }
-    }
-    int count()
-    {
-        return (int)creators.size();
-    }
-    void getExtensionsList(std::vector<std::string>& list)
-    {
-        for (std::map<std::string, vpdecoder_entry_t>::iterator it=creators.begin();
-             it!=creators.end();
-             it++)
-        {
-            list.push_back(it->first);
-        }
-    }
+    VPDecoderPlugin *create(VPResource& resource, VPlayer *v);
+    int count();
+    void getExtensionsList(std::vector<std::string>& list);
 };
 #define VPBUFFER_FRAMES VPOutFactory::getSingleton()->getBufferSize()
 #endif // CONFIG_OUT_H

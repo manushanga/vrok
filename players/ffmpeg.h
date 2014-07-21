@@ -34,14 +34,15 @@ private:
     AVSampleFormat sfmt;
     AVFrame *frame;
     AVPacket packet;
+    AVStream *audio_st;
     ALIGNAUTO (float remainder[FFMPEG_MAX_BUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE]);
-    uint64_t frame_position;
+    uint64_t current_in_seconds;
     uint64_t seek_to;
-    uint64_t frame_count;
+    uint64_t duration_in_seconds;
 public:
     FFMPEGDecoder(VPlayer *v);
     static VPDecoderPlugin* VPDecoderFFMPEG_new(VPlayer *v);
-    int open(const char *url);
+    int open(VPResource resource);
     void reader();
     uint64_t getLength();
     void setPosition(uint64_t t);

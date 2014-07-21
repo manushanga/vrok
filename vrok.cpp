@@ -52,11 +52,15 @@ VPOutFactory::VPOutFactory()
 VPDecoderFactory::VPDecoderFactory()
 {
     vpdecoder_entry_t decoders[]= {
-     {"FLAC",(vpdecode_creator_t)FLACDecoder::VPDecoderFLAC_new },
-     {"MPEG",(vpdecode_creator_t)MPEGDecoder::VPDecoderMPEG_new },
-     {"OGG",(vpdecode_creator_t)OGGDecoder::VPDecoderOGG_new },
-     {"FFMPEG",(vpdecode_creator_t)FFMPEGDecoder::VPDecoderFFMPEG_new }
+     {"FLAC", (vpdecode_creator_t)FLACDecoder::VPDecoderFLAC_new, "file", "flac" },
+     {"MPEG",(vpdecode_creator_t)MPEGDecoder::VPDecoderMPEG_new, "file", "mpX,mp2,mp1"},
+     {"OGG",(vpdecode_creator_t)OGGDecoder::VPDecoderOGG_new, "file", "ogg"},
+     {"FFMPEG",(vpdecode_creator_t)FFMPEGDecoder::VPDecoderFFMPEG_new, "ANY", "ANY"}
     };
+
+    for (int i=0;i<sizeof(decoders)/sizeof(vpdecoder_entry_t);i++){
+        decoders_.push_back(decoders[i]);
+    }
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("flac",decoders[0]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp1",decoders[1]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp2",decoders[1]));
@@ -75,4 +79,45 @@ VPDecoderFactory::VPDecoderFactory()
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("wma",decoders[3]));
     creators.insert(std::pair<std::string, vpdecoder_entry_t>("wmv",decoders[3]));
 
+}
+
+
+VPDecoderPlugin *VPDecoderFactory::create(VPResource& resource, VPlayer *v)
+{
+    for (std::vector< vpdecoder_entry_t >::iterator it=decoders_.begin();it!=decoders_.end();it++)
+    {
+        DBG(it->name<<" "<<resource.getExtension()<<" "<<resource.getProtocol());
+        std::string ext,proto;
+        ext=resource.getExtension();
+        proto=resource.getProtocol();
+
+        if (it->protocols.compare("ANY") == 0){
+            if (it->extensions.compare("ANY") == 0){
+                return (VPDecoderPlugin *) it->creator(v);
+            } else if (it->extensions.find(ext) != std::string::npos) {
+                return (VPDecoderPlugin *) it->creator(v);
+            }
+        } else if (it->protocols.find(proto) != std::string::npos) {
+            if (it->extensions.compare("ANY") == 0){
+                return (VPDecoderPlugin *) it->creator(v);
+            } else if (it->extensions.find(ext) != std::string::npos) {
+                return (VPDecoderPlugin *) it->creator(v);
+            }
+        }
+    }
+    WARN("No decoder found");
+    return NULL;
+}
+int VPDecoderFactory::count()
+{
+    return (int)decoders_.size();
+}
+void VPDecoderFactory::getExtensionsList(std::vector<std::string>& list)
+{
+    for (std::map<std::string, vpdecoder_entry_t>::iterator it=creators.begin();
+         it!=creators.end();
+         it++)
+    {
+        list.push_back(it->first);
+    }
 }

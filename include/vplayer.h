@@ -13,6 +13,7 @@
 
 #include "threads.h"
 #include "vputils.h"
+#include "resource.h"
 
 #define VP_MAX_EFFECTS 32
 
@@ -105,7 +106,7 @@ public:
     void setOutBuffers(VPBuffer *outprop, VPBuffer **out);
 
     // external interface
-    int open(const char *url, bool tryGapless=false);
+    int open(VPResource resource, bool tryGapless=false);
     int play();
     void pause();
     void stop();

@@ -23,7 +23,9 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
     int ret;
     unsigned out_frames=0;
     unsigned chans=self->bin->chans;
-
+    int *out_buf_i=self->out_buf_i;
+    float *out_buf=self->out_buf;
+    int multiplier = self->multiplier;
     float *buffer[2];
     buffer[0] = self->bin->buffer[0];
     buffer[1] = self->bin->buffer[1];
@@ -63,8 +65,11 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
             out_frames+=self->rd.output_frames_gen;
         }
 
+        for (int i=0;i<out_frames*chans;i++){
+            out_buf_i[i]=out_buf[i]*multiplier;
+        }
         ret = snd_pcm_writei(self->handle,
-                             self->out_buf,
+                             out_buf_i,
                              out_frames);
 
         self->owner->mutex[0].unlock();
@@ -113,6 +118,7 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
     bin = in;
     if (snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NO_AUTO_RESAMPLE) < 0){
         DBG("Alsa:init: failed to open pcm");
+        exit(0);
         return -1;
     }
     snd_pcm_sw_params_t *swparams;
@@ -125,8 +131,33 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
     snd_pcm_hw_params_alloca(&params);
     snd_pcm_hw_params_any(handle, params);
     snd_pcm_hw_params_set_access(handle, params, SND_PCM_ACCESS_RW_INTERLEAVED);
-
-    snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_FLOAT);
+    snd_pcm_format_mask_t *mask;
+    snd_pcm_format_mask_alloca(&mask);
+    snd_pcm_hw_params_get_format_mask(params, mask);
+    if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S32))
+    {
+        DBG("bit depth is 32");
+        snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S32);
+        multiplier = 1<<31 -1;
+    }
+    else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S24))
+    {
+        DBG("bit depth is 24");
+        snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S24);
+        multiplier = 1<<23 -1;
+    }
+    else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S16))
+    {
+        DBG("bit depth is 16");
+        snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16);
+        multiplier = 1<<15 -1;
+    }
+    else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S8))
+    {
+        DBG("bit depth is 8");
+        snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S8);
+        multiplier = 1<<7 -1;;
+    }
 
     snd_pcm_hw_params_set_channels(handle, params, bin->chans);
 
@@ -150,7 +181,9 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
 
     rd.src_ratio = (out_srate*1.0)/(in_srate*1.0);
     out_frames = (VPBUFFER_FRAMES*rd.src_ratio)*2;
+
     out_buf = (float *)ALIGNED_ALLOC(sizeof(float)*out_frames*bin->chans);
+    out_buf_i = (int *)ALIGNED_ALLOC(sizeof(int)*out_frames*bin->chans);
 
     DBG("target rate "<<out_srate);
     work = true;
@@ -183,6 +216,7 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     snd_pcm_close(handle);
 
     ALIGNED_FREE(out_buf);
+    ALIGNED_FREE(out_buf_i);
     src_delete(rs);
 
 }

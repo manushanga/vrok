@@ -17,7 +17,7 @@ public:
     uint64_t seek_to;
 
     OGGDecoder(VPlayer *v);
-    int open(const char *url);
+    int open(VPResource resource);
     void reader();
     uint64_t getLength();
     void setPosition(uint64_t t);
