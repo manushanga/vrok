@@ -14,8 +14,9 @@ private:
     std::string url_;
 public:
     enum VPResourceInitType {INIT_FILE, INIT_URL};
-
+    VPResource();
     VPResource(std::string url, VPResourceInitType type);
+    void setURL(std::string url);
     std::string getPath();
     std::string getURL();
     std::string getProtocol();

@@ -31,6 +31,7 @@
 #include "out.h"
 #include "decoder.h"
 #include "effect.h"
+#include "events.h"
 
 void VPlayer::playWork(VPlayer *self)
 {
@@ -43,15 +44,16 @@ void VPlayer::playWork(VPlayer *self)
         self->mutex[0].lock();
         self->mutex[0].unlock();
         DBG("done");
-        self->nextTrack[0]='\0';
+        self->nextResource.setURL("");
 
 
-        if (self->nextTrackCallback && self->work) {
-            self->nextTrackCallback(self->nextTrack, self->nextCallbackUser);
+        if ( self->work) {
 
-            if (self->nextTrack[0]!='\0') {
-                self->open(VPResource(std::string(self->nextTrack),VPResource::INIT_FILE),true);
-                DBG("new track");
+            VPEvents::getSingleton()->fire("GrabNext",&self->nextResource,sizeof(VPResource));
+
+            if (self->nextResource.getURL().size() > 0) {
+                self->open(self->nextResource,true);
+                DBG("new track arrived");
             } else {
                 delete self->vpdecode;
                 self->vpdecode = NULL;
@@ -73,10 +75,9 @@ void VPlayer::playWork(VPlayer *self)
 
 }
 
-VPlayer::VPlayer(NextTrackCallback cb, void *cb_user)
+VPlayer::VPlayer()
 {
     control.lock();
-    nextCallbackUser = cb_user;
 
     eff_count = 0;
     playWorker = NULL;
@@ -88,8 +89,6 @@ VPlayer::VPlayer(NextTrackCallback cb, void *cb_user)
     vpout=NULL;
     vpdecode=NULL;
 
-    nextTrackCallback = cb;
-    nextTrack[0]='\0';
     currentTrack[0]='\0';
 
     bout.chans = 0;
@@ -100,7 +99,14 @@ VPlayer::VPlayer(NextTrackCallback cb, void *cb_user)
     bufferCursor = 0;
 
     mutex[1].try_lock();
+
+    VPEvents::getSingleton()->addEvent("GrabNext",1);
+    VPEvents::getSingleton()->addEvent("StateChangePlaying",0);
+    VPEvents::getSingleton()->addEvent("StateChangePaused",0);
+    VPEvents::getSingleton()->addEvent("ErrorFileOpenFailure",0);
+
     control.unlock();
+
 }
 
 
@@ -259,6 +265,9 @@ int VPlayer::open(VPResource resource, bool tryGapless)
 
     control.unlock();
 
+    // we started rolling so announce we are playing
+    VPEvents::getSingleton()->fire("StateChangePlaying",NULL,0);
+
     return ret;
 }
 int VPlayer::play()
@@ -270,7 +279,7 @@ int VPlayer::play()
         announce(VP_STATUS_PLAYING);
     }
     control.unlock();
-
+    VPEvents::getSingleton()->fire("StateChangePlaying",NULL,0);
     return 0;
 }
 
@@ -283,7 +292,7 @@ void VPlayer::pause()
         announce(VP_STATUS_PAUSED);
     }
     control.unlock();
-
+    VPEvents::getSingleton()->fire("StateChangePaused",NULL,0);
 }
 
 void VPlayer::stop()

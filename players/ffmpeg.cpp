@@ -21,8 +21,10 @@
 VPDecoderPlugin* FFMPEGDecoder::VPDecoderFFMPEG_new(VPlayer *v){
     // one time call for a single load
     static int s=0;
-    if (s==0)
+    if (s==0) {
+        avformat_network_init();
         av_register_all();
+    }
     s++;
     return (VPDecoderPlugin *) new FFMPEGDecoder(v);
 }

@@ -76,7 +76,7 @@ private:
 public:
     char currentTrack[256];
     // take lock on mutex_control when writing to this
-    char nextTrack[256];
+    VPResource nextResource;
 
     // mutex[0..1] for buffer, mutex[2..3] for buffer2
     std::shared_mutex mutex[2];
@@ -98,7 +98,7 @@ public:
     // bin: buffer in for vpout
     VPBuffer bout,bin;
 
-    VPlayer(NextTrackCallback cb, void *cb_user);
+    VPlayer();
 
     // internal interface
     static void playWork(VPlayer *self);

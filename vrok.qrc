@@ -1,6 +1,14 @@
 <RCC>
     <qresource prefix="/icon">
-        <file>vrok.png</file>
+        <file>res/vrok.png</file>
+        <file>res/streams.png</file>
+        <file>res/local.png</file>
+        <file>res/radio.png</file>
+        <file>res/play.png</file>
+        <file>res/pause.png</file>
+        <file>res/about.png</file>
+        <file>res/plugins.png</file>
+        <file>res/devices.png</file>
     </qresource>
     <qresource prefix="/images">
         <file>effects/spatial/res/diagram.png</file>

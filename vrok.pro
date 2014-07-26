@@ -241,13 +241,15 @@ HEADERS += \
     frontend/playlistwidget.h \
     frontend/controlswidget.h \
     frontend/ticker.h \
-    include/resource.h
+    include/resource.h \
+    include/events.h
 
 SOURCES += \
     frontend/playlistwidget.cpp \
     frontend/controlswidget.cpp \
     frontend/ticker.cpp \
-    resource.cpp
+    resource.cpp \
+    util/events.cpp
 
 FORMS += \
     frontend/playlistwidget.ui \

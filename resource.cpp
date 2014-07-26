@@ -1,16 +1,22 @@
 #include "resource.h"
 #include <iostream>
 
-/**
- *
- *
- */
+VPResource::VPResource()
+{
+    url_="";
+}
+
 VPResource::VPResource(std::string url, VPResourceInitType type)
 {
     if (type == INIT_FILE)
         url_ = "file://" + url;
     else
         url_ = url;
+}
+
+void VPResource::setURL(std::string url)
+{
+    url_ = url;
 }
 
 std::string VPResource::getPath()

@@ -57,43 +57,11 @@ private:
     std::map<std::string, vpout_entry_t> creators;
     std::string currentOut;
 public:
-    static VPOutFactory *getSingleton()
-    {
-        static VPOutFactory vpf;
-        return &vpf;
-    }
-    inline int getBufferSize()
-    {
-        std::map<std::string, vpout_entry_t>::iterator it=creators.find(currentOut);
-        if (it == creators.end()) {
-            DBG("Error getting buffer size for outplugin");
-            return 0;
-        } else {
-            return it->second.frames;
-        }
-    }
+    static VPOutFactory *getSingleton();
     VPOutFactory();
-    inline VPOutPlugin *create()
-    {
-        std::map<std::string, vpout_entry_t>::iterator it=creators.find(currentOut);
-        if (it!= creators.end()){
-            return (VPOutPlugin *)it->second.creator();
-        } else {
-            return NULL;
-        }
-    }
-
-    inline VPOutPlugin *create(std::string name)
-    {
-        std::map<std::string, vpout_entry_t>::iterator it=creators.find(name);
-        if (it!= creators.end()){
-            currentOut = name;
-            VSettings::getSingleton()->writeString("outplugin",currentOut);
-            return (VPOutPlugin *)it->second.creator();
-        } else {
-            return NULL;
-        }
-    }
+    int getBufferSize();
+    VPOutPlugin *create();
+    VPOutPlugin *create(std::string name);
 
 };
 
@@ -107,13 +75,8 @@ struct vpdecoder_entry_t{
 class VPDecoderFactory{
 private:
     std::vector< vpdecoder_entry_t > decoders_;
-    std::map<std::string, vpdecoder_entry_t> creators;
 public:
-    static VPDecoderFactory *getSingleton()
-    {
-        static VPDecoderFactory vpd;
-        return &vpd;
-    }
+    static VPDecoderFactory *getSingleton();
     VPDecoderFactory();
     VPDecoderPlugin *create(VPResource& resource, VPlayer *v);
     int count();

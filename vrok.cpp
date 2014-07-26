@@ -61,27 +61,52 @@ VPDecoderFactory::VPDecoderFactory()
     for (int i=0;i<sizeof(decoders)/sizeof(vpdecoder_entry_t);i++){
         decoders_.push_back(decoders[i]);
     }
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("flac",decoders[0]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp1",decoders[1]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp2",decoders[1]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp3",decoders[1]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("ogg",decoders[2]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mpg",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("avi",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mpeg",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mp4",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("mkv",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("dat",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("vob",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("aac",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("wav",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("flv",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("wma",decoders[3]));
-    creators.insert(std::pair<std::string, vpdecoder_entry_t>("wmv",decoders[3]));
 
 }
 
+VPOutFactory *VPOutFactory::getSingleton()
+{
+    static VPOutFactory vpf;
+    return &vpf;
+}
+int VPOutFactory::getBufferSize()
+{
+    std::map<std::string, vpout_entry_t>::iterator it=creators.find(currentOut);
+    if (it == creators.end()) {
+        DBG("Error getting buffer size for outplugin");
+        return 0;
+    } else {
+        return it->second.frames;
+    }
+}
+VPOutPlugin *VPOutFactory::create()
+{
+    std::map<std::string, vpout_entry_t>::iterator it=creators.find(currentOut);
+    if (it!= creators.end()){
+        return (VPOutPlugin *)it->second.creator();
+    } else {
+        return NULL;
+    }
+}
 
+VPOutPlugin *VPOutFactory::create(std::string name)
+{
+    std::map<std::string, vpout_entry_t>::iterator it=creators.find(name);
+    if (it!= creators.end()){
+        currentOut = name;
+        VSettings::getSingleton()->writeString("outplugin",currentOut);
+        return (VPOutPlugin *)it->second.creator();
+    } else {
+        return NULL;
+    }
+}
+
+
+VPDecoderFactory *VPDecoderFactory::getSingleton()
+{
+    static VPDecoderFactory vpd;
+    return &vpd;
+}
 VPDecoderPlugin *VPDecoderFactory::create(VPResource& resource, VPlayer *v)
 {
     for (std::vector< vpdecoder_entry_t >::iterator it=decoders_.begin();it!=decoders_.end();it++)
@@ -114,10 +139,8 @@ int VPDecoderFactory::count()
 }
 void VPDecoderFactory::getExtensionsList(std::vector<std::string>& list)
 {
-    for (std::map<std::string, vpdecoder_entry_t>::iterator it=creators.begin();
-         it!=creators.end();
-         it++)
+    for (std::vector< vpdecoder_entry_t >::iterator it=decoders_.begin();it!=decoders_.end();it++)
     {
-        list.push_back(it->first);
+        std::split(it->extensions,',',list);
     }
 }

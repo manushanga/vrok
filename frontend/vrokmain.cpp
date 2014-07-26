@@ -103,9 +103,9 @@ VrokMain::VrokMain(QWidget *parent) :
     rw=NULL;
     sw=NULL;
 
-    setWindowIcon(QIcon(":icon/vrok.png"));
+    setWindowIcon(QIcon(":icon/res/vrok.png"));
 
-    vp = new VPlayer(NULL, NULL);
+    vp = new VPlayer();
     eq = new VPEffectPluginEQ();
     sp = new VPEffectPluginSpatial();
     vz = new VPEffectPluginVis();

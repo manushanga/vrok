@@ -9,8 +9,10 @@
 #include <QStandardItemModel>
 #include <QActionGroup>
 #include <QTimer>
+#include <QMenu>
 
 #include "vrok.h"
+#include "events.h"
 #include "ticker.h"
 
 namespace Ui {
@@ -23,6 +25,8 @@ class PlaylistWidget : public ManagedDockWidget
 
 public:
     static void callbackNext(char *mem, void *user);
+    static void nextResource(void *message, int messageLength, void *user);
+
     explicit PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *parent = 0);
     void registerUi();
     QStringList getExtensionList();
@@ -43,19 +47,29 @@ private slots:
     void actionQueueClear();
     void actionSetLibDir();
     void actionRescan();
+    void actionRadioAdd();
+    void actionRadioRemove();
     void on_lvPlaylist_doubleClicked(const QModelIndex &index);
+
+    void on_lvLibraries_clicked(const QModelIndex &index);
+
+    void on_tvLibrary_customContextMenuRequested(const QPoint &pos);
 
 private:
     Ticker ticker;
     QString dbpath;
     QString lastplayed;
     QTimer fillTimer;
-    QStandardItemModel model;
+    QMenu localMenu, streamsMenu, radioMenu;
+    int selectedModel;
+    std::shared_mutex modelGuard;
+    QStandardItemModel localModel,streamsModel,radioModel,devicesModel;
     QStandardItemModel searchModel;
     QStandardItemModel playlist;
 
     QList< QAction * > contextMenuFiles;
     QList< QAction * > contextMenuQueue;
+    QList< QAction * > contextMenuRadio;
     QActionGroup *queueToggleFillType;
     QActionGroup *queueTogglePlayType;
     VPlayer *player;
