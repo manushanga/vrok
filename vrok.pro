@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -236,20 +236,24 @@ QMAKE_CXXFLAGS_DEBUG +=  -g -O3 #-pgc
 
 }
 
+DEFINES += \
+    VPNETWORK_QT
 
 HEADERS += \
     frontend/playlistwidget.h \
     frontend/controlswidget.h \
     frontend/ticker.h \
     include/resource.h \
-    include/events.h
+    include/events.h \
+    include/network.h
 
 SOURCES += \
     frontend/playlistwidget.cpp \
     frontend/controlswidget.cpp \
     frontend/ticker.cpp \
     resource.cpp \
-    util/events.cpp
+    util/events.cpp \
+    util/network.cpp
 
 FORMS += \
     frontend/playlistwidget.ui \

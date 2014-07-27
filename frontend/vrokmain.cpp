@@ -83,6 +83,8 @@ void VrokMain::showAboutVrok()
              "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br/>"
              "<br/>GUI<br/>"
              "<a href=\"http://qt-project.org\">Qt</a>: Frontend<br/>"
+             "<a href=\"http://vlademareous.deviantart.com\">http://vlademareous.deviantart.com</a>: Sidebar icons \"4 Music Icons\"<br/>"
+             "<a href=\"http://mazenl77.deviantart.com/\">http://mazenl77.deviantart.com</a>: Playback Buttons \"I like buttons\"<br/>"
              "<br/>"
              "<span style=\"font-size: 8pt\">Bugs may exist. Built on " __DATE__ " at " __TIME__ ".</span>" );
     h.addWidget(&a);
