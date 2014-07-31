@@ -32,6 +32,8 @@
 #define M_RADIO 2
 #define M_DEVICES 3
 
+#include "network.h"
+
 void PlaylistWidget::callbackNext(char *mem, void *user)
 {
     PlaylistWidget *wgt=(PlaylistWidget*)user;
@@ -244,6 +246,8 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
 
     ui->lvLibraries->setModel(libraries_model);
     on_lvLibraries_clicked(libraries_model->index(0,0));
+   // std::network::data_t data;
+   // std::network::getSingleton()->network_operation("https://vws-0xdeafc0de.rhcloud.com/things",std::network::GET,data);
     srand(time(NULL));
 }
 

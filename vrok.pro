@@ -121,9 +121,10 @@ OTHER_FILES += README.md \
 
 
 linux* {
-LIBS     += -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
-LIBS    +=  -lavformat -lavcodec -lavutil
-LIBS += -lpthread -ldl
+LIBS        += -lm -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
+LIBS        += -lavformat -lavcodec -lavutil
+LIBS        += -lcurl
+LIBS        += -lpthread -ldl
 
 PulseAudio {
     LIBS += -lpulse-simple

@@ -39,7 +39,7 @@ private:
     SuperEqState sb_state;
     float sb_preamp;
     void *sb_paramsroot;
-
+    std::shared_mutex mutex;
     ALIGNAUTO(float sb_bands[BAR_COUNT]); // __attribute__ ((aligned(16)));
     ALIGNAUTO(float target[BAR_COUNT]);//__attribute__ ((aligned(16)));
 
@@ -52,24 +52,16 @@ public:
     VPEffectPluginEQ();
     inline const char **getBandNames() const { return sb_bandnames; }
     inline const float *getBands() const { return sb_bands; }
-    inline const float *getTargetBands() const {  return target; }
-    inline void setTargetBand(int i, float val) {
 
-        sb_bands[i]=(val);
-        target[i]=(val);
-
-        ATOMIC_CAS(&sched_recalc,false,true);
-    }
     inline void setAutoPreamp(bool yes){ autopreamp = yes; }
     inline bool getAutoPreamp() { return autopreamp; }
     inline void setBand(int i, float val) { sb_bands[i]=(val); ATOMIC_CAS(&sched_recalc,false,true);}
-    inline void setPreamp(float val) { sb_preamp = val; }
+    inline void setPreamp(float val) { sb_preamp = val; sb_recalc_table();}
     inline float getPreamp() const { return sb_preamp; }
     inline unsigned getBarCount() const { return BAR_COUNT; }
     inline unsigned getBarSetCount() const { return BAR_SETS; }
 
     int init(VPlayer *v, VPBuffer *in, VPBuffer **out);
-    void statusChange(VPStatus status);
     void process();
     int finit();
     ~VPEffectPluginEQ();

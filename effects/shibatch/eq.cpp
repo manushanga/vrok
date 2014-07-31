@@ -16,7 +16,7 @@
 #endif
 VPEffectPluginEQ::VPEffectPluginEQ()
 {
-    sb_preamp = (float) VSettings::getSingleton()->readFloat("eqpre",96.0f);
+    sb_preamp = (float) VSettings::getSingleton()->readFloat("eqpre",1.0f);
     autopreamp = (bool) VSettings::getSingleton()->readInt("autopreamp",0);
     sb_paramsroot = NULL;
     sched_recalc = true;
@@ -25,35 +25,29 @@ VPEffectPluginEQ::VPEffectPluginEQ()
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
         band.append(std::to_string(i));
-        target[i]=VSettings::getSingleton()->readFloat(band,pow(10,48.0f/-20));
-        DBG(band<<" "<<target[i]);
+        sb_bands[i]=VSettings::getSingleton()->readFloat(band,1.0f);
+
     }
     memset(&sb_state, 0, sizeof(SuperEqState));
     initd=false;
 
 }
 
-void VPEffectPluginEQ::statusChange(VPStatus status){
-    switch (status) {
-        case VP_STATUS_OPEN:
-        DBG("got status");
-
-        break;
-        default:
-        break;
-    }
-}
 VPEffectPluginEQ::~VPEffectPluginEQ()
 {
     if (initd)
         finit();
 }
+
 void VPEffectPluginEQ::sb_recalc_table()
 {
     void *params = paramlist_alloc ();
+    float sb_bands_copy[18];
+    for (int i=0;i<BAR_COUNT;i++){
+        sb_bands_copy[i]=sb_bands[i]*sb_preamp;
+    }
 
-
-    equ_makeTable (&sb_state, sb_bands, params, bin->srate);
+    equ_makeTable (&sb_state, sb_bands_copy, params, bin->srate);
     if (sb_paramsroot)
         paramlist_free (sb_paramsroot);
     sb_paramsroot = params;
@@ -62,11 +56,6 @@ void VPEffectPluginEQ::sb_recalc_table()
 
 int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 {
-
-    for (unsigned i=0;i<BAR_COUNT;i++){
-        sb_bands[i] = target[i];
-    }
-
     owner = v;
     bin = in;
     bout = in;
@@ -83,6 +72,7 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 
 void VPEffectPluginEQ::process()
 {
+
     float *buffer = bin->currentBuffer();
     int samples_per_chan = VPBUFFER_FRAMES;
     int samples = VPBUFFER_FRAMES*bin->chans;
@@ -96,34 +86,11 @@ void VPEffectPluginEQ::process()
 
     equ_modifySamples_float(&sb_state, (char *)buffer, samples_per_chan, bin->chans);
 
-    if (autopreamp) {
-        bool ff=true, xx=true;
-        for (register int i=0;i<samples;i++){
-            float tmp=buffer[i]*sb_preamp;
-            if (tmp > 0.95f && sb_preamp > 32.0f) {
-                sb_preamp*=0.999f;
-                tmp*=0.999f;
-                ff=false;
-            }
-            if (tmp > 0.2f || tmp < -0.2f) {
-                xx=false;
-            }
-            buffer[i]=tmp;
+    /*if (autopreamp) {
 
-			buffer[i]=CLIP(buffer[i]);
 
-        }
-        if (ff && xx && sb_preamp < 64.0f) {
-            sb_preamp*=1.01f;
-        }
+    }*/
 
-    } else {
-        for (register int i=0;i<samples;i++){
-            buffer[i]*=sb_preamp;
-			buffer[i]=CLIP(buffer[i]);
-
-        }
-    }
 }
 
 int VPEffectPluginEQ::finit()
@@ -131,7 +98,7 @@ int VPEffectPluginEQ::finit()
     for (int i=0;i<BAR_COUNT;i++) {
         std::string band("eq");
         band.append(std::to_string(i));
-        VSettings::getSingleton()->writeFloat(band,target[i]);
+        VSettings::getSingleton()->writeFloat(band,sb_bands[i]);
     }
 
 

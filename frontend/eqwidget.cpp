@@ -3,7 +3,10 @@
 #include <QFileDialog>
 #include <QPainter>
 #include <QTextStream>
-#define PREAMPMAX 256
+#include <QVBoxLayout>
+#include <QSpacerItem>
+#define GAIN_RANGE 28
+#define GAIN_HALF 14
 
 EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) :
     plugin(eq),
@@ -13,40 +16,59 @@ EQWidget::EQWidget(DockManager *manager, VPEffectPluginEQ *eq, QWidget *parent) 
     ui->setupUi(this);
 
     target_sliders[0] = new QSlider();
-    target_sliders[0]->setMaximum(PREAMPMAX);
+    target_sliders[0]->setTickInterval(1);
+    target_sliders[0]->setMaximum(GAIN_RANGE);
     target_sliders[0]->setMinimum(0);
-    target_sliders[0]->setValue(plugin->getPreamp());
+    target_sliders[0]->setValue(GAIN_HALF-log10(plugin->getPreamp())*-20);
     target_sliders[0]->setProperty("index",QVariant(0));
     connect(target_sliders[0],SIGNAL(valueChanged(int)),this,SLOT(target_changed(int)));
     ui->gridLayout->addWidget(target_sliders[0],0,0);
     ui->gridLayout->addWidget(&labelsBottom[0],1,0);
+
     QFont f;
     f.setPixelSize(10);
 
     QFontMetrics fm(f);
+
+    QWidget *wid=new QWidget();
+    QVBoxLayout *layout=new QVBoxLayout();
+    QLabel *labelM = new QLabel("+" + QString::number(GAIN_HALF) + "dB" );
+    labelM->setFont(f);
+    layout->addWidget(labelM);
+    layout->addSpacerItem(new QSpacerItem(0,1000,QSizePolicy::Minimum,QSizePolicy::Maximum));
+    labelM=new QLabel("-" + QString::number(GAIN_HALF) + "dB" );
+    labelM->setFont(f);
+    layout->addWidget(labelM);
+
+    wid->setLayout(layout);
+    ui->gridLayout->addWidget(wid,0,1);
+
+
     labelsBottom[0].setFont(f);
     labelsBottom[0].setFixedHeight(fm.height());
 
     labelsBottom[0].setText("Premap");
     for (int i=1;i<19;i++){
-        if (i){
-            target_sliders[i] = new QSlider();
-            target_sliders[i]->setMaximum(96);
-            target_sliders[i]->setMinimum(0);
-            target_sliders[i]->setValue(96-log10(plugin->getTargetBands()[i-1])*-20);
-            target_sliders[i]->setProperty("index",QVariant(i));
 
 
-            connect(target_sliders[i],SIGNAL(valueChanged(int)),this,SLOT(target_changed(int)));
+        target_sliders[i] = new QSlider();
+        target_sliders[i]->setTickInterval(1);
+        target_sliders[i]->setMaximum(GAIN_RANGE);
+        target_sliders[i]->setMinimum(0);
+        target_sliders[i]->setValue(GAIN_HALF-log10(plugin->getBands()[i-1])*-20);
+        target_sliders[i]->setProperty("index",QVariant(i));
 
-            ui->gridLayout->addWidget(target_sliders[i],0,i);
-            ui->gridLayout->addWidget(&labelsBottom[i],1,i);
 
-            labelsBottom[i].setFont(f);
+        connect(target_sliders[i],SIGNAL(valueChanged(int)),this,SLOT(target_changed(int)));
 
-            labelsBottom[i].setFixedHeight(fm.height());
-            labelsBottom[i].setText(QString(plugin->getBandNames()[i-1]));
-        }
+        ui->gridLayout->addWidget(target_sliders[i],0,i+1);
+        ui->gridLayout->addWidget(&labelsBottom[i],1,i+1);
+
+        labelsBottom[i].setFont(f);
+
+        labelsBottom[i].setFixedHeight(fm.height());
+        labelsBottom[i].setText(QString(plugin->getBandNames()[i-1]));
+
 
 
     }
@@ -61,11 +83,12 @@ void EQWidget::registerUi()
 void EQWidget::target_changed(int)
 {
     QSlider *th = (QSlider *)sender();
+    DBG(th->value());
     int h=th->property("index").toInt();
     if(h>0)
-        plugin->setTargetBand(h-1,pow(10,(96-th->value())/-20.0) );
+        plugin->setBand(h-1,pow(10,(GAIN_HALF-th->value())/-20.0) );
     else
-        plugin->setPreamp(th->value());
+        plugin->setPreamp(pow(10,(GAIN_HALF-th->value())/-20.0));
 
 }
 
@@ -79,10 +102,9 @@ EQWidget::~EQWidget()
 
 void EQWidget::on_pbReset_clicked()
 {
-    target_sliders[0]->setValue(PREAMPMAX/2);
+    target_sliders[0]->setValue(GAIN_HALF);
     for (int i=0;i<18;i++){
-        target_sliders[i+1]->setValue(48);
-//        plugin->setTargetBand(i,pow(10,48/-20.0)) ;
+        target_sliders[i+1]->setValue(GAIN_HALF);
     }
 }
 
@@ -106,9 +128,9 @@ void EQWidget::on_pbLoad_clicked()
         for (int i=1;i<19;i++){
             int x;
             ts>>x;
-            target_sliders[i]->setValue( (1.0f+x/20.0f)*48 );
+            target_sliders[i]->setValue( (1.0f+x/20.0f)*GAIN_HALF );
         }
-        target_sliders[0]->setValue(PREAMPMAX/2);
+        target_sliders[0]->setValue(GAIN_HALF);
         f.close();
     }
 }

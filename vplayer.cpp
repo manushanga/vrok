@@ -71,7 +71,6 @@ void VPlayer::playWork(VPlayer *self)
     }
     self->vpout->idle();
     DBG("play worker dying");
-    self->announce(VP_STATUS_STOPPED);
 
 }
 
@@ -88,8 +87,6 @@ VPlayer::VPlayer()
 
     vpout=NULL;
     vpdecode=NULL;
-
-    currentTrack[0]='\0';
 
     bout.chans = 0;
     bout.srate = 0;
@@ -137,12 +134,11 @@ void VPlayer::setEffectsList(std::vector<VPEffectPlugin *> list)
     control.unlock();
     // we initialize DSP, this might be reinitialized if the srate and chans
     // are different in the new track, for this function this never happens
-    if (currentTrack[0]!='\0') {
+    if (currentResource.getURL().size() > 0) {
         initializeEffects();
 
-        char copy[256];
-        strcpy(copy,currentTrack);
-        open(VPResource(std::string(copy),VPResource::INIT_FILE));
+        VPResource res=currentResource;
+        open(res);
 		
 		pause();
 		setPosition(pos);
@@ -188,15 +184,6 @@ void VPlayer::initializeEffects()
     memcpy(&bin,tmp,sizeof(VPBuffer));
 }
 
-void VPlayer::announce(VPStatus status)
-{
-    // pass status to all DSP plugins
-    for (int i=0;i<eff_count;i++){
-        effects[i].eff->statusChange(status);
-    }
-
-}
-
 int VPlayer::getSupportedFileTypeCount()
 {
     return VPDecoderFactory::getSingleton()->count();
@@ -224,8 +211,6 @@ int VPlayer::open(VPResource resource, bool tryGapless)
     } else {
         stop();
     }
-
-    currentTrack[0]='\0';
 
     vpdecode=VPDecoderFactory::getSingleton()->create(resource,this);
     int ret = 0;
@@ -257,9 +242,8 @@ int VPlayer::open(VPResource resource, bool tryGapless)
         DBG("make play worker");    
     }
 
-    announce(VP_STATUS_OPEN);
 
-    strcpy(currentTrack, resource.getPath().c_str());
+    currentResource = resource;
 
     vpout->resume();
 
@@ -276,7 +260,6 @@ int VPlayer::play()
     if (vpdecode && paused && active) {
         paused = false;
         vpout->resume();
-        announce(VP_STATUS_PLAYING);
     }
     control.unlock();
     VPEvents::getSingleton()->fire("StateChangePlaying",NULL,0);
@@ -289,7 +272,6 @@ void VPlayer::pause()
     if (vpdecode && !paused && active) {
         vpout->pause();
         paused = true;
-        announce(VP_STATUS_PAUSED);
     }
     control.unlock();
     VPEvents::getSingleton()->fire("StateChangePaused",NULL,0);

@@ -63,7 +63,7 @@ void VrokMain::showAboutVrok()
     QHBoxLayout h(&d);
     d.setLayout(&h);
     QLabel a("<center>"
-             "<span style=\"font-size: 12pt\"><b>Vrok 3</b> smokin' audio<br/></span>"
+             "<span style=\"font-size: 12pt\"><b>Vrok " + QString::number(VERSION) + "." +  QString::number(VERSION_MINOR) + "</b> smokin' audio<br/></span>"
              "</center>"
              "Copyright (C) 2012-2014 Madura A. <madura.x86@gmail.com><br/>"
              "<br/>"

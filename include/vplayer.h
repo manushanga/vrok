@@ -74,7 +74,7 @@ private:
     int bufferCursor;
     int bufferSamples[2];
 public:
-    char currentTrack[256];
+    VPResource currentResource;
     // take lock on mutex_control when writing to this
     VPResource nextResource;
 
@@ -83,7 +83,7 @@ public:
 
     // open, play, pause, stop event control all are considered as cirtical
     // sections, none run interleaved.
-    std::shared_mutex control;
+    std::mutex control;
 
     // internal, play_worker runs only if work==true, if not it MUST return
     bool work;

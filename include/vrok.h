@@ -10,15 +10,18 @@
 
 #include "vputils.h"
 #include "out.h"
-
 #include "players/flac.h"
 #include "players/mpeg.h"
 #include "players/ogg.h"
 #include "players/ffmpeg.h"
 
+
+#include "events.h"
+#include "network.h"
 #include "cpplib.h"
 
 #define VERSION 4
+#define VERSION_MINOR 1
 
 class VPlayer;
 

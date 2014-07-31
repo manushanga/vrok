@@ -6,7 +6,7 @@
 class VPEffectPluginVis : public VPEffectPlugin
 {
 public:
-    enum vis_t{SCOPE, SPECTRUM};
+    enum vis_t{SCOPE=0, SPECTRUM_BARS, SPECTRUM_FIRE};
 private:
     float *bars;
     vis_t type;

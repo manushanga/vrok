@@ -79,6 +79,8 @@ class VSWidget : public ManagedDockWidget
     Q_OBJECT
 
 public:
+    static void cb_playing(void *message, int messageLength, void *user);
+    static void cb_paused(void *message, int messageLength, void *user);
     explicit VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent = 0);
     void registerUi();
     ~VSWidget();

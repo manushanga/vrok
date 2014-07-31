@@ -16,12 +16,13 @@ int VPEffectPluginVis::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 
 void VPEffectPluginVis::process()
 {
+    if (wstate)
+        return;
+
     float *buffer = bin->currentBuffer();
     int samples_per_chan = VPBUFFER_FRAMES;
     //int samples = samples_per_chan*bin->chans;
 
-    if (wstate)
-        return;
    // if (ATOMIC_CAS(&filled,true,true))
    //     return;
 

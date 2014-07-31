@@ -19,7 +19,6 @@ protected:
 public:
     virtual int init(VPlayer *v, VPBuffer *in, VPBuffer **out) = 0;
     virtual void process() = 0;
-    virtual void statusChange(VPStatus status) { status; }
     virtual int finit() = 0;
     virtual void minimized(bool state) { state; } // for use for visual plugins
     virtual ~VPEffectPlugin() {}
