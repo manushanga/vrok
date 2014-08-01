@@ -14,6 +14,11 @@ void VSWidget::cb_paused(void *message, int messageLength, void *user)
     ((VSWidget *) user)->q.stop();
 }
 
+void VSWidget::cb_stopped(void *message, int messageLength, void *user)
+{
+    ((VSWidget *) user)->q.stop();
+}
+
 VSWidget::VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent) :
     ManagedDockWidget(manager, this, parent),
     plugin(vis),
@@ -32,7 +37,8 @@ VSWidget::VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent
 
     VPEvents::getSingleton()->addListener("StateChangePlaying",(VPEvents::VPListener)cb_playing,this);
     VPEvents::getSingleton()->addListener("StateChangePaused",(VPEvents::VPListener)cb_paused,this);
-
+    VPEvents::getSingleton()->addListener("StateChangeStopped",(VPEvents::VPListener)cb_stopped,this);
+    VPEvents::getSingleton()->addListener("StateChangeFinished",(VPEvents::VPListener)cb_stopped,this);
 }
 
 void VSWidget::registerUi()
@@ -165,6 +171,7 @@ void VDisplay::paintEvent(QPaintEvent *e)
 
 
         }
+        a.append(QPoint(padw+f,padh));
         pp.drawPolygon(a);
 
     }

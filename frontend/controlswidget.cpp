@@ -20,6 +20,13 @@ void ControlsWidget::OnStateChangePaused(void *message, int messageLength, void 
 
 }
 
+void ControlsWidget::OnStateChangeStopped(void *message, int messageLength, void *user)
+{
+    ControlsWidget *wgt = (ControlsWidget *)user;
+    wgt->ui->btPlay->setEnabled(false);
+    wgt->ui->btStop->setEnabled(false);
+}
+
 ControlsWidget::ControlsWidget(DockManager *manager, VrokMain *vrokMain, QWidget *parent) :
     ManagedDockWidget(manager, this, parent),
     main(vrokMain),
@@ -34,6 +41,7 @@ ControlsWidget::ControlsWidget(DockManager *manager, VrokMain *vrokMain, QWidget
     pause_icon=new QIcon(":icon/res/pause");
     VPEvents::getSingleton()->addListener("StateChangePlaying",(VPEvents::VPListener)OnStateChangePlaying,this);
     VPEvents::getSingleton()->addListener("StateChangePaused",(VPEvents::VPListener)OnStateChangePaused,this);
+    VPEvents::getSingleton()->addListener("StateChangeStopped",(VPEvents::VPListener)OnStateChangeStopped,this);
 
     ui->setupUi(this);
 

@@ -24,6 +24,19 @@
   lock.
 
 */
+/*
+  Events:
+    Event Name                 Message        Max Listeners(0 is any)
+
+    GrabNext                   Next Res.      1
+    StateChangePlaying         Current Res.   0
+    StateChangePaused          Current Res.   0
+    StateChangeStopped         Current Res.   0
+    StateChangeFinished        Current Res.   0
+    StateChangeWindowMaximized NULL           0
+    ErrorFileOpenFailure       Failed Res.    0
+
+*/
 #include <cstring>
 #include <algorithm>
 #include "vrok.h"
@@ -48,7 +61,7 @@ void VPlayer::playWork(VPlayer *self)
 
 
         if ( self->work) {
-
+            VPEvents::getSingleton()->fire("StateChangeFinished",&self->currentResource,sizeof(VPResource));
             VPEvents::getSingleton()->fire("GrabNext",&self->nextResource,sizeof(VPResource));
 
             if (self->nextResource.getURL().size() > 0) {
@@ -101,6 +114,7 @@ VPlayer::VPlayer()
     VPEvents::getSingleton()->addEvent("StateChangePlaying",0);
     VPEvents::getSingleton()->addEvent("StateChangePaused",0);
     VPEvents::getSingleton()->addEvent("StateChangeStopped",0);
+    VPEvents::getSingleton()->addEvent("StateChangeFinished",0);
     VPEvents::getSingleton()->addEvent("StateChangeWindowMaximized",0);
     VPEvents::getSingleton()->addEvent("ErrorFileOpenFailure",0);
 
@@ -251,7 +265,7 @@ int VPlayer::open(VPResource resource, bool tryGapless)
     control.unlock();
 
     // we started rolling so announce we are playing
-    VPEvents::getSingleton()->fire("StateChangePlaying",NULL,0);
+    VPEvents::getSingleton()->fire("StateChangePlaying",&currentResource,sizeof(VPResource));
 
     return ret;
 }
@@ -263,7 +277,7 @@ int VPlayer::play()
         vpout->resume();
     }
     control.unlock();
-    VPEvents::getSingleton()->fire("StateChangePlaying",NULL,0);
+    VPEvents::getSingleton()->fire("StateChangePlaying",&currentResource,sizeof(VPResource));
     return 0;
 }
 
@@ -275,7 +289,7 @@ void VPlayer::pause()
         paused = true;
     }
     control.unlock();
-    VPEvents::getSingleton()->fire("StateChangePaused",NULL,0);
+    VPEvents::getSingleton()->fire("StateChangePaused",&currentResource,sizeof(VPResource));
 }
 
 void VPlayer::stop()
@@ -297,9 +311,11 @@ void VPlayer::stop()
             vpdecode = NULL;
         }
 
+        VPEvents::getSingleton()->fire("StateChangeStopped",&currentResource,sizeof(VPResource));
 
         active = false;
     }
+
 }
 bool VPlayer::isPlaying()
 {

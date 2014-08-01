@@ -480,7 +480,8 @@ void PlaylistWidget::actionRadioAdd()
 
 void PlaylistWidget::actionRadioRemove()
 {
-
+    int sel=ui->lvLibraries->selectionModel()->currentIndex().row();
+    radioModel.removeRow(sel);
 }
 
 void PlaylistWidget::on_lvPlaylist_doubleClicked(const QModelIndex &index)
@@ -531,7 +532,7 @@ void PlaylistWidget::saveRadioLibrary()
     ts.setCodec("utf-8");
     ts<<radioModel.rowCount()<<"\n";
     for (int i=0;i<radioModel.rowCount();i++){
-        ts<<radioModel.item(i,0)->text() << "\n" << radioModel.item(i,1)->text();
+        ts<<radioModel.item(i,0)->text() << "\n" << radioModel.item(i,1)->text()<<"\n";
     }
     file.close();
 }

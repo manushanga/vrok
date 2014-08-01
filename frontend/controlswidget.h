@@ -20,6 +20,7 @@ class ControlsWidget : public ManagedDockWidget
 public:
     static void OnStateChangePlaying(void *message, int messageLength, void *user);
     static void OnStateChangePaused(void *message, int messageLength, void *user);
+    static void OnStateChangeStopped(void *message, int messageLength, void *user);
 
     explicit ControlsWidget(DockManager *manager, VrokMain *vrokMain, QWidget *parent = 0);
     void registerUi();
