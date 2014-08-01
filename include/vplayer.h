@@ -20,13 +20,6 @@
 #define VP_SWAP_BUFFERS(v) \
     *(v->cursor) = 1-*(v->cursor);
 
-enum VPStatus {
-    VP_STATUS_OPEN,
-    VP_STATUS_PLAYING,
-    VP_STATUS_PAUSED,
-    VP_STATUS_STOPPED
-};
-
 class VPOutPlugin;
 class VPEffectPlugin;
 class VPDecoderPlugin;
@@ -53,9 +46,9 @@ struct VPEffect {
 };
 
 enum VPWindowState {
-    VPMINIMIZED,
-    VPMAXIMIZED,
-    VPNORMAL
+    VPWINDOWSTATE_MINIMIZED=0,
+    VPWINDOWSTATE_MAXIMIZED,
+    VPWINDOWSTATE_NORMAL
 };
 
 class VPlayer
@@ -68,7 +61,6 @@ private:
     bool active;
     void *nextCallbackUser;
     void initializeEffects();
-    void announce(VPStatus status);
     float volume;
 
     int bufferCursor;

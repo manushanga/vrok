@@ -41,9 +41,9 @@ bool VrokMain::eventFilter(QObject *target, QEvent *event)
 
     if (event->type() == QEvent::WindowStateChange) {
         if (windowState() == Qt::WindowMinimized) {
-            vp->uiStateChanged(VPMINIMIZED);
+            vp->uiStateChanged(VPWINDOWSTATE_MINIMIZED);
         } else if (windowState() == Qt::WindowMaximized) {
-            vp->uiStateChanged(VPMAXIMIZED);
+            vp->uiStateChanged(VPWINDOWSTATE_MAXIMIZED);
         }
 
         return true;

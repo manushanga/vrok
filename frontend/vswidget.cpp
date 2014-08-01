@@ -25,7 +25,6 @@ VSWidget::VSWidget(DockManager *manager, VPEffectPluginVis *vis, QWidget *parent
     ui->verticalLayout->addWidget(&disp);
     connect(&q,SIGNAL(timeout()),this,SLOT(process()));
     connect(&disp,SIGNAL(doubleClicked()),this,SLOT(dispDoubleClicked()));
-    plugin->minimized(false);
 
     q.setSingleShot(false);
 
@@ -44,8 +43,6 @@ void VSWidget::registerUi()
 VSWidget::~VSWidget()
 {
     q.stop();
-
-    plugin->minimized(true);
 
     delete ui;
 }
@@ -81,7 +78,7 @@ void VDisplay::paintEvent(QPaintEvent *e)
     //ATOMIC_CAS(&plugin->filled,true,true);
     float *pbars=plugin->getBars();
     QPainter pp(this);
-    pp.setRenderHints(QPainter::Antialiasing, true);
+    pp.setRenderHints(QPainter::Antialiasing, false);
 
     if (!pbars){
         pp.end();
@@ -114,7 +111,7 @@ void VDisplay::paintEvent(QPaintEvent *e)
         pp.fillRect(e->rect(),QColor(0,0,0));
 
         for (register int i=0;i<VISBUFFER_FRAMES;i++){
-            bars[i]=(0.54-0.46*cos(i*(2*M_PI/VISBUFFER_FRAMES)))*(pbars[i+z]);
+            bars[i]=(0.54f-0.46f*cos(i*(2*M_PI/VISBUFFER_FRAMES)))*(pbars[i+z]);
         }
         rdft(VISBUFFER_FRAMES,1,bars,ip,w);
         register int j=0;
@@ -146,7 +143,7 @@ void VDisplay::paintEvent(QPaintEvent *e)
         pp.fillRect(e->rect(),QColor(0,0,0));
 
         for (register int i=0;i<VISBUFFER_FRAMES;i++){
-            bars[i]=(0.54-0.46*cos(i*(2*M_PI/VISBUFFER_FRAMES)))*(pbars[i+z]);
+            bars[i]=(0.54f-0.46f*cos(i*(2*M_PI/VISBUFFER_FRAMES)))*(pbars[i+z]);
         }
         rdft(VISBUFFER_FRAMES,1,bars,ip,w);
         register int j=0;

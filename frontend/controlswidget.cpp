@@ -6,12 +6,18 @@ void ControlsWidget::OnStateChangePlaying(void *message, int messageLength, void
 
     ControlsWidget *wgt = (ControlsWidget *)user;
     wgt->ui->btPlay->setIcon(*wgt->pause_icon);
+    wgt->ui->btPlay->setEnabled(true);
+    wgt->ui->btStop->setEnabled(true);
+
 }
 
 void ControlsWidget::OnStateChangePaused(void *message, int messageLength, void *user)
 {
     ControlsWidget *wgt = (ControlsWidget *)user;
     wgt->ui->btPlay->setIcon(*wgt->play_icon);
+    wgt->ui->btPlay->setEnabled(true);
+    wgt->ui->btStop->setEnabled(true);
+
 }
 
 ControlsWidget::ControlsWidget(DockManager *manager, VrokMain *vrokMain, QWidget *parent) :
@@ -30,6 +36,11 @@ ControlsWidget::ControlsWidget(DockManager *manager, VrokMain *vrokMain, QWidget
     VPEvents::getSingleton()->addListener("StateChangePaused",(VPEvents::VPListener)OnStateChangePaused,this);
 
     ui->setupUi(this);
+
+
+    ui->btPlay->setEnabled(false);
+    ui->btStop->setEnabled(false);
+
 }
 
 void ControlsWidget::registerUi()
@@ -71,4 +82,10 @@ void ControlsWidget::positionTick()
 void ControlsWidget::on_btPlugins_clicked()
 {
     main->configurePlugins();
+}
+
+void ControlsWidget::on_btStop_clicked()
+{
+    if (main->vp->isPlaying())
+        main->vp->stop();
 }

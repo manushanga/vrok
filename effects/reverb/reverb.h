@@ -15,7 +15,6 @@ private:
 	int initd;
 public:
     VPEffectPluginReverb();
-	void statusChange(VPStatus status);
     int init(VPlayer *v, VPBuffer *in, VPBuffer **out);
     void process();
     int finit();

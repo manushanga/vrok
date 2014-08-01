@@ -75,6 +75,8 @@ private:
     VPlayer *player;
     Ui::PlaylistWidget *ui;
     void setTicker(QString text);
+    void loadRadioLibrary();
+    void saveRadioLibrary();
     void loadLibrary();
     void saveLibrary();
 };

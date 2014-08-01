@@ -34,6 +34,8 @@ private slots:
     void positionTick();
     void on_btPlugins_clicked();
 
+    void on_btStop_clicked();
+
 private:
     QIcon *play_icon,*pause_icon;
     QTimer tpos;

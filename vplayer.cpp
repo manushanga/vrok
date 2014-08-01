@@ -100,6 +100,8 @@ VPlayer::VPlayer()
     VPEvents::getSingleton()->addEvent("GrabNext",1);
     VPEvents::getSingleton()->addEvent("StateChangePlaying",0);
     VPEvents::getSingleton()->addEvent("StateChangePaused",0);
+    VPEvents::getSingleton()->addEvent("StateChangeStopped",0);
+    VPEvents::getSingleton()->addEvent("StateChangeWindowMaximized",0);
     VPEvents::getSingleton()->addEvent("ErrorFileOpenFailure",0);
 
     control.unlock();
@@ -196,9 +198,8 @@ void VPlayer::getSupportedFileTypeExtensions(std::vector<std::string>& exts)
 
 void VPlayer::uiStateChanged(VPWindowState state)
 {
-    for (int i=0;i<eff_count;i++){
-        effects[i].eff->minimized(state == VPMINIMIZED);
-    }
+    int x=(int) state;
+    VPEvents::getSingleton()->fire("StateChangeWindowMaximized",&x,sizeof(int));
 }
 int VPlayer::open(VPResource resource, bool tryGapless)
 {

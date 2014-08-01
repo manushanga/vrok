@@ -30,16 +30,6 @@ VPEffectPluginSpatial::VPEffectPluginSpatial() : delayed(NULL), enabled(false), 
                   VSettings::getSingleton()->readFloat("spatial_D",0.1524f));
 }
 
-void VPEffectPluginSpatial::statusChange(VPStatus status){
-    switch (status) {
-        case VP_STATUS_OPEN:
-        DBG("got status");
-
-        break;
-        default:
-        break;
-    }
-}
 VPEffectPluginSpatial::~VPEffectPluginSpatial()
 {
     VSettings::getSingleton()->writeFloat("spatial_H",params[SPATIAL_PARAM_H]);

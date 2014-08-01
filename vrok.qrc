@@ -9,6 +9,7 @@
         <file>res/about.png</file>
         <file>res/plugins.png</file>
         <file>res/devices.png</file>
+        <file>res/stop.png</file>
     </qresource>
     <qresource prefix="/images">
         <file>effects/spatial/res/diagram.png</file>

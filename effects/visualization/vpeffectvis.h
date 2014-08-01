@@ -12,8 +12,6 @@ private:
     vis_t type;
     VPBuffer *bin;
 public:
-
-
     bool wstate;
     bool filled;
     VPEffectPluginVis();
@@ -22,8 +20,6 @@ public:
     void process() ;
     inline void setType(vis_t t) {  type=t;   }
     inline vis_t getType() { return type; }
-    void statusChange(VPStatus status) {status;}
-    void minimized(bool state) { wstate = state; }
     int finit() ;
     ~VPEffectPluginVis() {}
 };

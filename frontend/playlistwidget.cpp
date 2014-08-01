@@ -227,6 +227,7 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
     contextMenuQueue[sel]->setChecked(true);
 
     loadLibrary();
+    loadRadioLibrary();
 
     fillTimer.setSingleShot(true);
     fillTimer.stop();
@@ -276,6 +277,8 @@ void PlaylistWidget::setPlaylistTitle(QString filename)
 
 PlaylistWidget::~PlaylistWidget()
 {
+    saveRadioLibrary();
+
     for (int i=QA_FILLRAN;i<=QA_FILLRPT;i++){
         if (contextMenuQueue[i]->isChecked()){
             VSettings::getSingleton()->writeInt("playlist_menu",i);
@@ -500,6 +503,37 @@ void PlaylistWidget::on_lvPlaylist_doubleClicked(const QModelIndex &index)
 void PlaylistWidget::setTicker(QString text)
 {
     ticker.setText(text);
+}
+
+void PlaylistWidget::loadRadioLibrary()
+{
+    QFile file(dbpath + "/radio.db");
+    if (file.exists()) {
+        file.open(QFile::ReadOnly);
+        QTextStream ts(&file);
+        ts.setCodec("utf-8");
+        int stations=ts.readLine().toInt();
+        for (int i=0;i<stations;i++){
+            QString name = ts.readLine();
+            QString url = ts.readLine();
+            radioModel.appendRow(QList< QStandardItem * > () << new QStandardItem(name)<<new QStandardItem(url));
+        }
+    }
+}
+
+void PlaylistWidget::saveRadioLibrary()
+{
+    QFile file(dbpath + "/radio.db");
+    if (file.exists())
+        file.remove();
+    file.open(QFile::WriteOnly);
+    QTextStream ts(&file);
+    ts.setCodec("utf-8");
+    ts<<radioModel.rowCount()<<"\n";
+    for (int i=0;i<radioModel.rowCount();i++){
+        ts<<radioModel.item(i,0)->text() << "\n" << radioModel.item(i,1)->text();
+    }
+    file.close();
 }
 
 void PlaylistWidget::loadLibrary()

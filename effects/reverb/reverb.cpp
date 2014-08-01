@@ -19,16 +19,6 @@ VPEffectPluginReverb::VPEffectPluginReverb() : reverb_buffer(NULL), initd(false)
 	for (int i=0;i<MAX_REVERBS;i++) { reverb_delay[i]=0; reverb_amp[i]=0.8f; }
 }
 
-void VPEffectPluginReverb::statusChange(VPStatus status){
-    switch (status) {
-        case VP_STATUS_OPEN:
-        DBG("got status");
-
-        break;
-        default:
-        break;
-    }
-}
 VPEffectPluginReverb::~VPEffectPluginReverb()
 {
 }
