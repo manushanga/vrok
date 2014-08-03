@@ -335,42 +335,63 @@ void PlaylistWidget::startFillTimer()
 
 void PlaylistWidget::on_leSearch_textChanged(const QString &arg1)
 {
-    if (arg1 == ""){
-        ui->tvLibrary->setModel(&localModel);
-    } else {
-        QModelIndexList list =localModel.match(localModel.index(0,0),Qt::DisplayRole,QVariant("*"+arg1+"*"),128,Qt::MatchWildcard | Qt::MatchRecursive);
-        searchModel.clear();
-        int i=0;
-        if (list.size()) {
-            QModelIndex parentIdx=list[0];
-            foreach (QModelIndex idx, list) {
-                QStandardItem *item=localModel.itemFromIndex(idx);
-                if (item->parent() && parentIdx == item->parent()->index() ) {
-                    continue;
-                }
 
-                if (item->hasChildren()) {
-                    QStandardItem *parentItem=new QStandardItem(item->text());
-                    searchModel.setItem(i,0, parentItem);
-                    for (int j=0;j<item->rowCount();j++) {
-                        parentItem->setChild(j,0, new QStandardItem(item->child(j,0)->text()));
-                        parentItem->setChild(j,1, new QStandardItem(item->child(j,1)->text()));
-
+    if (selectedModel == M_LOCAL) {
+        if (arg1 == ""){
+            ui->tvLibrary->setModel(&localModel);
+        } else {
+            QModelIndexList list =localModel.match(localModel.index(0,0),Qt::DisplayRole,QVariant("*"+arg1+"*"),128,Qt::MatchWildcard | Qt::MatchRecursive);
+            searchModel.clear();
+            int i=0;
+            if (list.size()) {
+                QModelIndex parentIdx=list[0];
+                foreach (QModelIndex idx, list) {
+                    QStandardItem *item=localModel.itemFromIndex(idx);
+                    if (item->parent() && parentIdx == item->parent()->index() ) {
+                        continue;
                     }
 
-                }
-                else {
-                    QStandardItem *pathItem=localModel.itemFromIndex( idx.sibling(idx.row(), 1) );
+                    if (item->hasChildren()) {
+                        QStandardItem *parentItem=new QStandardItem(item->text());
+                        searchModel.setItem(i,0, parentItem);
+                        for (int j=0;j<item->rowCount();j++) {
+                            parentItem->setChild(j,0, new QStandardItem(item->child(j,0)->text()));
+                            parentItem->setChild(j,1, new QStandardItem(item->child(j,1)->text()));
 
-                    searchModel.setItem(i,0, new QStandardItem(item->text()));
-                    searchModel.setItem(i,1, new QStandardItem(pathItem->text()));
+                        }
+
+                    }
+                    else {
+                        QStandardItem *pathItem=localModel.itemFromIndex( idx.sibling(idx.row(), 1) );
+
+                        searchModel.setItem(i,0, new QStandardItem(item->text()));
+                        searchModel.setItem(i,1, new QStandardItem(pathItem->text()));
+                    }
+                    i++;
+                    parentIdx=idx;
                 }
-                i++;
-                parentIdx=idx;
             }
+            ui->tvLibrary->setModel(&searchModel);
         }
-        ui->tvLibrary->setModel(&searchModel);
+    } else if (selectedModel == M_STREAMS) {
+    } else if (selectedModel == M_RADIO) {
+        if (arg1 == "")
+        {
+            ui->tvLibrary->setModel(&radioModel);
+        } else {
+            QList< QStandardItem *> items =radioModel.findItems("*" +arg1 +"*", Qt::MatchWildcard);
+            int i=0;
+            searchModel.clear();
+            foreach (QStandardItem *item, items) {
+                searchModel.setItem(i,item->clone());
+                i++;
+            }
+            ui->tvLibrary->setModel(&searchModel);
+        }
+
+        ui->tvLibrary->header()->hideSection(1);
     }
+
 
 }
 

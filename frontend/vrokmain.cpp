@@ -146,7 +146,7 @@ VrokMain::VrokMain(QWidget *parent) :
 
     vis_counter = 0;
 
-    setWindowTitle(QString("Vrok ") + QString::number(VERSION));
+    setWindowTitle(QString("Vrok ") + QString::number(VERSION) + "." +  QString::number(VERSION_MINOR)  );
 
 
 }

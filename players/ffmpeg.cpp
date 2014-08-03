@@ -246,7 +246,7 @@ void FFMPEGDecoder::reader()
         VP_SWAP_BUFFERS(bout);
         owner->mutex[1].unlock();
 
-
+        last_read=time(NULL);
     }
 
     avcodec_free_frame(&frame);
@@ -279,6 +279,13 @@ FFMPEGDecoder::~FFMPEGDecoder()
     av_close_input_file(container);
 }
 
+int FFMPEGDecoder::ff_avio_interrupt(void *user)
+{
+    FFMPEGDecoder *dec=(FFMPEGDecoder *)user;
+
+    return (time(NULL) - dec->last_read) > 5;
+}
+
 FFMPEGDecoder::FFMPEGDecoder(VPlayer *v) :
     container(NULL),
     audio_stream_id(-1),
@@ -289,4 +296,7 @@ FFMPEGDecoder::FFMPEGDecoder(VPlayer *v) :
 {
     owner = v;
     container=avformat_alloc_context();
+    container->interrupt_callback.callback = FFMPEGDecoder::ff_avio_interrupt;
+    container->interrupt_callback.opaque = this;
+    last_read = time(NULL);
 }

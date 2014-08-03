@@ -10,7 +10,7 @@
 #define FFMPEGPLAYER_H
 
 #include "vplayer.h"
-
+#include <ctime>
 extern "C" {
 
 #ifndef __STDC_CONSTANT_MACROS
@@ -20,6 +20,7 @@ extern "C" {
 #include <libavutil/mathematics.h>
 #include <libavutil/samplefmt.h>
 #include <libavformat/avformat.h>
+#include <libavformat/avio.h>
 #include <libswscale/swscale.h>
 }
 #define FFMPEG_MAX_BUF_SIZE 192000
@@ -27,6 +28,8 @@ extern "C" {
 class FFMPEGDecoder : public VPDecoderPlugin
 {
 private:
+    static int ff_avio_interrupt(void *user);
+    time_t last_read;
     AVFormatContext* container;
     int audio_stream_id;
     AVCodecContext *ctx;
