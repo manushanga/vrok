@@ -53,7 +53,7 @@ VPDecoderFactory::VPDecoderFactory()
 {
     vpdecoder_entry_t decoders[]= {
      {"FLAC", (vpdecode_creator_t)FLACDecoder::VPDecoderFLAC_new, "file", "flac" },
-     {"MPEG",(vpdecode_creator_t)MPEGDecoder::VPDecoderMPEG_new, "file", "mpX,mp2,mp1"},
+     {"MPEG",(vpdecode_creator_t)MPEGDecoder::VPDecoderMPEG_new, "file", "mp3,mp2,mp1"},
      {"OGG",(vpdecode_creator_t)OGGDecoder::VPDecoderOGG_new, "file", "ogg"},
      {"FFMPEG",(vpdecode_creator_t)FFMPEGDecoder::VPDecoderFFMPEG_new, "ANY", "ANY"}
     };

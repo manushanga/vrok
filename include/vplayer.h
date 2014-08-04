@@ -60,11 +60,12 @@ private:
 
     bool active;
     void *nextCallbackUser;
-    void initializeEffects();
     float volume;
 
     int bufferCursor;
     int bufferSamples[2];
+
+    void initializeEffects();
 public:
     VPResource currentResource;
     // take lock on mutex_control when writing to this

@@ -190,6 +190,9 @@ public:
     inline void unlock(){
         pthread_mutex_unlock(&mutex_);
     }
+    inline bool try_lock(){
+        return pthread_mutex_trylock(&mutex_) == 0;
+    }
     ~mutex(){
         pthread_mutex_destroy(&mutex_);
     }

@@ -32,6 +32,32 @@ void VPEvents::addListener(std::string event, VPListener listener, void *user)
     mutex_.unlock();
 }
 
+void VPEvents::removeListener(std::string event, VPEvents::VPListener listener)
+{
+    mutex_.lock();
+    std::map< std::string, VPEvent >::iterator it;
+    it=events_.find(event);
+    if (it != events_.end()){
+        for (VPListenerDataList::iterator it_listener = it->second.list.begin();
+             it_listener!=it->second.list.end();
+             it_listener++)
+        {
+            if (it_listener->listener == listener){
+                it->second.list.erase(it_listener);
+                break;
+            }
+        }
+    }
+    mutex_.unlock();
+}
+
+void VPEvents::removeEvent(std::string event)
+{
+    mutex_.lock();
+    events_.erase(event);
+    mutex_.unlock();
+}
+
 VPEvents::VPListenerDataList *VPEvents::getListeners(std::string event)
 {
     std::map< std::string, VPEvent >::iterator it;

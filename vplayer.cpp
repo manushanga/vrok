@@ -200,6 +200,7 @@ void VPlayer::initializeEffects()
     memcpy(&bin,tmp,sizeof(VPBuffer));
 }
 
+
 int VPlayer::getSupportedFileTypeCount()
 {
     return VPDecoderFactory::getSingleton()->count();
@@ -295,6 +296,8 @@ void VPlayer::pause()
 void VPlayer::stop()
 {
     // only run on control mutex locked
+    bool locked=control.try_lock();
+
     if (ATOMIC_CAS(&active,true,true)) {
         if (vpdecode){
 
@@ -315,6 +318,9 @@ void VPlayer::stop()
 
         active = false;
     }
+
+    if (locked)
+        control.unlock();
 
 }
 bool VPlayer::isPlaying()

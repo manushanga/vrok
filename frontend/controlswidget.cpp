@@ -16,7 +16,7 @@ void ControlsWidget::OnStateChangePaused(void *message, int messageLength, void 
     ControlsWidget *wgt = (ControlsWidget *)user;
     wgt->ui->btPlay->setIcon(*wgt->play_icon);
     wgt->ui->btPlay->setEnabled(true);
-    wgt->ui->btStop->setEnabled(true);
+    wgt->ui->btStop->setEnabled(false);
 
 }
 
@@ -58,6 +58,10 @@ void ControlsWidget::registerUi()
 
 ControlsWidget::~ControlsWidget()
 {
+    VPEvents::getSingleton()->removeListener("StateChangePlaying",(VPEvents::VPListener)OnStateChangePlaying);
+    VPEvents::getSingleton()->removeListener("StateChangePaused",(VPEvents::VPListener)OnStateChangePaused);
+    VPEvents::getSingleton()->removeListener("StateChangeStopped",(VPEvents::VPListener)OnStateChangeStopped);
+
     delete ui;
 }
 

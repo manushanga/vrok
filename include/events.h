@@ -25,6 +25,8 @@ public:
     static VPEvents *getSingleton();
     void addEvent(std::string eventName, int limit);
     void addListener(std::string event, VPListener listener, void *user);
+    void removeListener(std::string event, VPListener listener);
+    void removeEvent(std::string event);
     VPListenerDataList *getListeners(std::string event);
     void fire(std::string event, void *message, int messageLength);
 };
