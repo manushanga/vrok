@@ -5,6 +5,7 @@
 #include "dockmanager.h"
 #include <QDockWidget>
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QStandardItemModel>
 #include <QActionGroup>

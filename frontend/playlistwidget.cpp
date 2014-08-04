@@ -594,6 +594,14 @@ void PlaylistWidget::loadLibrary()
             QString currentPath(lastpath.c_str());
             QString rootPath=currentPath;
             QStringList extensions=getExtensionList();
+
+            if (extensions.contains("*.ANY")){
+                // append a list of known media formats
+                extensions<<"*.mp4"<<"*.aac"<<"*.3gp"<<"*.mkv"<<"*.avi"<<"*.mpc"<<"*.mpc8"<<"*.mpeg"<<"*.webm"
+                          <<"*.flv"<<"*.speex"<<"*.ogg"<<"*.mp1"<<"*.mp2"<<"*.mp3"<<"*.flac"<<"*.ast"<<"*.wma"
+                          <<"*.wmv"<<"*.mov"<<"*.ac3"<<"*.vob"<<"*.wav";
+            }
+
             QDirIterator iterator(currentPath, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories );
             QDirIterator iteratorSubRoot(currentPath,extensions, QDir::NoDotAndDotDot | QDir::Files);
 
