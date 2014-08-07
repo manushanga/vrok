@@ -65,7 +65,11 @@ void VPlayer::playWork(VPlayer *self)
             VPEvents::getSingleton()->fire("GrabNext",&self->nextResource,sizeof(VPResource));
 
             if (self->nextResource.getURL().size() > 0) {
-                self->open(self->nextResource,true);
+                while ( self->open(self->nextResource,true) < 0 )
+                {
+                    DBG("drop due to failure to open");
+                    VPEvents::getSingleton()->fire("GrabNext",&self->nextResource,sizeof(VPResource));
+                }
                 DBG("new track arrived");
             } else {
                 delete self->vpdecode;
@@ -235,7 +239,7 @@ int VPlayer::open(VPResource resource, bool tryGapless)
     if (vpdecode){
         ret = vpdecode->open(resource);
         if (ret < 0) {
-            WARN("dropping file");
+            DBG("dropping file");
             delete vpdecode;
             vpdecode=NULL;
             control.unlock();
