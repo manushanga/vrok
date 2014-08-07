@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>458</width>
+    <width>488</width>
     <height>300</height>
    </rect>
   </property>
@@ -151,7 +151,7 @@
     <item row="0" column="0">
      <widget class="QLineEdit" name="leSearch">
       <property name="placeholderText">
-       <string>Type to search here, add media by right clicking below view ..</string>
+       <string>Type to search here, add media by right clicking view below ..</string>
       </property>
      </widget>
     </item>

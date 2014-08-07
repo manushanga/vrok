@@ -81,6 +81,8 @@ void VrokMain::showAboutVrok()
              "<a href=\"http://www.ffmpeg.org/\">libavcodec</a>: Demux & Decode AAC, MP4, MPG, AVI ... and more<br/>"
              "<br/>DSP<br/>"
              "<a href=\"http://shibatch.sourceforge.net/\">SuperEQ</a>: Naoki Shibata's 18 Band Equalizer<br/>"
+             "<br/>Network<br/>"
+             "<a href=\"http://curl.haxx.se\">libcurl</a>: VrokWS<br/>"
              "<br/>GUI<br/>"
              "<a href=\"http://qt-project.org\">Qt</a>: Frontend<br/>"
              "<a href=\"http://vlademareous.deviantart.com\">http://vlademareous.deviantart.com</a>: Sidebar icons \"4 Music Icons\"<br/>"
