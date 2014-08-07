@@ -228,8 +228,8 @@ LIBS    +=  -lFLAC -lmpg123 -lvorbisfile -lvorbis -logg
 LIBS    +=  -lavformat -lavcodec -lavutil
 LIBS    +=  -lws2_32 -lkernel32 -luser32 -lshlwapi -ladvapi32 -lshell32 -loleaut32 -luuid
 LIBS    +=  -lcurldll
-QMAKE_CXXFLAGS_RELEASE += -march=i686 -Wall -O3
-QMAKE_CXXFLAGS_DEBUG +=  -g -O3 #-pgc
+QMAKE_CXXFLAGS_RELEASE += -march=i686 -Wall -O3 -msse4.2
+QMAKE_CXXFLAGS_DEBUG +=  -g
 
 }
 

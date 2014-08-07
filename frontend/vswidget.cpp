@@ -104,14 +104,13 @@ void VDisplay::paintEvent(QPaintEvent *e)
         pp.save();
         pp.setBrush(Qt::red);
         for (register int i=0;i<VISBUFFER_FRAMES;i++) {
-            if (pbars[i]>0.8f)
+            if (fabs(pbars[i])>0.7f )
             {
-                pp.drawRect(padw-12,height()-12,10,10);
+                pp.drawRect(padw-12,0,10,10);
                 break;
             }
         }
         pp.restore();
-
         for (register int i=0;i<(VISBUFFER_FRAMES)-1;i+=1){
             pp.drawLine(padw +i*1,padh+pbars[i+z]*padh,padw+ i+1,padh+pbars[i+z+1]*padh);
 

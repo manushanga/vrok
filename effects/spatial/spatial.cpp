@@ -62,6 +62,7 @@ int VPEffectPluginSpatial::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
     remainder_write=0;
     delayed_write=0;
 
+
     return 0;
 }
 

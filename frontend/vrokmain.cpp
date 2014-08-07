@@ -175,13 +175,15 @@ void VrokMain::configurePlugins()
 {
 
     QStandardItemModel aa;
+    QMap<QString, VPEffectPlugin *> plugins;
     int i=0;
     foreach (VPEffectInfo e, effects){
         QStandardItem *s1=new QStandardItem(QString(e.name));
-        s1->setData(qVariantFromValue((void*)e.ptr));
+        plugins.insert(e.name,e.ptr);
         s1->setCheckable(true);
         s1->setCheckState(e.enabled ? Qt::Checked : Qt::Unchecked);
         aa.setItem(i,s1);
+        DBG(e.name.toStdString()<<" "<<e.ptr);
         i++;
     }
     Orderer xr(&aa);
@@ -198,16 +200,14 @@ void VrokMain::configurePlugins()
         std::vector<VPEffectPlugin*> effs;
         effects.clear();
 
-
         for (int i=0;i<aa.rowCount();i++){
-            VPEffectPlugin *p=(VPEffectPlugin *) xr.model->item(i,0)->data().value<void*>();
+            QString name=xr.model->item(i)->text();
+            VPEffectPlugin *p=plugins[name];
 
             if (xr.model->item(i,0)->checkState() == Qt::Checked) {
                 VSettings::getSingleton()->writeInt(xr.model->item(i,0)->text().toLower().replace(' ','_').toStdString(),1);
                 effects.push_back( VPEffectInfo(xr.model->item(i)->text() , p , true) );
 
-                QString name=xr.model->item(i)->text();
-                DBG(name.toStdString());
                 if (name == "Equalizer") { docks.insert(name,new EQWidget(dockManager, (VPEffectPluginEQ *) p)); }
                 else if (name == "Visualizer") { docks.insert(name,new VSWidget(dockManager, (VPEffectPluginVis *) p)); }
                 else if (name == "Reverb") { docks.insert(name,new ReverbWidget(dockManager, (VPEffectPluginReverb *)p)); }

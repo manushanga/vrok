@@ -133,6 +133,7 @@ void VPlayer::setEffectsList(std::vector<VPEffectPlugin *> list)
 
     for (int i=0;i<eff_count;i++) {
         effects[i].eff->finit();
+        effects[i].active=false;
     }
 
     if (list.size() > VP_MAX_EFFECTS) {

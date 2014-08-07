@@ -6,6 +6,7 @@
   See LICENSE for details.
 */
 #include "vrok.h"
+#define NOMINMAX
 #include "dsound.h"
 
 LPDIRECTSOUND VPOutPluginDSound::lpds;
@@ -101,10 +102,11 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
         if (hr == WAIT_OBJECT_0){
             //WaitForSingleObject(NotifyEvent[0], INFINITE);
             hr = lpdsbuffer->Lock(0,dsbdesc.dwBufferBytes/2,&lpvWrite,&dwLength,NULL,NULL,0);
-
+            short tmp;
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[i]=(short)(self->bin->nextBuffer()[i]*32700.0f);
+                    tmp=(short)(self->bin->nextBuffer()[i]*32700.0f);
+                    ((short *)lpvWrite)[i]=std::max((short)-32768,std::min((short)32767,tmp));
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
@@ -112,10 +114,11 @@ void VPOutPluginDSound::worker_run(VPOutPluginDSound *self)
             //WaitForSingleObject(NotifyEvent[1], INFINITE);
 
             hr = lpdsbuffer->Lock(dsbdesc.dwBufferBytes/2,dsbdesc.dwBufferBytes/2,&lpvWrite,&dwLength,NULL,NULL,0);
-
+            short tmp;
             if(SUCCEEDED(hr)){
                 for (unsigned i=0;i<self->half_buffer_size;i++){
-                    ((short *)lpvWrite)[i]=(short)(self->bin->nextBuffer()[i]*32700.0f);
+                    tmp=(short)(self->bin->nextBuffer()[i]*32700.0f);
+                    ((short *)lpvWrite)[i]=std::max((short)-32768,std::min((short)32767,tmp));
                 }
                 hr = lpdsbuffer->Unlock(lpvWrite,dwLength,NULL,NULL);
             }
