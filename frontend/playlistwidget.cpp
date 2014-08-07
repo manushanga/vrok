@@ -159,14 +159,14 @@ PlaylistWidget::PlaylistWidget(DockManager *manager, VPlayer *vp, QWidget *paren
 
     radioMenu.addActions(contextMenuRadio);
 
-    contextMenuFiles.push_back(new QAction("Queue",this));
+    contextMenuFiles.push_back(new QAction("Queue Selection",this));
     contextMenuFiles.push_back(new QAction("Set Queue",this));
     contextMenuFiles.push_back(new QAction("Set Library Directory",this));
     contextMenuFiles.push_back(new QAction("Rescan",this));
 
     localMenu.addActions(contextMenuFiles);
 
-    contextMenuQueue.push_back(new QAction("Remove",this));
+    contextMenuQueue.push_back(new QAction("Remove Selection",this));
     contextMenuQueue.push_back(new QAction("Fill Random",this));
     contextMenuQueue.push_back(new QAction("Fill None",this));
     contextMenuQueue.push_back(new QAction("Fill Repeat",this));
@@ -302,7 +302,6 @@ void PlaylistWidget::fillQueue()
     bool notplaying=!player->isPlaying();
 
     if (playlist.rowCount()<3) {
-        srand(time(NULL));
 
         if (contextMenuQueue[QA_FILLRAN]->isChecked()) {
             for (int i=0;i<3;i++) {
@@ -326,6 +325,9 @@ void PlaylistWidget::fillQueue()
         playlist.removeRow(0);
         player->open(path.toUtf8().data());
     }*/
+
+
+    srand(time(NULL));
 }
 
 void PlaylistWidget::startFillTimer()
@@ -486,23 +488,27 @@ void PlaylistWidget::actionRescan()
 
 void PlaylistWidget::actionRadioAdd()
 {
-    QString url=QInputDialog::getText(this,"Radio URL","[name]<space>URL").trimmed();
+    QString url=QInputDialog::getText(this,"Radio URL","[name]<space><URL>").trimmed();
     QList <QStandardItem*> list;
-    if (url.indexOf(' ')>=0)
-    {
-        list<<new QStandardItem(url.section(' ',0,-2));
-        list<<new QStandardItem(url.section(' ',-1,-1));
-    } else {
-        list<<new QStandardItem(url);
-        list<<new QStandardItem(url);
+    if (url.length() > 0) {
+        if (url.indexOf(' ')>=0)
+        {
+            list<<new QStandardItem(url.section(' ',0,-2));
+            list<<new QStandardItem(url.section(' ',-1,-1));
+        } else {
+            list<<new QStandardItem(url);
+            list<<new QStandardItem(url);
+        }
+        radioModel.appendRow(list);
     }
-    radioModel.appendRow(list);
 }
 
 void PlaylistWidget::actionRadioRemove()
 {
-    int sel=ui->lvLibraries->selectionModel()->currentIndex().row();
+    int sel= ui->tvLibrary->selectionModel()->selectedRows().at(0).row();
+    modelGuard.lock();
     radioModel.removeRow(sel);
+    modelGuard.unlock();
 }
 
 void PlaylistWidget::on_lvPlaylist_doubleClicked(const QModelIndex &index)
@@ -511,7 +517,7 @@ void PlaylistWidget::on_lvPlaylist_doubleClicked(const QModelIndex &index)
     QStandardItem *item=model->itemFromIndex(index);
     if (!item->hasChildren()) {
         lastplayed=index.sibling(item->row(),1).data().toString();
-        player->open( VPResource( std::string(lastplayed.toUtf8().data()), VPResource::INIT_FILE ),false);
+        player->open( VPResource( std::string(lastplayed.toUtf8().data()), VPResource::INIT_URL ),false);
         if (contextMenuQueue[QA_FILLRPT]->isChecked()) {
             int r=model->rowCount();
             model->setItem(r,0, item->clone());
@@ -708,7 +714,7 @@ void PlaylistWidget::on_lvLibraries_clicked(const QModelIndex &index)
         break;
     }
     default:
-        WARN("selection error");
+        DBG("selection error");
     }
     modelGuard.unlock();
 }
@@ -733,7 +739,7 @@ void PlaylistWidget::on_tvLibrary_customContextMenuRequested(const QPoint &pos)
         radioMenu.exec(ui->tvLibrary->mapToGlobal (pos));
     }
     default:
-        WARN("selection error");
+        DBG("selection error");
     }
 
 }

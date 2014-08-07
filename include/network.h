@@ -26,8 +26,12 @@ private:
     static size_t network_fwrite(void *buffer, size_t size, size_t n, void *data);
 
 public:
-    enum http_t{POST=0,GET};
-    enum error_t{NO_ERROR=0,NO_NETWORK,NO_CONNECT,NO_AUTH,INVALID_INPUT};
+    enum http_t{NETWORK_POST=0,NETWORK_GET};
+    enum error_t{NETWORK_NO_ERROR=0,
+                 NETWORK_NO_NETWORK,
+                 NETWORK_NO_CONNECT,
+                 NETWORK_NO_AUTH,
+                 NETWORK_INVALID_INPUT};
     typedef map<string, vector<string> > data_t;
     struct network_file{
         char *buffer;

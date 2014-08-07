@@ -78,6 +78,9 @@ void MPEGDecoder::reader()
 int MPEGDecoder::open(VPResource resource)
 {
     fcurrent=fopenu(resource.getPath().c_str(),FOPEN_RB);
+    if (!fcurrent) {
+        return -1;
+    }
     if (mpg123_open_fd(mh, fileno(fcurrent)) != MPG123_OK) {
         DBG("open file fail");
         return -1;
@@ -137,7 +140,8 @@ MPEGDecoder::~MPEGDecoder()
     mpg123_delete(mh);
     mpg123_exit();
 
-    fclose(fcurrent);
+    if (fcurrent)
+        fclose(fcurrent);
 
     ALIGNED_FREE(buffer);
 }

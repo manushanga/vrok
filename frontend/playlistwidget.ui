@@ -139,7 +139,7 @@
          <enum>QAbstractItemView::ContiguousSelection</enum>
         </property>
         <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectItems</enum>
+         <enum>QAbstractItemView::SelectRows</enum>
         </property>
         <attribute name="headerVisible">
          <bool>false</bool>
@@ -149,7 +149,11 @@
      </layout>
     </item>
     <item row="0" column="0">
-     <widget class="QLineEdit" name="leSearch"/>
+     <widget class="QLineEdit" name="leSearch">
+      <property name="placeholderText">
+       <string>Type to search here, add media by right clicking below view ..</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

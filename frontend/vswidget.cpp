@@ -48,7 +48,11 @@ void VSWidget::registerUi()
 
 VSWidget::~VSWidget()
 {
-    q.stop();
+    VPEvents::getSingleton()->removeListener("StateChangePlaying",(VPEvents::VPListener)cb_playing);
+    VPEvents::getSingleton()->removeListener("StateChangePaused",(VPEvents::VPListener)cb_paused);
+    VPEvents::getSingleton()->removeListener("StateChangeStopped",(VPEvents::VPListener)cb_stopped);
+    VPEvents::getSingleton()->removeListener("StateChangeFinished",(VPEvents::VPListener)cb_stopped);
+
 
     delete ui;
 }

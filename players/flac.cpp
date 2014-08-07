@@ -139,6 +139,9 @@ FLACDecoder::~FLACDecoder()
 int FLACDecoder::open(VPResource resource)
 {
     fcurrent = fopenu( resource.getPath().c_str() ,FOPEN_RB);
+    if (!fcurrent){
+        return -1;
+    }
     init_status = FLAC__stream_decoder_init_FILE(decoder, fcurrent, write_callback, metadata_callback, error_callback, (void *) this);
     if (init_status != FLAC__STREAM_DECODER_INIT_STATUS_OK){
         DBG("decoder init fail");

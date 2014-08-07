@@ -67,6 +67,28 @@ public:
     }
 };
 
+class mutex
+{
+private:
+    CRITICAL_SECTION csec_;
+public:
+    mutex(){
+        InitializeCriticalSection(&csec_);
+    }
+    inline void lock(){
+        EnterCriticalSection(&csec_);
+    }
+    inline void unlock(){
+        LeaveCriticalSection(&csec_);
+    }
+    inline bool try_lock(){
+        return TryEnterCriticalSection(&csec_);
+    }
+    ~mutex(){
+        DeleteCriticalSection(&csec_);
+    }
+};
+
 // The below code was used for this implementation
 // http://preshing.com/20111124/always-use-a-lightweight-mutex
 

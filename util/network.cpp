@@ -45,16 +45,16 @@ std::network::error_t std::network::network_operation(std::string url, std::netw
 {
     curlguard_.lock();
     if (!curl_)
-        return NO_NETWORK;
+        return NETWORK_NO_NETWORK;
 
     CURLcode res;
-    error_t error=NO_ERROR;
+    error_t error=NETWORK_NO_ERROR;
     curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl_, CURLOPT_USERAGENT, "vrok");
 
     switch (type)
     {
-    case GET:
+    case NETWORK_GET:
     {
         network_file nf;
         nf.buffer = buffer_;
@@ -72,17 +72,17 @@ std::network::error_t std::network::network_operation(std::string url, std::netw
         nf.buffer[nf.filled] = '\0';
 
         if (res != CURLE_OK){
-            error=NO_CONNECT;
+            error=NETWORK_NO_CONNECT;
         }
         curl_easy_cleanup(curl_);
 
     }
-    case POST:
+    case NETWORK_POST:
     {
 
     }
     default:
-        error=INVALID_INPUT;
+        error=NETWORK_INVALID_INPUT;
     }
     curlguard_.unlock();
     return error;
