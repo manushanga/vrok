@@ -8,6 +8,7 @@
 
 #ifndef VPUTILS_H
 #define VPUTILS_H
+#include <fstream>
 #include <sstream>
 #include <cstdlib>
 #include "threads.h"
@@ -31,6 +32,18 @@
 #endif
 
 extern std::shared_mutex __m_console;
+#ifdef LOG_TO_FILE
+extern std::ofstream __m_log;
+
+class GlobalInitialization{
+public:
+    GlobalInitialization();
+    ~GlobalInitialization();
+};
+
+extern GlobalInitialization __m_global;
+#endif
+
 std::string function_name(const std::string& func);
 std::string class_name(const std::string& func);
 
@@ -82,10 +95,20 @@ void __mingw_aligned_free (void *memblock);
 #if defined(DEBUG)
     #include <iostream>
     #include "vputils.h"
+#if defined(LOG_TO_FILE)
+    #include <fstream>
+
+    #define DBG(...) \
+    __m_console.lock(); \
+    __m_log<<class_name(FUNCTION_NAME)<<": "<<__VA_ARGS__<<" at "<<function_name(FUNCTION_NAME)<<std::endl; \
+    __m_log<< std::flush; \
+    __m_console.unlock();
+#else
     #define DBG(...) \
     __m_console.lock(); \
     std::cout<<class_name(FUNCTION_NAME)<<": "<<__VA_ARGS__<<" at "<<function_name(FUNCTION_NAME)<<std::endl; \
     __m_console.unlock();
+#endif
 #else
     #define DBG(...)
 #endif

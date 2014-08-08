@@ -261,5 +261,9 @@ FORMS += \
     frontend/playlistwidget.ui \
     frontend/controlswidget.ui
 
+# turn this on for Windows builds
+#DEFINES += \
+#    LOG_TO_FILE
+
 
 
