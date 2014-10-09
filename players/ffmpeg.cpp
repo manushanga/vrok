@@ -276,7 +276,8 @@ FFMPEGDecoder::~FFMPEGDecoder()
 {
     DBG("cleaning up");
     avcodec_close(ctx);
-    av_close_input_file(container);
+    avformat_close_input(&container);
+    avformat_free_context(container);
 }
 
 int FFMPEGDecoder::ff_avio_interrupt(void *user)
