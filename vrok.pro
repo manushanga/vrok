@@ -247,7 +247,10 @@ HEADERS += \
     frontend/ticker.h \
     include/resource.h \
     include/events.h \
-    include/network.h
+    include/network.h \
+    include/general.h \
+    general/autopause/hotkeys.h \
+    general/hotkeys/hotkeys.h
 
 SOURCES += \
     frontend/playlistwidget.cpp \
@@ -255,7 +258,8 @@ SOURCES += \
     frontend/ticker.cpp \
     resource.cpp \
     util/events.cpp \
-    util/network.cpp
+    util/network.cpp \
+    general/hotkeys/hotkeys.cpp
 
 FORMS += \
     frontend/playlistwidget.ui \

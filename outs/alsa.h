@@ -8,8 +8,10 @@
 
 #ifndef OUT_ALSA_H
 #define OUT_ALSA_H
+#include <unistd.h>
 
 #include <alsa/asoundlib.h>
+#include <sys/inotify.h>
 #include <samplerate.h>
 
 #include "vplayer.h"
@@ -36,6 +38,7 @@ public:
     float *out_buf;
     int *out_buf_i;
     unsigned out_frames;
+    int in_fd,in_wd[2];
 
     virtual int init(VPlayer *v, VPBuffer *in);
     virtual void rewind();

@@ -6,12 +6,28 @@
   See LICENSE for details.
 */
 
-#include <unistd.h>
+
 
 #include "vrok.h"
 #include "alsa.h"
+#define IN_EVENT_SIZE  ( sizeof (struct inotify_event) )
+#define IN_EVENT_BUF_LEN     ( 10 * ( IN_EVENT_SIZE + 256 ) )
 
 static const snd_pcm_uframes_t PERIOD_SIZE = 256;
+char buffer[IN_EVENT_BUF_LEN] __attribute__ ((aligned(8)));
+
+bool wait_on(int fd, int mask){
+    int len=read( fd, buffer, IN_EVENT_BUF_LEN );
+    int i=0;
+    while (i<len){
+        struct inotify_event *event = ( struct inotify_event * ) &buffer[ i ];
+        if (event->mask & mask) {
+            return true;
+        }
+        i += IN_EVENT_SIZE + event->len;
+    }
+    return false;
+}
 
 VPOutPlugin* VPOutPluginAlsa::VPOutPluginAlsa_new()
 {
@@ -29,6 +45,16 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
     float *buffer[2];
     buffer[0] = self->bin->buffer[0];
     buffer[1] = self->bin->buffer[1];
+
+    fd_set rfds;
+    struct timeval tv;
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+
+    FD_ZERO(&rfds);
+    FD_SET(self->in_fd, &rfds);
+
+  //  pollfd pfd = { self->in_fd, POLLIN, 5 };
 
     while (ATOMIC_CAS(&self->work,true,true)){
         if (ATOMIC_CAS(&self->pause_check,true,true)) {
@@ -74,6 +100,20 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
 
         self->owner->mutex[0].unlock();
 
+
+        if (wait_on(self->in_fd,IN_OPEN)){
+            DBG("inotify on snd device");
+            self->m_pause.lock();
+            ATOMIC_CAS(&self->pause_check,false,true);
+            //snd_pcm_pause(self->handle,true);
+            while (!wait_on(self->in_fd,IN_CLOSE)) {
+                sleep(2);
+            }
+            self->m_pause.unlock();
+            ATOMIC_CAS(&self->pause_check,true,false);
+            //snd_pcm_pause(self->handle,false);
+        }
+
         if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE){
             DBG("trying to recover");
             if ( snd_pcm_recover(self->handle, ret, 0) < 0 ) {
@@ -82,6 +122,7 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
         } else if (ret < 0 && ret != -EAGAIN){
             DBG("write error "<<ret);
         }
+
     }
 
 }
@@ -191,10 +232,19 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
     pause_check = false;
 
     FULL_MEMORY_BARRIER;
+    in_fd = inotify_init();
+    if ( in_fd < 0 ) {
+        DBG("error initializing inotify, auto pause won't work");
+    } else {
+        in_wd[0]=inotify_add_watch( in_fd, "/dev/snd/pcmC0D0p", IN_OPEN | IN_CLOSE );
+        DBG(in_wd[0]<<in_wd[1]<<in_fd);
+    }
+    fcntl(in_fd, F_SETFL, O_NONBLOCK);
 
     worker = new std::thread((void(*)(void*))worker_run, this);
     worker->high_priority();
     DBG("alsa thread made");
+
     return 0;
 }
 
@@ -206,6 +256,10 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     // we unlock it here to avoid deadlock
     owner->mutex[1].unlock();
     resume();
+
+    inotify_rm_watch( in_fd, in_wd[0] );
+    inotify_rm_watch( in_fd, in_wd[1] );
+    close(in_fd);
 
     if (worker){
         worker->join();

@@ -106,6 +106,7 @@ void FFMPEGDecoder::reader()
     int vpbuffer_write=0;
     int vpbuffer_samples=(VPBUFFER_FRAMES)*bout->chans;
     int remainder_write=0;
+    int remainder_read=0;
 
     av_init_packet(&packet);
     AVFrame *frame=avcodec_alloc_frame();
@@ -115,9 +116,26 @@ void FFMPEGDecoder::reader()
     while (ATOMIC_CAS(&owner->work,true,true) && packetFinished >=0) {
         vpbuffer_write=0;
         if (remainder_write>0) {
-            for (int i=0;i<remainder_write;i++){
-                bout->buffer[*bout->cursor][vpbuffer_write]=remainder[i];
+            remainder_read = 0;
+            for (int nn=0;nn<remainder_write / vpbuffer_samples; nn++) {
+                vpbuffer_write=0;
+                while (vpbuffer_write < vpbuffer_samples){
+                    bout->buffer[*bout->cursor][vpbuffer_write]=remainder[remainder_read];
+                    remainder_read++;
+                    vpbuffer_write++;
+                }
+                owner->postProcess();
+
+                owner->mutex[0].lock();
+                VP_SWAP_BUFFERS(bout);
+                owner->mutex[1].unlock();
+
+            }
+            vpbuffer_write=0;
+            while (remainder_read < remainder_write) {
+                bout->buffer[*bout->cursor][vpbuffer_write]=remainder[remainder_read];
                 vpbuffer_write++;
+                remainder_read++;
             }
         }
         remainder_write=0;
@@ -135,7 +153,6 @@ void FFMPEGDecoder::reader()
                 if (ret<0) {
                     DBG("seek failed");
                 } else {
-
                     current_in_seconds=seek_to;
                     avcodec_flush_buffers(ctx);
                 }
@@ -172,7 +189,7 @@ void FFMPEGDecoder::reader()
                                 for (int ch = 0; ch < ctx->channels; ch++) {
 
                                     if (vpbuffer_write< vpbuffer_samples){
-                                        bout->currentBuffer()[vpbuffer_write]= ((float *) frame->extended_data[ch])[nb] ;
+                                        bout->currentBuffer()[vpbuffer_write]= ((float *) frame->extended_data[ch])[nb];
                                         vpbuffer_write++;
                                     } else {
                                         remainder[remainder_write] = ((float *) frame->extended_data[ch])[nb];
@@ -229,7 +246,7 @@ void FFMPEGDecoder::reader()
                             }
                             break;
                         default:
-                            DBG("PCM type not supported");
+                            WARN("PCM type not supported");
                     }
                 } else {
                     DBG("frame failed");
