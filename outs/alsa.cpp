@@ -15,19 +15,8 @@
 
 static const snd_pcm_uframes_t PERIOD_SIZE = 256;
 char buffer[IN_EVENT_BUF_LEN] __attribute__ ((aligned(8)));
+std::queue<int> inotify_q;
 
-bool wait_on(int fd, int mask){
-    int len=read( fd, buffer, IN_EVENT_BUF_LEN );
-    int i=0;
-    while (i<len){
-        struct inotify_event *event = ( struct inotify_event * ) &buffer[ i ];
-        if (event->mask & mask) {
-            return true;
-        }
-        i += IN_EVENT_SIZE + event->len;
-    }
-    return false;
-}
 
 VPOutPlugin* VPOutPluginAlsa::VPOutPluginAlsa_new()
 {
@@ -101,18 +90,6 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
         self->owner->mutex[0].unlock();
 
 
-        if (wait_on(self->in_fd,IN_OPEN)){
-            DBG("inotify on snd device");
-            self->m_pause.lock();
-            ATOMIC_CAS(&self->pause_check,false,true);
-            //snd_pcm_pause(self->handle,true);
-            while (!wait_on(self->in_fd,IN_CLOSE)) {
-                sleep(2);
-            }
-            self->m_pause.unlock();
-            ATOMIC_CAS(&self->pause_check,true,false);
-            //snd_pcm_pause(self->handle,false);
-        }
 
         if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE){
             DBG("trying to recover");
@@ -127,6 +104,44 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
 
 }
 
+void VPOutPluginAlsa::check_contention(void *user)
+{
+    VPOutPluginAlsa *self=(VPOutPluginAlsa *)user;
+    load_inotify(self->in_fd);
+    while (inotify_q.size() > 1) {
+       inotify_q.pop();
+       inotify_q.pop();
+    }
+    if (!inotify_q.empty()) {
+        int m=inotify_q.front();
+        if (m == IN_OPEN){
+            self->owner->pause();
+        } else if ( m==IN_CLOSE ){
+            self->owner->play();
+        } else {
+            DBG("error");
+        }
+        inotify_q.pop();
+    }
+}
+
+void VPOutPluginAlsa::load_inotify(int fd)
+{
+    int len=read( fd, buffer, IN_EVENT_BUF_LEN );
+    int i=0;
+    while (i<len){
+        struct inotify_event *event = ( struct inotify_event * ) &buffer[ i ];
+        if (event->mask & IN_OPEN) {
+            inotify_q.push(IN_OPEN);
+        }
+        if (event->mask & IN_CLOSE) {
+            inotify_q.push(IN_CLOSE);
+        }
+
+        i += IN_EVENT_SIZE + event->len;
+    }
+}
+
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 {
     if (!ATOMIC_CAS(&paused,false,false) ){
@@ -139,6 +154,7 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::rewind()
 void __attribute__((optimize("O0"))) VPOutPluginAlsa::resume()
 {
     if (ATOMIC_CAS(&paused,false,false) ){
+
         m_pause.unlock();
         while (ATOMIC_CAS(&paused,false,false)) {}
     }
@@ -149,6 +165,7 @@ void __attribute__((optimize("O0"))) VPOutPluginAlsa::pause()
         m_pause.lock();
         ATOMIC_CAS(&pause_check,false,true);
         while (!ATOMIC_CAS(&paused,false,false)) {}
+
     }
 }
 
@@ -237,14 +254,14 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
         DBG("error initializing inotify, auto pause won't work");
     } else {
         in_wd[0]=inotify_add_watch( in_fd, "/dev/snd/pcmC0D0p", IN_OPEN | IN_CLOSE );
-        DBG(in_wd[0]<<in_wd[1]<<in_fd);
     }
     fcntl(in_fd, F_SETFL, O_NONBLOCK);
 
     worker = new std::thread((void(*)(void*))worker_run, this);
     worker->high_priority();
     DBG("alsa thread made");
-
+    DBG((void *)VPOutPluginAlsa::check_contention);
+    VPEvents::getSingleton()->schedulerAddJob((VPEvents::VPJob) VPOutPluginAlsa::check_contention, this,0);
     return 0;
 }
 
@@ -258,7 +275,7 @@ VPOutPluginAlsa::~VPOutPluginAlsa()
     resume();
 
     inotify_rm_watch( in_fd, in_wd[0] );
-    inotify_rm_watch( in_fd, in_wd[1] );
+
     close(in_fd);
 
     if (worker){

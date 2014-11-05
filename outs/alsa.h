@@ -8,6 +8,8 @@
 
 #ifndef OUT_ALSA_H
 #define OUT_ALSA_H
+#include <queue>
+
 #include <unistd.h>
 
 #include <alsa/asoundlib.h>
@@ -23,6 +25,8 @@ class VPOutPluginAlsa: public VPOutPlugin {
 public:
     static VPOutPlugin* VPOutPluginAlsa_new();
     static void worker_run(VPOutPluginAlsa *self);
+    static void check_contention(void *user);
+    static void load_inotify(int fd);
     VPlayer *owner;
     snd_pcm_t *handle;
     snd_pcm_hw_params_t *params;
