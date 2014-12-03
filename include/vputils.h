@@ -152,6 +152,12 @@ inline FILE *fopenu(const char *path,const char *opt){
 #define FOPEN_AB "w+"
 #endif
 
+#if defined(min) && defined(max)
+#define CLIP(x) max(min(x,1.0f),-1.0f)
+#else
+#define CLIP(x) std::max(std::min(x,0.999f),-0.999f)
+#endif
+
 typedef unsigned int uint;
 uint FNV(char *str);
 #endif // VPUTILS_H

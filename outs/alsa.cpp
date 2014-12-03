@@ -81,7 +81,7 @@ void VPOutPluginAlsa::worker_run(VPOutPluginAlsa *self)
         }
 
         for (int i=0;i<out_frames*chans;i++){
-            out_buf_i[i]=out_buf[i]*multiplier;
+            out_buf_i[i]=CLIP(out_buf[i])*multiplier;
         }
         ret = snd_pcm_writei(self->handle,
                              out_buf_i,
@@ -196,25 +196,26 @@ int VPOutPluginAlsa::init(VPlayer *v, VPBuffer *in)
     {
         DBG("bit depth is 32");
         snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S32);
-        multiplier = 1<<31 -1;
+        multiplier = (1<<31) -1 ;
+        DBG(multiplier);
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S24))
     {
         DBG("bit depth is 24");
         snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S24);
-        multiplier = 1<<23 -1;
+        multiplier = (1<<23) -1;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S16))
     {
         DBG("bit depth is 16");
         snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16);
-        multiplier = 1<<15 -1;
+        multiplier = (1<<15) -1;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S8))
     {
         DBG("bit depth is 8");
         snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S8);
-        multiplier = 1<<7 -1;;
+        multiplier = (1<<7) -1;;
     }
 
     snd_pcm_hw_params_set_channels(handle, params, bin->chans);
