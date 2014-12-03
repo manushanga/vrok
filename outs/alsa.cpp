@@ -109,8 +109,15 @@ void VPOutPluginAlsa::check_contention(void *user)
     VPOutPluginAlsa *self=(VPOutPluginAlsa *)user;
     load_inotify(self->in_fd);
     while (inotify_q.size() > 1) {
-       inotify_q.pop();
-       inotify_q.pop();
+        if (inotify_q.front() == IN_OPEN) {
+            inotify_q.pop();
+            if (inotify_q.front() == IN_CLOSE) {
+                inotify_q.pop();
+            } else {
+                inotify_q.push(IN_OPEN);
+                break;
+            }
+        }
     }
     if (!inotify_q.empty()) {
         int m=inotify_q.front();
