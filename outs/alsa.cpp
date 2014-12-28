@@ -117,6 +117,8 @@ void VPOutPluginAlsa::check_contention(void *user)
                 inotify_q.push(IN_OPEN);
                 break;
             }
+        } else {
+            break;
         }
     }
     if (!inotify_q.empty()) {

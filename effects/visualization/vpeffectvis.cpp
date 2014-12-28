@@ -28,10 +28,10 @@ void VPEffectPluginVis::process()
 
     for (int i=0;i<samples_per_chan;i++) {
         float mid=0.0f;
-        for (int j=0;j<bin->chans;j++) {
+        /*for (int j=0;j<bin->chans;j++) {
             mid = (mid + buffer[i*bin->chans + j])/2.0f;
-        }
-        bars[i]=mid;
+        }*/
+        bars[i]=buffer[i*bin->chans];
     }
 
    // ATOMIC_CAS(&filled,false,true);

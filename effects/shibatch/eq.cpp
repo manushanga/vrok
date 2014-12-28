@@ -66,6 +66,44 @@ int VPEffectPluginEQ::init(VPlayer *v, VPBuffer *in, VPBuffer **out)
 
 }
 
+static float coeffs[] = {0.000359,
+                         0.000790,
+                         0.001423,
+                         0.002296,
+                         0.003436,
+                         0.004860,
+                         0.006571,
+                         0.008555,
+                         0.010778,
+                         0.013189,
+                         0.015717,
+                         0.018279,
+                         0.020780,
+                         0.023120,
+                         0.025199,
+                         0.026927,
+                         0.028222,
+                         0.029025,
+                         0.029297,
+                         0.029025,
+                         0.028222,
+                         0.026927,
+                         0.025199,
+                         0.023120,
+                         0.020780,
+                         0.018279,
+                         0.015717,
+                         0.013189,
+                         0.010778,
+                         0.008555,
+                         0.006571,
+                         0.004860,
+                         0.003436,
+                         0.002296,
+                         0.001423,
+                         0.000790,
+                         0.000359};
+
 void VPEffectPluginEQ::process()
 {
 
@@ -82,6 +120,27 @@ void VPEffectPluginEQ::process()
 
     equ_modifySamples_float(&sb_state, (char *)buffer, samples_per_chan, bin->chans);
 
+    static float pre[8];
+    for (int i=0;i<bin->chans;i++)
+    {
+        buffer[i]=(-0.1*pre[i]-0.6*buffer[i])*2;
+    }
+
+    for (int i=0;i<bin->chans;i++)
+    {
+        for (int j=1;j<VPBUFFER_FRAMES;j++)
+        {
+            float xn=buffer[bin->chans*j+i];
+            float xn_1=buffer[bin->chans*(j-1)+i];
+
+            buffer[bin->chans*j+i] =( -0.1*xn_1-0.6*xn)*2;
+        }
+    }
+
+    for (int i=0;i<bin->chans;i++)
+    {
+        pre[i]=buffer[bin->chans*(VPBUFFER_FRAMES-1)+i];
+    }
 
 }
 
