@@ -1,3 +1,5 @@
+**Deprecation notice: Please checkout https://github.com/manushanga/VrokNext**
+
 Vrok - smokin' audio
 ======================
 
